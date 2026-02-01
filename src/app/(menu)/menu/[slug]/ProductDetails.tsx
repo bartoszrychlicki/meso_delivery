@@ -34,6 +34,7 @@ interface Product {
   description?: string
   story?: string
   price: number
+  original_price?: number
   image_url?: string
   is_spicy?: boolean
   spice_level?: 1 | 2 | 3
@@ -170,11 +171,42 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           {product.name}
         </h1>
 
+        {/* Price with original price strikethrough */}
+        <div className="flex items-baseline gap-3 pb-2">
+          <span className="text-2xl font-bold text-meso-red-500">
+            {formatPrice(product.price)}
+          </span>
+          {product.original_price && product.original_price > product.price && (
+            <span className="text-lg text-zinc-500 line-through">
+              {formatPrice(product.original_price)}
+            </span>
+          )}
+        </div>
+
+        {/* Calories */}
+        {product.calories && (
+          <p className="text-zinc-500 text-sm pb-2">
+            {product.calories} kcal
+          </p>
+        )}
+
         {/* Description */}
         {product.description && (
           <p className="text-zinc-400 text-base font-normal leading-normal pb-3 pt-1">
             {product.description}
           </p>
+        )}
+
+        {/* Story / Chef Quote */}
+        {product.story && (
+          <div className="my-4 p-4 bg-meso-dark-800/50 border-l-4 border-meso-red-500 rounded-r-lg">
+            <p className="text-zinc-300 italic text-sm leading-relaxed mb-2">
+              &ldquo;{product.story}&rdquo;
+            </p>
+            <p className="text-meso-red-500 text-xs font-medium">
+              — Maciej Krawczun, Szef Kuchni MESO
+            </p>
+          </div>
         )}
 
         {/* Ingredients chips */}
@@ -220,6 +252,15 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   </button>
                 ))}
               </div>
+              {/* Piekielny Warning */}
+              {selectedSpice === 3 && (
+                <div className="mt-3 p-3 bg-orange-500/20 border border-orange-500/50 rounded-lg flex items-start gap-2">
+                  <span className="text-lg">⚠️</span>
+                  <p className="text-orange-400 text-sm">
+                    <strong>Poziom Piekielny to nie żart!</strong> Bardzo ostra wersja dla doświadczonych fanów chilli.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

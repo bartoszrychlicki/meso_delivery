@@ -11,7 +11,10 @@ export default function CartPage() {
   const items = useCartStore((state) => state.items)
   const itemCount = useCartStore((state) => state.getItemCount())
   const canCheckout = useCartStore((state) => state.canCheckout)
-  const getTotal = useCartStore((state) => state.getTotal)
+  // Subscribe to the state values that affect total to trigger re-renders
+  const promoDiscount = useCartStore((state) => state.promoDiscount)
+  const tip = useCartStore((state) => state.tip)
+  const total = useCartStore((state) => state.getTotal())
 
   const checkout = canCheckout()
 
@@ -113,7 +116,7 @@ export default function CartPage() {
         >
           <span>Zamów</span>
           <span className="mx-2">·</span>
-          <span>{formatPrice(getTotal())}</span>
+          <span>{formatPrice(total)}</span>
         </Link>
       </div>
     </div>
