@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
@@ -40,8 +40,14 @@ function LoginForm() {
   })
 
   // Redirect if already logged in as permanent user
+  useEffect(() => {
+    if (!authLoading && isPermanent) {
+      router.push(redirectTo)
+    }
+  }, [authLoading, isPermanent, redirectTo, router])
+
+  // Show nothing while redirecting
   if (!authLoading && isPermanent) {
-    router.push(redirectTo)
     return null
   }
 
