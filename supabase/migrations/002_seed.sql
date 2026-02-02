@@ -1,2 +1,0 @@
--- Placeholder for seed migration (already applied remotely)
--- This file exists to sync migration history

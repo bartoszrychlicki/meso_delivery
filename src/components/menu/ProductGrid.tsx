@@ -39,11 +39,14 @@ interface ProductGridProps {
 
 export function ProductGrid({ products, categories, activeCategory }: ProductGridProps) {
   // Filter products by active category
+  // Special case: "bestsellery" category shows all products with is_bestseller=true
   const filteredProducts = activeCategory && activeCategory !== 'all'
-    ? products.filter((p) => {
-      const category = categories.find((c) => c.slug === activeCategory)
-      return category && p.category_id === category.id
-    })
+    ? activeCategory === 'bestsellery'
+      ? products.filter((p) => p.is_bestseller === true)
+      : products.filter((p) => {
+        const category = categories.find((c) => c.slug === activeCategory)
+        return category && p.category_id === category.id
+      })
     : products
 
   // If a specific category is selected, show products without headers
