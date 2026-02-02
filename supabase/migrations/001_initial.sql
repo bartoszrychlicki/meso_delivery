@@ -1,0 +1,2 @@
+-- Placeholder for initial migration (already applied remotely)
+-- This file exists to sync migration history

@@ -1,0 +1,2 @@
+-- Placeholder for RLS migration (already applied remotely)
+-- This file exists to sync migration history
