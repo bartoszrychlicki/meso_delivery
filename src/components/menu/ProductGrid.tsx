@@ -41,15 +41,15 @@ export function ProductGrid({ products, categories, activeCategory }: ProductGri
   // Filter products by active category
   const filteredProducts = activeCategory && activeCategory !== 'all'
     ? products.filter((p) => {
-        const category = categories.find((c) => c.slug === activeCategory)
-        return category && p.category_id === category.id
-      })
+      const category = categories.find((c) => c.slug === activeCategory)
+      return category && p.category_id === category.id
+    })
     : products
 
   // If a specific category is selected, show products without headers
   if (activeCategory && activeCategory !== 'all') {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProducts.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
@@ -80,7 +80,7 @@ export function ProductGrid({ products, categories, activeCategory }: ProductGri
               )}
             </div>
           </div>
-          <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {categoryProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
