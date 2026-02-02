@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, UtensilsCrossed, ShoppingCart, User, Receipt } from 'lucide-react'
+import { Home, UtensilsCrossed, ShoppingCart, User, Receipt, LogIn, UserPlus } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/useAuth'
 
 interface BottomNavProps {
   cartItemCount?: number
@@ -12,13 +13,21 @@ interface BottomNavProps {
 
 export function BottomNav({ cartItemCount = 0, className }: BottomNavProps) {
   const pathname = usePathname()
+  const { isAnonymous, isPermanent, isLoading } = useAuth()
 
-  const navItems = [
+  // Base nav items (always shown)
+  const baseNavItems = [
     { href: '/', icon: Home, label: 'Home' },
     { href: '/cart', icon: ShoppingCart, label: 'Koszyk', badge: cartItemCount },
     { href: '/orders', icon: Receipt, label: 'Zamówienia' },
-    { href: '/account', icon: User, label: 'Profil' },
   ]
+
+  // Auth-dependent items
+  const authNavItem = isPermanent
+    ? { href: '/account', icon: User, label: 'Profil' }
+    : { href: '/login', icon: LogIn, label: 'Zaloguj' }
+
+  const navItems = [...baseNavItems, authNavItem]
 
   return (
     <nav className={cn(

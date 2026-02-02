@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ShoppingCart, User, MapPin, Menu } from 'lucide-react'
+import { ShoppingCart, User, MapPin, Menu, LogIn, UserPlus, LogOut } from 'lucide-react'
 import { MesoLogo } from '@/components/brand/MesoLogo'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/useAuth'
 
 interface HeaderProps {
   cartItemCount?: number
@@ -16,12 +17,18 @@ interface HeaderProps {
 
 export function Header({ cartItemCount = 0, locationName = 'Gdańsk', className }: HeaderProps) {
   const pathname = usePathname()
+  const { isAnonymous, isPermanent, isLoading, signOut, user } = useAuth()
 
   const navLinks = [
     { href: '/menu', label: 'Menu' },
     { href: '/about', label: 'O nas' },
     { href: '/contact', label: 'Kontakt' },
   ]
+
+  // Get user display name for permanent users
+  const userDisplayName = isPermanent
+    ? user?.user_metadata?.name || user?.email?.split('@')[0] || 'Konto'
+    : null
 
   return (
     <header className={cn(
@@ -56,10 +63,44 @@ export function Header({ cartItemCount = 0, locationName = 'Gdańsk', className 
                   </Link>
                 ))}
               </nav>
-              <div className="border-t border-meso-red-500/20 pt-4">
-                <Link href="/login" className="text-white/70 hover:text-white">
-                  Zaloguj się
-                </Link>
+              <div className="border-t border-meso-red-500/20 pt-4 space-y-3">
+                {isLoading ? (
+                  <div className="text-white/50">Ładowanie...</div>
+                ) : isPermanent ? (
+                  <>
+                    <Link
+                      href="/account"
+                      className="flex items-center gap-2 text-white/70 hover:text-white"
+                    >
+                      <User className="w-4 h-4" />
+                      {userDisplayName}
+                    </Link>
+                    <button
+                      onClick={() => signOut()}
+                      className="flex items-center gap-2 text-white/50 hover:text-white text-sm"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Wyloguj się
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/account/upgrade"
+                      className="flex items-center gap-2 text-meso-gold-400 hover:text-meso-gold-300"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Załóż konto
+                    </Link>
+                    <Link
+                      href="/login"
+                      className="flex items-center gap-2 text-white/70 hover:text-white text-sm"
+                    >
+                      <LogIn className="w-4 h-4" />
+                      Mam już konto
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </SheetContent>
@@ -128,15 +169,53 @@ export function Header({ cartItemCount = 0, locationName = 'Gdańsk', className 
             </Button>
           </Link>
 
-          <Link href="/login">
-            <Button
-              variant="outline"
-              className="border-meso-red-500/30 text-white hover:bg-meso-red-500/10 hover:border-meso-red-500/50"
-            >
-              <User className="w-4 h-4 mr-2" />
-              Zaloguj się
-            </Button>
-          </Link>
+          {isLoading ? (
+            <div className="w-24 h-9 bg-meso-dark-800 rounded animate-pulse" />
+          ) : isPermanent ? (
+            <div className="flex items-center gap-2">
+              <Link href="/account">
+                <Button
+                  variant="ghost"
+                  className="text-white/80 hover:text-white gap-2"
+                >
+                  <div className="w-7 h-7 rounded-full bg-meso-red-500 flex items-center justify-center text-xs font-bold">
+                    {userDisplayName?.[0]?.toUpperCase() || 'U'}
+                  </div>
+                  <span className="hidden xl:inline">{userDisplayName}</span>
+                </Button>
+              </Link>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => signOut()}
+                className="text-white/50 hover:text-white"
+                title="Wyloguj się"
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link href="/account/upgrade">
+                <Button
+                  variant="outline"
+                  className="border-meso-gold-500/30 text-meso-gold-400 hover:bg-meso-gold-500/10 hover:border-meso-gold-500/50"
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Załóż konto
+                </Button>
+              </Link>
+              <Link href="/login">
+                <Button
+                  variant="ghost"
+                  className="text-white/60 hover:text-white"
+                >
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Zaloguj
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </header>

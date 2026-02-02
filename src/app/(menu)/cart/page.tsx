@@ -5,6 +5,7 @@ import { ArrowLeft, ShoppingCart } from 'lucide-react'
 import { useCartStore } from '@/stores/cartStore'
 import { CartItem, CartSummary, PromoCodeInput, TipSelector } from '@/components/cart'
 import { EmptyState } from '@/components/common/EmptyState'
+import { AnonymousBanner } from '@/components/auth'
 import { cn } from '@/lib/utils'
 
 export default function CartPage() {
@@ -89,6 +90,9 @@ export default function CartPage() {
 
         {/* Summary */}
         <CartSummary />
+
+        {/* Anonymous Banner - upsell to create account */}
+        <AnonymousBanner variant="checkout" />
 
         {/* Min order warning */}
         {!checkout.allowed && checkout.reason && (

@@ -3,14 +3,15 @@ export type LoyaltyTier = 'bronze' | 'silver' | 'gold'
 export interface Customer {
   id: string
   name?: string
-  email: string
+  email?: string | null  // NULL for anonymous users
   phone?: string
   birthday?: string
   loyalty_points: number
   loyalty_tier: LoyaltyTier
-  referral_code: string
+  referral_code?: string | null  // NULL for anonymous users
   referred_by?: string
   marketing_consent: boolean
+  is_anonymous: boolean  // true for anonymous users
   created_at: string
 }
 
