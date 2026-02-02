@@ -120,3 +120,83 @@ export const ORDER_STATUS_MESSAGES: Record<OrderStatus, { title: string; subtitl
     emoji: '❌',
   },
 }
+
+// Extended order type for order tracking
+export interface OrderWithItems extends Omit<Order, 'items'> {
+  items: OrderItemWithProduct[]
+  location?: {
+    name: string
+    address: string
+    phone: string | null
+  }
+}
+
+export interface OrderItemWithProduct extends Omit<OrderItem, 'product'> {
+  product: {
+    id: string
+    name: string
+    image_url: string | null
+  }
+  variant_name?: string | null
+}
+
+// Status colors and icons for UI
+export const ORDER_STATUS_STYLES: Record<OrderStatus, { color: string; bgColor: string; icon: string }> = {
+  pending_payment: { color: 'text-yellow-500', bgColor: 'bg-yellow-500/10', icon: 'Clock' },
+  confirmed: { color: 'text-blue-500', bgColor: 'bg-blue-500/10', icon: 'CheckCircle' },
+  preparing: { color: 'text-orange-500', bgColor: 'bg-orange-500/10', icon: 'ChefHat' },
+  ready: { color: 'text-green-500', bgColor: 'bg-green-500/10', icon: 'Package' },
+  awaiting_courier: { color: 'text-purple-500', bgColor: 'bg-purple-500/10', icon: 'Search' },
+  in_delivery: { color: 'text-purple-500', bgColor: 'bg-purple-500/10', icon: 'Truck' },
+  delivered: { color: 'text-green-600', bgColor: 'bg-green-600/10', icon: 'CheckCircle2' },
+  cancelled: { color: 'text-red-500', bgColor: 'bg-red-500/10', icon: 'XCircle' },
+}
+
+// Timeline steps for order tracking
+export const ORDER_TIMELINE_STEPS = [
+  { status: 'confirmed' as OrderStatus, label: 'Zamówione', shortLabel: 'Zamówione' },
+  { status: 'preparing' as OrderStatus, label: 'Przygotowywane', shortLabel: 'Gotujemy' },
+  { status: 'ready' as OrderStatus, label: 'Gotowe', shortLabel: 'Gotowe' },
+  { status: 'in_delivery' as OrderStatus, label: 'W drodze', shortLabel: 'W drodze' },
+  { status: 'delivered' as OrderStatus, label: 'Dostarczone', shortLabel: 'Dostarczone' },
+]
+
+// Get current step index for timeline
+export function getTimelineStepIndex(status: OrderStatus): number {
+  const index = ORDER_TIMELINE_STEPS.findIndex(step => step.status === status)
+  if (status === 'pending_payment') return -1
+  if (status === 'cancelled') return -1
+  if (status === 'awaiting_courier') return 2 // same as 'ready'
+  return index
+}
+
+// Format order date
+export function formatOrderDate(dateString: string): string {
+  const date = new Date(dateString)
+  return new Intl.DateTimeFormat('pl-PL', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
+
+// Format short date for list view
+export function formatOrderDateShort(dateString: string): string {
+  const date = new Date(dateString)
+  const now = new Date()
+  const isToday = date.toDateString() === now.toDateString()
+
+  if (isToday) {
+    return `Dziś, ${date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}`
+  }
+
+  return new Intl.DateTimeFormat('pl-PL', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
+
