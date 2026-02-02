@@ -11,19 +11,26 @@ interface BottomNavProps {
   className?: string
 }
 
+interface NavItem {
+  href: string
+  icon: typeof Home
+  label: string
+  badge?: number
+}
+
 export function BottomNav({ cartItemCount = 0, className }: BottomNavProps) {
   const pathname = usePathname()
   const { isAnonymous, isPermanent, isLoading } = useAuth()
 
   // Base nav items (always shown)
-  const baseNavItems = [
+  const baseNavItems: NavItem[] = [
     { href: '/', icon: Home, label: 'Home' },
     { href: '/cart', icon: ShoppingCart, label: 'Koszyk', badge: cartItemCount },
     { href: '/orders', icon: Receipt, label: 'Zamówienia' },
   ]
 
   // Auth-dependent items
-  const authNavItem = isPermanent
+  const authNavItem: NavItem = isPermanent
     ? { href: '/account', icon: User, label: 'Profil' }
     : { href: '/login', icon: LogIn, label: 'Zaloguj' }
 
