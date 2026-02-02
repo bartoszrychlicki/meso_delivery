@@ -1,7 +1,7 @@
 # Plan Implementacji MESO Delivery PWA
 
 > **Status:** W trakcie realizacji
-> **Aktualna faza:** 8 - Śledzenie zamówienia
+> **Aktualna faza:** 9 - Profil i MESO Club
 
 ## Podsumowanie
 
@@ -31,8 +31,8 @@ Pełna implementacja aplikacji PWA do zamawiania japońskiego comfort food z dos
 | 5 | Koszyk | ✅ Gotowe |
 | 6 | Autentykacja | ✅ Gotowe |
 | 7 | Checkout i płatności | ✅ Gotowe |
-| 8 | Śledzenie zamówienia | 🔄 W trakcie |
-| 9 | Profil i MESO Club | ⏳ Oczekuje |
+| 8 | Śledzenie zamówienia | ✅ Gotowe |
+| 9 | Profil i MESO Club | 🔄 W trakcie |
 | 10 | Panel operatora | ⏳ Oczekuje |
 | 11 | PWA i finalizacja | ⏳ Oczekuje |
 
@@ -303,13 +303,19 @@ src/app/(main)/menu/
 ## Faza 8: Śledzenie zamówienia
 
 ### Zadania
-- [ ] Strona statusu zamówienia (/orders/[id])
-- [ ] Lista zamówień użytkownika (/orders)
-- [ ] Real-time updates (Supabase Realtime)
-- [ ] Timeline statusów (Przyjęte → Gotowane → W drodze → Dostarczone)
-- [ ] Powiadomienia push (opcjonalnie)
+- [x] Strona statusu zamówienia (/orders/[id])
+- [x] Lista zamówień użytkownika (/orders)
+- [x] Real-time updates (Supabase Realtime)
+- [x] Timeline statusów (Zamówione → Gotowane → W drodze → Dostarczone)
+- [ ] Powiadomienia push (opcjonalnie - Faza 11)
 
-*(W trakcie)*
+### Test Chrome - Faza 8
+- [x] /orders → Lista zamówień z kartami ✅
+- [x] Kliknięcie zamówienia → /orders/[id] ✅
+- [x] Timeline wizualny z progresem ✅
+- [x] Lista produktów z obrazkami i cenami ✅
+- [x] Podsumowanie płatności ✅
+- [x] Real-time subscription (Supabase Realtime) ✅
 
 ---
 
