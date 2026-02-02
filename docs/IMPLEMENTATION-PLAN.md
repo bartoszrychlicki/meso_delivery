@@ -1,7 +1,7 @@
 # Plan Implementacji MESO Delivery PWA
 
 > **Status:** W trakcie realizacji
-> **Aktualna faza:** 5 - Koszyk
+> **Aktualna faza:** 8 - Śledzenie zamówienia
 
 ## Podsumowanie
 
@@ -28,10 +28,10 @@ Pełna implementacja aplikacji PWA do zamawiania japońskiego comfort food z dos
 | 2 | Komponenty bazowe | ✅ Gotowe |
 | 3 | Landing page | ✅ Gotowe |
 | 4 | Menu i produkty | ✅ Gotowe |
-| 5 | Koszyk | 🔄 W trakcie |
-| 6 | Autentykacja | ⏳ Oczekuje |
-| 7 | Checkout i płatności | ⏳ Oczekuje |
-| 8 | Śledzenie zamówienia | ⏳ Oczekuje |
+| 5 | Koszyk | ✅ Gotowe |
+| 6 | Autentykacja | ✅ Gotowe |
+| 7 | Checkout i płatności | ✅ Gotowe |
+| 8 | Śledzenie zamówienia | 🔄 W trakcie |
 | 9 | Profil i MESO Club | ⏳ Oczekuje |
 | 10 | Panel operatora | ⏳ Oczekuje |
 | 11 | PWA i finalizacja | ⏳ Oczekuje |
@@ -241,20 +241,98 @@ src/app/(main)/menu/
 ## Faza 5: Koszyk
 
 ### Zadania
-- [ ] Strona koszyka z listą produktów
-- [ ] Edycja ilości, usuwanie produktów
-- [ ] Cross-sell "Zaokrąglij zamówienie"
-- [ ] Kod rabatowy
-- [ ] Napiwek
-- [ ] Walidacja min. wartości zamówienia (35 zł)
+- [x] Strona koszyka z listą produktów
+- [x] Edycja ilości, usuwanie produktów
+- [x] Cross-sell "Zaokrąglij zamówienie"
+- [x] Kod rabatowy
+- [x] Napiwek
+- [x] Walidacja min. wartości zamówienia (35 zł)
 
-*(W budowie)*
+### Test Chrome - Faza 5
+- [x] /cart → Lista produktów z cenami ✅
+- [x] Edycja ilości → aktualizacja ceny ✅
+- [x] Usunięcie produktu → znika z listy ✅
+- [x] Kod rabatowy "PIERWSZYRAMEN" → -15% ✅
+- [x] Napiwek → aktualizacja sumy ✅
+- [x] Walidacja min. 35 zł → blokada "ZAMÓW" ✅
 
 ---
 
-## Faza 6-11
+## Faza 6: Autentykacja
 
-*(Szczegóły w pełnym planie)*
+### Zadania
+- [x] Strona logowania (/login)
+- [x] Strona rejestracji (/register → zintegrowane z /login)
+- [x] Anonimowe sesje (auto-create customer)
+- [x] Reset hasła (/forgot-password, /reset-password)
+- [x] Auth callback (/callback)
+- [x] Hook useAuth z isPermanent / isAnonymous
+- [x] Migracja na Next.js 15/16 (proxy zamiast middleware)
+
+### Test Chrome - Faza 6
+- [x] /login → Formularz logowania ✅
+- [x] Rejestracja nowego użytkownika ✅
+- [x] Logowanie istniejącego użytkownika ✅
+- [x] Reset hasła → email wysyłany ✅
+- [x] Anonimowa sesja → automatycznie tworzona ✅
+
+---
+
+## Faza 7: Checkout i Płatności
+
+### Zadania
+- [x] Strona checkout (/checkout)
+- [x] CheckoutWizard (kroki: Dostawa → Adres → Płatność)
+- [x] DeliveryForm (typ dostawy, czas)
+- [x] AddressForm (ulica, miasto, kod, telefon)
+- [x] PaymentMethod (BLIK, karta, gotówka - mock)
+- [x] Hook useCheckout (tworzenie zamówienia w Supabase)
+- [x] Naprawa błędów FK i total_price
+- [x] Product Drawer (customizacja w Drawer zamiast osobnej strony)
+
+### Test Chrome - Faza 7
+- [x] /checkout → Wizard 3-krokowy ✅
+- [x] Wybór dostawy → "Jak najszybciej" / Zaplanuj ✅
+- [x] Formularz adresu → walidacja Zod ✅
+- [x] Wybór płatności → kafelki ✅
+- [x] "Zamów i zapłać" → zamówienie w bazie ✅
+- [x] Koszyk czyszczony po sukcesie ✅
+
+---
+
+## Faza 8: Śledzenie zamówienia
+
+### Zadania
+- [ ] Strona statusu zamówienia (/orders/[id])
+- [ ] Lista zamówień użytkownika (/orders)
+- [ ] Real-time updates (Supabase Realtime)
+- [ ] Timeline statusów (Przyjęte → Gotowane → W drodze → Dostarczone)
+- [ ] Powiadomienia push (opcjonalnie)
+
+*(W trakcie)*
+
+---
+
+## Faza 9-11
+
+### Faza 9: Profil i MESO Club
+- [ ] Strona profilu (/account)
+- [ ] Historia zamówień
+- [ ] Zapisane adresy
+- [ ] Program lojalnościowy MESO Club
+
+### Faza 10: Panel operatora
+- [ ] Dashboard dla operatora punktu
+- [ ] Lista aktywnych zamówień
+- [ ] Zmiana statusu zamówienia
+- [ ] Statystyki
+
+### Faza 11: PWA i finalizacja
+- [ ] Manifest PWA
+- [ ] Service Worker
+- [ ] Offline support
+- [ ] Push notifications
+- [ ] Testy E2E
 
 ---
 
