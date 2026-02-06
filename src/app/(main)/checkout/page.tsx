@@ -14,11 +14,13 @@ import { cn } from '@/lib/utils'
 import { CheckoutWizard } from '@/components/checkout/CheckoutWizard'
 import { DeliveryForm } from '@/components/checkout/DeliveryForm'
 import { AddressForm } from '@/components/checkout/AddressForm'
+import { ContactForm } from '@/components/checkout/ContactForm'
 import { PaymentMethod } from '@/components/checkout/PaymentMethod'
+import { TermsAcceptance } from '@/components/checkout/TermsAcceptance'
 import { EmptyState } from '@/components/common/EmptyState'
 
 // Types
-import type { AddressFormData, DeliveryFormData, PaymentFormData } from '@/lib/validators/checkout'
+import type { AddressFormData, ContactFormData, DeliveryFormData, PaymentFormData } from '@/lib/validators/checkout'
 
 const STEPS = [
     { id: 'delivery', label: 'Dostawa' },
@@ -42,10 +44,15 @@ export default function CheckoutPage() {
     })
 
     const [addressData, setAddressData] = useState<AddressFormData | null>(null)
+    const [contactData, setContactData] = useState<ContactFormData | null>(null)
 
     const [paymentData, setPaymentData] = useState<PaymentFormData>({
         method: 'blik'
     })
+
+    // Terms acceptance state
+    const [termsAccepted, setTermsAccepted] = useState(false)
+    const [termsError, setTermsError] = useState<string | undefined>(undefined)
 
     // Redirect if cart is empty or user not logged in
     useEffect(() => {
@@ -54,10 +61,10 @@ export default function CheckoutPage() {
         }
     }, [authLoading, user, router])
 
-    // Pre-fill address data from customer profile
+    // Pre-fill address and contact data from customer profile
     useEffect(() => {
         const loadCustomerData = async () => {
-            if (!user || addressData) return
+            if (!user || addressData || contactData) return
 
             try {
                 const supabase = createClient()
@@ -82,6 +89,15 @@ export default function CheckoutPage() {
                     const firstName = nameParts[0] || ''
                     const lastName = nameParts.slice(1).join(' ') || ''
 
+                    // Dane kontaktowe (dla pickup)
+                    setContactData({
+                        firstName: firstName,
+                        lastName: lastName,
+                        email: customer?.email || user.email || '',
+                        phone: customer?.phone || '',
+                    })
+
+                    // Pełne dane adresowe (dla delivery)
                     setAddressData({
                         firstName: firstName,
                         lastName: lastName,
@@ -134,10 +150,23 @@ export default function CheckoutPage() {
         handleNextStep()
     }
 
-    const handleFinalSubmit = async () => {
-        if (!addressData) return
+    const handleContactSubmit = (data: ContactFormData) => {
+        setContactData(data)
+        handleNextStep()
+    }
 
-        await submitOrder(deliveryData, addressData, paymentData)
+    const handleFinalSubmit = async () => {
+        // Validate terms acceptance
+        if (!termsAccepted) {
+            setTermsError('Musisz zaakceptować Regulamin i Politykę Prywatności')
+            return
+        }
+
+        // Dla pickup wystarczą dane kontaktowe, dla delivery pełny adres
+        const customerData = deliveryData.type === 'pickup' ? contactData : addressData
+        if (!customerData) return
+
+        await submitOrder(deliveryData, customerData as AddressFormData, paymentData)
     }
 
     const renderStepContent = () => {
@@ -150,6 +179,20 @@ export default function CheckoutPage() {
                     />
                 )
             case 1:
+                // Dla pickup pokazujemy tylko ContactForm, dla delivery pełny AddressForm
+                if (deliveryData.type === 'pickup') {
+                    return (
+                        <ContactForm
+                            defaultValues={contactData || {
+                                firstName: addressData?.firstName || '',
+                                lastName: addressData?.lastName || '',
+                                email: addressData?.email || '',
+                                phone: addressData?.phone || '',
+                            }}
+                            onSubmit={handleContactSubmit}
+                        />
+                    )
+                }
                 return (
                     <AddressForm
                         defaultValues={addressData || undefined}
@@ -171,12 +214,20 @@ export default function CheckoutPage() {
                                     <span className="text-white/60">Dostawa:</span>
                                     <span className="text-white">{deliveryData.type === 'delivery' ? 'Kurier' : 'Odbiór osobisty'}</span>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="text-white/60">Adres:</span>
-                                    <span className="text-white text-right">
-                                        {addressData?.street} {addressData?.houseNumber}{addressData?.apartmentNumber ? `/${addressData.apartmentNumber}` : ''}, {addressData?.city}
-                                    </span>
-                                </div>
+                                {deliveryData.type === 'delivery' && addressData && (
+                                    <div className="flex justify-between">
+                                        <span className="text-white/60">Adres:</span>
+                                        <span className="text-white text-right">
+                                            {addressData.street} {addressData.houseNumber}{addressData.apartmentNumber ? `/${addressData.apartmentNumber}` : ''}, {addressData.city}
+                                        </span>
+                                    </div>
+                                )}
+                                {deliveryData.type === 'pickup' && (
+                                    <div className="flex justify-between">
+                                        <span className="text-white/60">Odbiór:</span>
+                                        <span className="text-white text-right">MESO Food, Gdańsk</span>
+                                    </div>
+                                )}
                                 <div className="flex justify-between font-bold pt-2 border-t border-white/5">
                                     <span className="text-white">Do zapłaty:</span>
                                     <span className="text-meso-red-500 text-lg">
@@ -184,6 +235,18 @@ export default function CheckoutPage() {
                                     </span>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Terms Acceptance */}
+                        <div className="pt-4">
+                            <TermsAcceptance
+                                accepted={termsAccepted}
+                                onChange={(accepted) => {
+                                    setTermsAccepted(accepted)
+                                    if (accepted) setTermsError(undefined)
+                                }}
+                                error={termsError}
+                            />
                         </div>
                     </div>
                 )

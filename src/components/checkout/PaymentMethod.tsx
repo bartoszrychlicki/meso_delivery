@@ -66,12 +66,19 @@ export function PaymentMethod({ value, onChange }: PaymentMethodProps) {
                 ))}
             </div>
 
-            <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm">
+            <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm space-y-2">
                 <p className="flex items-center gap-2">
-                    <Landmark className="w-4 h-4" />
-                    Bezpieczne płatności obsługiwane przez Przelewy24 (Mock)
+                    <Landmark className="w-4 h-4 flex-shrink-0" />
+                    <span>Bezpieczne płatności obsługiwane przez Przelewy24</span>
                 </p>
+                {value === 'card' && (
+                    <p className="text-xs text-blue-400/70 leading-relaxed">
+                        Operatorem kart płatniczych jest PayPro SA Agent Rozliczeniowy, ul. Pastelowa 8, 60-198 Poznań,
+                        KRS 0000347935, NIP 7792369887, REGON 301345068.
+                    </p>
+                )}
             </div>
         </div>
     )
 }
+

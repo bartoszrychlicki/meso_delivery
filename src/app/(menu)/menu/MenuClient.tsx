@@ -66,15 +66,15 @@ export function MenuClient({ categories, products, location }: MenuClientProps) 
   // Filter products by search query
   const filteredProducts = searchQuery
     ? products.filter((p) =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.description?.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
     : products
 
   return (
     <div className="relative flex min-h-screen w-full flex-col bg-meso-dark-900 overflow-x-hidden font-display">
       {/* Header */}
-      <header className="sticky top-0 z-10 flex items-center bg-meso-dark-900/80 backdrop-blur-sm p-4 pb-2 justify-between border-b border-meso-red-500/20">
+      <header className="sticky top-0 z-10 flex lg:hidden items-center bg-meso-dark-900/80 backdrop-blur-sm p-4 pb-2 justify-between border-b border-meso-red-500/20">
         <div className="flex w-12 items-center justify-start">
           <Link
             href="/"

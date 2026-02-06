@@ -121,8 +121,8 @@ export default function AccountPage() {
         {isPermanent ? (
           <Button
             onClick={() => signOut()}
-            variant="outline"
-            className="w-full h-12 border-white/10 text-white/70 hover:text-white hover:bg-white/5"
+            variant="ghost"
+            className="w-full h-12 text-meso-red-500 hover:text-meso-red-400 hover:bg-meso-red-500/10 border border-meso-red-500/20"
           >
             <LogOut className="w-5 h-5 mr-2" />
             Wyloguj się
@@ -148,7 +148,7 @@ export default function AccountPage() {
 
       {/* Version info */}
       <p className="text-center text-white/20 text-xs">
-        MESO App v1.0.0 • Faza 6 (Autentykacja)
+        MESO App v1.0.0 • Faza 9 (Profil i MESO Club)
       </p>
     </div>
   )

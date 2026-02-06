@@ -13,16 +13,22 @@ interface HeaderProps {
   cartItemCount?: number
   locationName?: string
   className?: string
+  hideOnMobile?: boolean
 }
 
-export function Header({ cartItemCount = 0, locationName = 'Gdańsk', className }: HeaderProps) {
+export function Header({
+  cartItemCount = 0,
+  locationName = 'Gdańsk',
+  className,
+  hideOnMobile = false
+}: HeaderProps) {
   const pathname = usePathname()
   const { isAnonymous, isPermanent, isLoading, signOut, user } = useAuth()
 
   const navLinks = [
+    { href: '/', label: 'Home' },
     { href: '/menu', label: 'Menu' },
-    { href: '/about', label: 'O nas' },
-    { href: '/contact', label: 'Kontakt' },
+    { href: '/orders', label: 'Zamówienia' },
   ]
 
   // Get user display name for permanent users
@@ -37,97 +43,94 @@ export function Header({ cartItemCount = 0, locationName = 'Gdańsk', className 
       className
     )}>
       {/* Mobile Header */}
-      <div className="lg:hidden flex items-center justify-between px-4 h-14">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="text-white/80 hover:text-white">
-              <Menu className="w-5 h-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="bg-meso-dark-900 border-meso-red-500/20 w-72">
-            <div className="flex flex-col gap-6 mt-8">
-              <MesoLogo size="lg" />
-              <nav className="flex flex-col gap-4">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={cn(
-                      'text-lg transition-colors',
-                      pathname === link.href
-                        ? 'text-meso-red-500'
-                        : 'text-white/70 hover:text-white'
-                    )}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </nav>
-              <div className="border-t border-meso-red-500/20 pt-4 space-y-3">
-                {isLoading ? (
-                  <div className="text-white/50">Ładowanie...</div>
-                ) : isPermanent ? (
-                  <>
+      {!hideOnMobile && (
+        <div className="lg:hidden flex items-center justify-between px-4 h-14">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-white/80 hover:text-white">
+                <Menu className="w-5 h-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="bg-meso-dark-900 border-meso-red-500/20 w-72">
+              <div className="flex flex-col gap-6 mt-8">
+                <MesoLogo size="lg" />
+                <nav className="flex flex-col gap-4">
+                  {navLinks.map((link) => (
                     <Link
-                      href="/account"
-                      className="flex items-center gap-2 text-white/70 hover:text-white"
+                      key={link.href}
+                      href={link.href}
+                      className={cn(
+                        'text-lg transition-colors',
+                        pathname === link.href
+                          ? 'text-meso-red-500'
+                          : 'text-white/70 hover:text-white'
+                      )}
                     >
-                      <User className="w-4 h-4" />
-                      {userDisplayName}
+                      {link.label}
                     </Link>
-                    <button
-                      onClick={() => signOut()}
-                      className="flex items-center gap-2 text-white/50 hover:text-white text-sm"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Wyloguj się
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      href="/account/upgrade"
-                      className="flex items-center gap-2 text-meso-gold-400 hover:text-meso-gold-300"
-                    >
-                      <UserPlus className="w-4 h-4" />
-                      Załóż konto
-                    </Link>
-                    <Link
-                      href="/login"
-                      className="flex items-center gap-2 text-white/70 hover:text-white text-sm"
-                    >
-                      <LogIn className="w-4 h-4" />
-                      Mam już konto
-                    </Link>
-                  </>
-                )}
+                  ))}
+                </nav>
+                <div className="border-t border-meso-red-500/20 pt-4 space-y-3">
+                  {isLoading ? (
+                    <div className="text-white/50">Ładowanie...</div>
+                  ) : isPermanent ? (
+                    <>
+                      <Link
+                        href="/account"
+                        className="flex items-center gap-2 text-white/70 hover:text-white"
+                      >
+                        <User className="w-4 h-4" />
+                        {userDisplayName}
+                      </Link>
+                      <button
+                        onClick={() => signOut()}
+                        className="flex items-center gap-2 text-white/50 hover:text-white text-sm"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Wyloguj się
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href="/account/upgrade"
+                        className="flex items-center gap-2 text-meso-gold-400 hover:text-meso-gold-300"
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        Załóż konto
+                      </Link>
+                      <Link
+                        href="/login"
+                        className="flex items-center gap-2 text-white/70 hover:text-white text-sm"
+                      >
+                        <LogIn className="w-4 h-4" />
+                        Mam już konto
+                      </Link>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-          </SheetContent>
-        </Sheet>
+            </SheetContent>
+          </Sheet>
 
-        <Link href="/" className="absolute left-1/2 -translate-x-1/2">
-          <MesoLogo size="md" />
-        </Link>
-
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" className="text-white/70 hover:text-white text-xs gap-1 px-2">
-            <MapPin className="w-3 h-3" />
-            <span className="max-w-16 truncate">{locationName}</span>
-          </Button>
-
-          <Link href="/cart">
-            <Button variant="ghost" size="icon" className="text-white/80 hover:text-white relative">
-              <ShoppingCart className="w-5 h-5" />
-              {cartItemCount > 0 && (
-                <span className="absolute top-0 right-0 w-4 h-4 bg-meso-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold shadow-[0_0_8px_rgba(244,37,175,0.6)]">
-                  {cartItemCount > 9 ? '9+' : cartItemCount}
-                </span>
-              )}
-            </Button>
+          <Link href="/" className="absolute left-1/2 -translate-x-1/2">
+            <MesoLogo size="md" />
           </Link>
+
+          <div className="flex items-center gap-2">
+            <Link href="/cart">
+              <Button variant="ghost" size="icon" className="text-white/80 hover:text-white relative">
+                <ShoppingCart className="w-5 h-5" />
+                {cartItemCount > 0 && (
+                  <span className="absolute top-0 right-0 w-4 h-4 bg-meso-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold shadow-[0_0_8px_rgba(244,37,175,0.6)]">
+                    {cartItemCount > 9 ? '9+' : cartItemCount}
+                  </span>
+                )}
+              </Button>
+            </Link>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Desktop Header */}
       <div className="hidden lg:flex items-center justify-between px-8 xl:px-12 h-16">
@@ -153,11 +156,6 @@ export function Header({ cartItemCount = 0, locationName = 'Gdańsk', className 
         </nav>
 
         <div className="flex items-center gap-4">
-          <Button variant="ghost" className="text-white/70 hover:text-white gap-2">
-            <MapPin className="w-4 h-4" />
-            <span>{locationName}</span>
-          </Button>
-
           <Link href="/cart">
             <Button variant="ghost" size="icon" className="text-white/80 hover:text-white relative">
               <ShoppingCart className="w-5 h-5" />

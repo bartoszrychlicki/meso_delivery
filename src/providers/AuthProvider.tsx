@@ -22,10 +22,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const supabase = createClient()
+  // Use state to ensure single instance across renders
+  const [supabase] = useState(() => createClient())
 
   // Determine if user is anonymous from JWT or user metadata
-  const isAnonymous = user?.is_anonymous ?? user?.app_metadata?.is_anonymous ?? true
+  // Check email existence as a fallback - if user has email, they are likely permanent
+  const isAnonymous = user?.is_anonymous ?? user?.app_metadata?.is_anonymous ?? (!user?.email)
   const isPermanent = !!user && !isAnonymous
   const isAuthenticated = !!user
 

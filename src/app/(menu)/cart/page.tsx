@@ -103,6 +103,14 @@ export default function CartPage() {
             {checkout.reason}
           </div>
         )}
+
+        {/* Legal info */}
+        <p className="text-center text-white/40 text-xs">
+          Składając zamówienie akceptujesz{' '}
+          <Link href="/regulamin" className="text-meso-red-500 hover:underline">Regulamin</Link>
+          {' '}oraz{' '}
+          <Link href="/polityka-prywatnosci" className="text-meso-red-500 hover:underline">Politykę Prywatności</Link>
+        </p>
       </main>
 
       {/* Fixed CTA Button */}
