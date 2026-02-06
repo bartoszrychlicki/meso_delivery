@@ -8,7 +8,7 @@ import { AnonymousBanner } from '@/components/auth'
 import { cn } from '@/lib/utils'
 
 const MENU_ITEMS = [
-  { icon: Package, label: 'Moje zamówienia', href: '/account/orders', requiresPermanent: false },
+  { icon: Package, label: 'Moje zamówienia', href: '/orders', requiresPermanent: false },
   { icon: MapPin, label: 'Adresy dostawy', href: '/account/addresses', requiresPermanent: false },
   { icon: Gift, label: 'MESO Club', href: '/account/club', requiresPermanent: true },
   { icon: Settings, label: 'Ustawienia', href: '/account/settings', requiresPermanent: true },
