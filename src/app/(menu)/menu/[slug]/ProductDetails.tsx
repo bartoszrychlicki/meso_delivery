@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { useCartStore, CartItemAddon } from '@/stores/cartStore'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { formatPrice } from '@/lib/formatters'
 import { ALLERGENS, type AllergenKey } from '@/types/menu'
 
 interface Variant {
@@ -85,12 +86,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
     return (basePrice + variantPrice + addonsPrice) * quantity
   }
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('pl-PL', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(price) + ' zł'
-  }
+
 
   const handleAddonToggle = (addon: Addon) => {
     setSelectedAddons((prev) =>

@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
+import { formatPrice } from '@/lib/formatters'
 import type { OrderItemWithProduct } from '@/types/order'
 
 interface OrderItemsListProps {
@@ -10,12 +11,7 @@ interface OrderItemsListProps {
 }
 
 export function OrderItemsList({ items, className }: OrderItemsListProps) {
-    const formatPrice = (price: number) => {
-        return new Intl.NumberFormat('pl-PL', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        }).format(price) + ' zł'
-    }
+
 
     const getSpiceEmoji = (level: number) => {
         return level === 1 ? '🔥' : level === 2 ? '🔥🔥' : '🔥🔥🔥'

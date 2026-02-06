@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { Minus, Plus, Trash2 } from 'lucide-react'
 import { CartItem as CartItemType, useCartStore } from '@/stores/cartStore'
 import { cn } from '@/lib/utils'
+import { formatPrice } from '@/lib/formatters'
 
 interface CartItemProps {
   item: CartItemType
@@ -13,12 +14,7 @@ export function CartItem({ item }: CartItemProps) {
   const updateQuantity = useCartStore((state) => state.updateQuantity)
   const removeItem = useCartStore((state) => state.removeItem)
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('pl-PL', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(price) + ' zł'
-  }
+
 
   const itemTotal = () => {
     const basePrice = item.price + (item.variantPrice || 0)

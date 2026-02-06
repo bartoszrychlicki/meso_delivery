@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { formatPrice } from '@/lib/formatters'
 import { formatOrderDateShort, type OrderWithItems } from '@/types/order'
 import { OrderStatusBadge } from './OrderStatusBadge'
 
@@ -16,12 +17,7 @@ export function OrderCard({ order, className }: OrderCardProps) {
     const itemNames = order.items?.slice(0, 2).map(item => item.product?.name || 'Produkt').join(', ')
     const hasMoreItems = (order.items?.length || 0) > 2
 
-    const formatPrice = (price: number) => {
-        return new Intl.NumberFormat('pl-PL', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        }).format(price) + ' zł'
-    }
+
 
     return (
         <Link

@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { formatPrice } from '@/lib/formatters'
 import { useCartStore } from '@/stores/cartStore'
 import { toast } from 'sonner'
 import { ProductDrawer } from './ProductDrawer'
@@ -70,12 +71,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
     }
   }
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('pl-PL', {
-      style: 'currency',
-      currency: 'PLN',
-    }).format(price)
-  }
+
 
   return (
     <>

@@ -5,6 +5,7 @@ import { ArrowLeft, MapPin, Phone, Clock, CreditCard, Truck, Store } from 'lucid
 import { useOrderDetails } from '@/hooks/useOrderDetails'
 import { OrderTimeline, OrderStatusBadge, OrderItemsList } from '@/components/orders'
 import { ORDER_STATUS_MESSAGES, formatOrderDate } from '@/types/order'
+import { formatPrice } from '@/lib/formatters'
 import { Button } from '@/components/ui/button'
 
 export default function OrderDetailsPage() {
@@ -13,12 +14,7 @@ export default function OrderDetailsPage() {
     const orderId = params.id as string
     const { order, loading, error } = useOrderDetails(orderId)
 
-    const formatPrice = (price: number) => {
-        return new Intl.NumberFormat('pl-PL', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        }).format(price) + ' zł'
-    }
+
 
     const paymentMethodLabels: Record<string, string> = {
         blik: 'BLIK',

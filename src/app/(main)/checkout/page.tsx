@@ -9,6 +9,7 @@ import { useCartStore } from '@/stores/cartStore'
 import { useAuth } from '@/hooks/useAuth'
 import { useCheckout } from '@/hooks/useCheckout'
 import { cn } from '@/lib/utils'
+import { formatPrice } from '@/lib/formatters'
 
 // Components
 import { CheckoutWizard } from '@/components/checkout/CheckoutWizard'
@@ -231,7 +232,7 @@ export default function CheckoutPage() {
                                 <div className="flex justify-between font-bold pt-2 border-t border-white/5">
                                     <span className="text-white">Do zapłaty:</span>
                                     <span className="text-meso-red-500 text-lg">
-                                        {new Intl.NumberFormat('pl-PL', { minimumFractionDigits: 2 }).format(getTotal())} zł
+                                        {formatPrice(getTotal())}
                                     </span>
                                 </div>
                             </div>

@@ -7,6 +7,7 @@ import { CartItem, CartSummary, PromoCodeInput, TipSelector } from '@/components
 import { EmptyState } from '@/components/common/EmptyState'
 import { AnonymousBanner } from '@/components/auth'
 import { cn } from '@/lib/utils'
+import { formatPrice } from '@/lib/formatters'
 
 export default function CartPage() {
   const items = useCartStore((state) => state.items)
@@ -19,12 +20,7 @@ export default function CartPage() {
 
   const checkout = canCheckout()
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('pl-PL', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(price) + ' zł'
-  }
+
 
   if (items.length === 0) {
     return (
@@ -36,7 +32,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen pb-32 bg-meso-dark-900">
+    <div className="min-h-screen pb-32 bg-meso-dark-900 overflow-x-hidden">
       {/* Header */}
       <header className="sticky top-0 z-10 flex items-center bg-meso-dark-900/80 backdrop-blur-sm p-4 pb-2 justify-between border-b border-meso-red-500/20">
         <div className="flex w-12 items-center justify-start">

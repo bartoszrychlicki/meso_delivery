@@ -2,6 +2,7 @@
 
 import { useCartStore } from '@/stores/cartStore'
 import { cn } from '@/lib/utils'
+import { formatPrice } from '@/lib/formatters'
 import { Truck, Tag } from 'lucide-react'
 
 export function CartSummary() {
@@ -13,12 +14,7 @@ export function CartSummary() {
   const promoCode = useCartStore((state) => state.promoCode)
   const promoDiscountType = useCartStore((state) => state.promoDiscountType)
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('pl-PL', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(price) + ' zł'
-  }
+
 
   const subtotal = getSubtotal()
   const deliveryFee = getDeliveryFee()
