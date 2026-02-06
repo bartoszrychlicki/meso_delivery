@@ -32,7 +32,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen pb-32 bg-meso-dark-900 overflow-x-hidden max-w-full w-full box-border">
+    <div className="min-h-screen pb-32 bg-meso-dark-900">
       {/* Header */}
       <header className="sticky top-0 z-10 flex items-center bg-meso-dark-900/80 backdrop-blur-sm p-4 pb-2 justify-between border-b border-meso-red-500/20">
         <div className="flex w-12 items-center justify-start">
@@ -60,7 +60,7 @@ export default function CartPage() {
       </header>
 
       {/* Cart Items */}
-      <main className="px-4 py-4 space-y-6 max-w-full overflow-hidden">
+      <main className="px-4 py-4 space-y-6">
         {/* Items count */}
         <div className="flex items-center gap-2">
           <span className="text-white font-semibold">{itemCount} {itemCount === 1 ? 'produkt' : itemCount < 5 ? 'produkty' : 'produktów'}</span>
@@ -110,7 +110,7 @@ export default function CartPage() {
       </main>
 
       {/* Fixed CTA Button */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-meso-dark-900 to-transparent p-4 pb-6 max-w-full box-border">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-meso-dark-900 to-transparent p-4 pb-6">
         <Link
           href={checkout.allowed ? '/checkout' : '#'}
           onClick={(e) => !checkout.allowed && e.preventDefault()}
