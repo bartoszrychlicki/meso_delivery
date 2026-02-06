@@ -35,7 +35,7 @@ export function AppLayout({
   const displayCartCount = mounted ? cartItemCount : 0
 
   return (
-    <div className={cn('min-h-screen bg-meso-dark-950 text-white flex flex-col', className)}>
+    <div className={cn('min-h-screen bg-meso-dark-950 text-white flex flex-col overflow-x-hidden', className)}>
       {!hideHeader && (
         <Header
           cartItemCount={displayCartCount}
