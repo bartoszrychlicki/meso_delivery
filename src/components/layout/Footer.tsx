@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { Instagram, Facebook } from 'lucide-react'
 
 export function Footer() {
     const currentYear = new Date().getFullYear()
@@ -40,6 +41,28 @@ export function Footer() {
                             <span className="text-[#d42027] font-bold text-xs">P24</span>
                         </div>
                     </div>
+                </div>
+
+                {/* Social Media */}
+                <div className="flex items-center justify-center gap-4 mb-6">
+                    <a
+                        href="https://www.instagram.com/mesogdansk/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:border-meso-purple hover:bg-meso-purple/10 transition-all"
+                        aria-label="Instagram"
+                    >
+                        <Instagram className="w-5 h-5" />
+                    </a>
+                    <a
+                        href="https://www.facebook.com/RamenGdansk/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:border-meso-purple hover:bg-meso-purple/10 transition-all"
+                        aria-label="Facebook"
+                    >
+                        <Facebook className="w-5 h-5" />
+                    </a>
                 </div>
 
                 {/* Legal Links */}
