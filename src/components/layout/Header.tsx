@@ -138,23 +138,6 @@ export function Header({
           <MesoLogo size="lg" />
         </Link>
 
-        <nav className="flex items-center gap-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                'text-sm font-medium transition-colors',
-                pathname === link.href
-                  ? 'text-meso-red-500'
-                  : 'text-white/70 hover:text-white'
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-
         <div className="flex items-center gap-4">
           <Link href="/cart">
             <Button variant="ghost" size="icon" className="text-white/80 hover:text-white relative">
