@@ -24,6 +24,10 @@ export const metadata: Metadata = {
   title: "MESO - Smart Asian Comfort",
   description: "Zamów japońskie comfort food z dostawą. Ramen, Gyoza, Karaage.",
   keywords: ["ramen", "japanese food", "delivery", "gdańsk", "gyoza", "karaage"],
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export const viewport: Viewport = {
