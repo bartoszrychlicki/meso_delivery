@@ -16,12 +16,15 @@ export function ContactForm({ defaultValues, onSubmit }: ContactFormProps) {
     const {
         register,
         handleSubmit,
-        formState: { errors },
+        formState: { errors, touchedFields, isSubmitted },
     } = useForm<ContactFormData>({
         resolver: zodResolver(contactSchema),
         defaultValues,
-        mode: 'onBlur',
+        mode: 'onTouched',
     })
+
+    const showError = (field: keyof ContactFormData) =>
+        errors[field] && (touchedFields[field] || isSubmitted)
 
     return (
         <form id="address-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -47,25 +50,25 @@ export function ContactForm({ defaultValues, onSubmit }: ContactFormProps) {
                     <div className="space-y-2">
                         <Label htmlFor="firstName">Imię</Label>
                         <Input id="firstName" {...register('firstName')} placeholder="Jan" className="bg-meso-dark-800 border-white/10" />
-                        {errors.firstName && <p className="text-red-400 text-sm">{errors.firstName.message}</p>}
+                        {showError('firstName') && <p className="text-red-400 text-sm">{errors.firstName?.message}</p>}
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="lastName">Nazwisko</Label>
                         <Input id="lastName" {...register('lastName')} placeholder="Kowalski" className="bg-meso-dark-800 border-white/10" />
-                        {errors.lastName && <p className="text-red-400 text-sm">{errors.lastName.message}</p>}
+                        {showError('lastName') && <p className="text-red-400 text-sm">{errors.lastName?.message}</p>}
                     </div>
                 </div>
 
                 <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <Input id="email" type="email" {...register('email')} placeholder="jan@example.com" className="bg-meso-dark-800 border-white/10" />
-                    {errors.email && <p className="text-red-400 text-sm">{errors.email.message}</p>}
+                    {showError('email') && <p className="text-red-400 text-sm">{errors.email?.message}</p>}
                 </div>
 
                 <div className="space-y-2">
                     <Label htmlFor="phone">Telefon</Label>
                     <Input id="phone" type="tel" {...register('phone')} placeholder="123456789" maxLength={9} className="bg-meso-dark-800 border-white/10" />
-                    {errors.phone && <p className="text-red-400 text-sm">{errors.phone.message}</p>}
+                    {showError('phone') && <p className="text-red-400 text-sm">{errors.phone?.message}</p>}
                 </div>
             </div>
         </form>

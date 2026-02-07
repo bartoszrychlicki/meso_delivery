@@ -6,13 +6,15 @@ import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { useCartStore } from '@/stores/cartStore'
 import { useAuth } from '@/hooks/useAuth'
+import { useOrderConfirmationStore } from '@/stores/orderConfirmationStore'
 import type { AddressFormData, DeliveryFormData, PaymentFormData } from '@/lib/validators/checkout'
 
 export function useCheckout() {
     const router = useRouter()
     const supabase = createClient()
     const { user } = useAuth()
-    const { items, getTotal, getSubtotal, getDeliveryFee, tip, promoDiscount, clearCart } = useCartStore()
+    const { items, getTotal, getSubtotal, getDeliveryFee, getDiscount, tip, promoDiscount, clearCart } = useCartStore()
+    const { setConfirmation } = useOrderConfirmationStore()
 
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -126,13 +128,36 @@ export function useCheckout() {
                 throw new Error('Błąd podczas aktualizacji statusu płatności')
             }
 
-            // 5. Success
-            toast.success('Zamówienie zostało złożone pomyślnie!')
+            // 5. Save confirmation data before clearing cart
+            const confirmationItems = [...items]
+            const confirmationData = {
+                orderId: order.id,
+                orderNumber: order.id.slice(-6).toUpperCase(),
+                items: confirmationItems,
+                deliveryType: deliveryData.type,
+                deliveryAddress: deliveryData.type === 'delivery' ? {
+                    street: addressData.street,
+                    houseNumber: addressData.houseNumber,
+                    apartmentNumber: addressData.apartmentNumber,
+                    city: addressData.city,
+                    firstName: addressData.firstName,
+                    lastName: addressData.lastName,
+                } : null,
+                subtotal,
+                deliveryFee: getDeliveryFee(),
+                discount: getDiscount(),
+                tip,
+                total,
+                paymentMethod: paymentData.method,
+                estimatedTime: deliveryData.type === 'delivery' ? '30-45 min' : '15-20 min',
+                createdAt: new Date().toISOString(),
+            }
+
+            setConfirmation(confirmationData)
             clearCart()
 
-            // Redirect to order details (or thank you page)
-            // Since we don't have order details page yet in implementation plan, redirecting to menu or account
-            router.push('/menu') // Temporary
+            toast.success('Zamówienie zostało złożone pomyślnie!')
+            router.push('/order-confirmation')
 
         } catch (err) {
             const message = err instanceof Error ? err.message : 'Wystąpił nieoczekiwany błąd'

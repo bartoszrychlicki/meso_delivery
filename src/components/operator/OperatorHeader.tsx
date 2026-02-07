@@ -1,12 +1,15 @@
 'use client'
 
+import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Clock, ChefHat, UtensilsCrossed, LayoutDashboard } from 'lucide-react'
+import { Clock, ChefHat, UtensilsCrossed, LayoutDashboard, LogOut, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useOperatorAuthStore } from '@/stores/operatorAuthStore'
 
 export function OperatorHeader() {
     const pathname = usePathname()
+    const { logout } = useOperatorAuthStore()
 
     return (
         <header className="sticky top-0 z-50 bg-meso-dark-900 border-b border-white/5">
@@ -23,8 +26,19 @@ export function OperatorHeader() {
                         </div>
                     </Link>
 
-                    {/* Current Time */}
-                    <CurrentTime />
+                    <div className="flex items-center gap-4">
+                        {/* Current Time */}
+                        <CurrentTime />
+
+                        {/* Logout Button */}
+                        <button
+                            onClick={logout}
+                            className="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                            title="Wyloguj"
+                        >
+                            <LogOut className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Navigation */}
@@ -36,6 +50,10 @@ export function OperatorHeader() {
                     <NavLink href="/operator/stats" active={pathname === '/operator/stats'}>
                         <UtensilsCrossed className="w-4 h-4" />
                         Statystyki
+                    </NavLink>
+                    <NavLink href="/operator/settings" active={pathname === '/operator/settings'}>
+                        <Settings className="w-4 h-4" />
+                        Ustawienia
                     </NavLink>
                 </nav>
             </div>
@@ -60,7 +78,6 @@ function NavLink({ href, active, children }: { href: string; active: boolean; ch
 }
 
 function CurrentTime() {
-    // Use React state for client-side time
     const [time, setTime] = React.useState<string>('')
 
     React.useEffect(() => {
@@ -84,6 +101,3 @@ function CurrentTime() {
         </div>
     )
 }
-
-// Need to import React for the hooks
-import React from 'react'
