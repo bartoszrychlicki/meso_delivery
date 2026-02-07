@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
+import { MesoLogo } from '@/components/brand/MesoLogo'
 
 const loginSchema = z.object({
   email: z.string().email('Nieprawidłowy adres email'),
@@ -93,8 +94,8 @@ function LoginForm() {
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center">
-        <div className="w-14 h-14 rounded-full bg-meso-red-500/20 flex items-center justify-center mx-auto mb-4">
-          <LogIn className="w-7 h-7 text-meso-red-500" />
+        <div className="mb-4">
+          <MesoLogo size="xl" />
         </div>
         <h1 className="text-2xl font-bold text-white mb-2">
           Zaloguj się

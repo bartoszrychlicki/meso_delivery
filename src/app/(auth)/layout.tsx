@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { MesoLogo } from '@/components/brand/MesoLogo'
 import { ArrowLeft } from 'lucide-react'
 
 export default function AuthLayout({
@@ -10,18 +9,14 @@ export default function AuthLayout({
   return (
     <div className="min-h-screen bg-meso-dark-950 flex flex-col">
       {/* Header */}
-      <header className="p-4 flex items-center justify-between">
+      <header className="p-4">
         <Link
           href="/menu"
-          className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
+          className="flex items-center gap-2 text-white/60 hover:text-white transition-colors w-fit"
         >
           <ArrowLeft className="w-5 h-5" />
           <span className="text-sm">Powrót do menu</span>
         </Link>
-        <Link href="/">
-          <MesoLogo size="md" />
-        </Link>
-        <div className="w-24" /> {/* Spacer for centering */}
       </header>
 
       {/* Content */}
