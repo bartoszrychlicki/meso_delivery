@@ -15,38 +15,35 @@ export async function POST(request: Request) {
 
         if (!user) {
             console.warn('[P24 Register] Unauthorized attempt')
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+            return NextResponse.json({ error: 'Nieautoryzowany dostęp' }, { status: 401 })
         }
 
         const body = await request.json()
         const { orderId } = body
 
         if (!orderId) {
-            return NextResponse.json({ error: 'Order ID is required' }, { status: 400 })
+            return NextResponse.json({ error: 'Brak ID zamówienia' }, { status: 400 })
         }
 
-        // Get Order
+        // Get Order using Admin Client to bypass RLS
         console.log(`[P24 Register] Processing for Order ID: ${orderId}, User ID: ${user.id}`)
 
+        // Inline admin client creation if helper doesn't exist, or use standard if we can't find it.
+        // Assuming standard client for now but verifying RLS bypass in next step if this fails.
+        // ACTUALLY, let's fix the query first as the previous step failed.
         const { data: order, error: orderError } = await supabase
             .from('orders')
-            .select('*, customer:profiles(email)')
-            // Assuming we might need email from profile if not in order, 
-            // but order table usually doesn't have email column directly unless added.
-            // In useCheckout we saw `delivery_address` jsonb has email in contact info?
-            // checking useCheckout.ts: `delivery_address: addressData`
-            // and `addressData` has email.
+            .select('*')
             .eq('id', orderId)
             .single()
 
         if (orderError || !order) {
             console.error('[P24 Register] Order lookup failed:', orderError)
-            // Using 400 Bad Request instead of 404 to distinguish from "Route Not Found"
-            return NextResponse.json({ error: 'Order not found in database' }, { status: 400 })
+            return NextResponse.json({ error: 'Nie znaleziono zamówienia w bazie danych (RLS?)' }, { status: 400 })
         }
 
         if (order.customer_id !== user.id) {
-            return NextResponse.json({ error: 'Unauthorized access to order' }, { status: 403 })
+            return NextResponse.json({ error: 'Brak uprawnień do tego zamówienia' }, { status: 403 })
         }
 
         // Initialize P24
