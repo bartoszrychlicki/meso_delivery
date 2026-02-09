@@ -59,8 +59,8 @@ export class P24 {
 
     constructor(config: P24Config) {
         this.config = config
-        this.baseUrl = config.mode === 'production' 
-            ? 'https://secure.przelewy24.pl' 
+        this.baseUrl = config.mode === 'production'
+            ? 'https://secure.przelewy24.pl'
             : 'https://sandbox.przelewy24.pl'
     }
 
@@ -68,7 +68,7 @@ export class P24 {
         const data = `{"sessionId":"${sessionId}","merchantId":${this.config.merchantId},"amount":${amount},"currency":"${currency}","crc":"${crcKey}"}`
         return crypto.createHash('sha384').update(data).digest('hex')
     }
-    
+
     // For verifying notification signature
     public verifySign(notification: P24Notification): boolean {
         const { sessionId, amount, originAmount, currency, orderId, methodId, statement, sign } = notification
@@ -89,7 +89,7 @@ export class P24 {
         client?: string
     ): Promise<string> {
         const sign = this.calculateSign(sessionId, amount, 'PLN', this.config.crcKey)
-        
+
         const payload: P24TransactionRequest = {
             merchantId: this.config.merchantId,
             posId: this.config.posId,
@@ -103,6 +103,8 @@ export class P24 {
             urlStatus,
             sign,
             encoding: 'UTF-8',
+            country: 'PL',
+            language: 'pl',
         }
 
         try {
@@ -116,12 +118,12 @@ export class P24 {
             })
 
             const data = await response.json()
-            
+
             if (response.ok && data.data?.token) {
                 return data.data.token
             } else {
-                 console.error('P24 Registration Error:', data)
-                 throw new Error(data.error || 'Failed to register transaction')
+                console.error('P24 Registration Error:', data)
+                throw new Error(data.error || 'Failed to register transaction')
             }
         } catch (error) {
             console.error('P24 API Error:', error)
@@ -150,12 +152,12 @@ export class P24 {
         }
 
         // To be compliant with P24 REST, we call PUT /api/v1/transaction/verify
-         const sign = crypto.createHash('sha384').update(
+        const sign = crypto.createHash('sha384').update(
             `{"sessionId":"${notification.sessionId}","orderId":${notification.orderId},"amount":${notification.amount},"currency":"${notification.currency}","crc":"${this.config.crcKey}"}`
         ).digest('hex')
 
         try {
-             const response = await fetch(`${this.baseUrl}/api/v1/transaction/verify`, {
+            const response = await fetch(`${this.baseUrl}/api/v1/transaction/verify`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -171,17 +173,17 @@ export class P24 {
                     sign
                 })
             })
-            
+
             const data = await response.json()
             if (response.ok && data.data?.status === 'success') {
                 return true;
             }
-             console.error('P24 Verification Failed:', data)
+            console.error('P24 Verification Failed:', data)
             return false;
 
         } catch (error) {
-             console.error('P24 Verify API Error:', error)
-             return false
+            console.error('P24 Verify API Error:', error)
+            return false
         }
     }
 
