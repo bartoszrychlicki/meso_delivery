@@ -14,6 +14,7 @@ export async function POST(request: Request) {
         const { data: { user } } = await supabase.auth.getUser()
 
         if (!user) {
+            console.warn('[P24 Register] Unauthorized attempt')
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
@@ -25,6 +26,8 @@ export async function POST(request: Request) {
         }
 
         // Get Order
+        console.log(`[P24 Register] Processing for Order ID: ${orderId}, User ID: ${user.id}`)
+
         const { data: order, error: orderError } = await supabase
             .from('orders')
             .select('*, customer:profiles(email)')
@@ -37,7 +40,9 @@ export async function POST(request: Request) {
             .single()
 
         if (orderError || !order) {
-            return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+            console.error('[P24 Register] Order lookup failed:', orderError)
+            // Using 400 Bad Request instead of 404 to distinguish from "Route Not Found"
+            return NextResponse.json({ error: 'Order not found in database' }, { status: 400 })
         }
 
         if (order.customer_id !== user.id) {
