@@ -1,21 +1,129 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { CheckCircle2, Clock, MapPin, Store, ArrowLeft } from 'lucide-react'
+import { CheckCircle2, Clock, MapPin, Store, ArrowLeft, Loader2, XCircle } from 'lucide-react'
 import { useOrderConfirmationStore } from '@/stores/orderConfirmationStore'
 import { formatPriceExact } from '@/lib/formatters'
+import { createClient } from '@/lib/supabase/client'
+import { toast } from 'sonner'
+import type { OrderConfirmation } from '@/stores/orderConfirmationStore'
 
-export default function OrderConfirmationPage() {
+function OrderConfirmationContent() {
     const router = useRouter()
-    const { confirmation, clearConfirmation } = useOrderConfirmationStore()
+    const searchParams = useSearchParams()
+    const { confirmation, setConfirmation, clearConfirmation } = useOrderConfirmationStore()
+    const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+
+    const orderId = searchParams.get('orderId')
+    const status = searchParams.get('status')
 
     useEffect(() => {
-        if (!confirmation) {
-            router.replace('/menu')
+        // If we have an orderId in URL but no confirmation data, fetch it
+        const fetchOrder = async () => {
+            if (orderId && !confirmation) {
+                setIsLoading(true)
+                try {
+                    const supabase = createClient()
+
+                    // Fetch order with items
+                    const { data: order, error: orderError } = await supabase
+                        .from('orders')
+                        .select(`
+                            *,
+                            items:order_items(
+                                *,
+                                product:products(*)
+                            )
+                        `)
+                        .eq('id', orderId)
+                        .single()
+
+                    if (orderError || !order) {
+                        throw new Error('Nie znaleziono zamówienia')
+                    }
+
+                    // Transform to confirmation format
+                    const deliveryAddress = order.delivery_address as any
+
+                    const confirmationData: OrderConfirmation = {
+                        orderId: order.id.toString(),
+                        orderNumber: order.id.toString().slice(-6).toUpperCase(),
+                        items: order.items.map((item: any) => ({
+                            id: item.id,
+                            productId: item.product_id,
+                            name: item.product?.name || item.custom_name || 'Produkt',
+                            price: item.unit_price, // simplified
+                            variantPrice: 0,
+                            image: item.product?.image_url,
+                            quantity: item.quantity,
+                            spiceLevel: item.spice_level,
+                            variantId: item.variant_id,
+                            variantName: item.variant_name,
+                            addons: item.addons || [],
+                            notes: item.notes
+                        })),
+                        deliveryType: order.delivery_type,
+                        deliveryAddress: order.delivery_type === 'delivery' ? {
+                            street: deliveryAddress?.street,
+                            houseNumber: deliveryAddress?.houseNumber,
+                            apartmentNumber: deliveryAddress?.apartmentNumber,
+                            city: deliveryAddress?.city,
+                            firstName: deliveryAddress?.firstName,
+                            lastName: deliveryAddress?.lastName,
+                        } : null,
+                        subtotal: order.subtotal,
+                        deliveryFee: order.delivery_fee,
+                        discount: order.promo_discount || 0,
+                        tip: order.tip || 0,
+                        total: order.total,
+                        paymentMethod: order.payment_method,
+                        estimatedTime: order.delivery_type === 'delivery' ? '30-45 min' : '15-20 min',
+                        createdAt: order.created_at,
+                    }
+
+                    setConfirmation(confirmationData)
+                } catch (err) {
+                    console.error('Error fetching order:', err)
+                    setError('Nie udało się pobrać szczegółów zamówienia')
+                    toast.error('Nie udało się pobrać szczegółów zamówienia')
+                } finally {
+                    setIsLoading(false)
+                }
+            } else if (!confirmation && !orderId) {
+                // No confirmation data and no order params -> redirect to menu
+                router.replace('/menu')
+            }
         }
-    }, [confirmation, router])
+
+        fetchOrder()
+    }, [orderId, confirmation, router, setConfirmation])
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-meso-dark-950">
+                <Loader2 className="w-8 h-8 text-meso-red-500 animate-spin" />
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-meso-dark-950 p-4 text-center">
+                <XCircle className="w-12 h-12 text-red-500 mb-4" />
+                <h1 className="text-xl font-bold text-white mb-2">Wystąpił błąd</h1>
+                <p className="text-white/60 mb-6">{error}</p>
+                <Link
+                    href="/menu"
+                    className="bg-meso-red-500 text-white px-6 py-3 rounded-xl font-medium"
+                >
+                    Wróć do menu
+                </Link>
+            </div>
+        )
+    }
 
     if (!confirmation) {
         return null
@@ -34,7 +142,7 @@ export default function OrderConfirmationPage() {
                     <CheckCircle2 className="w-8 h-8 text-white" />
                 </div>
                 <h1 className="text-2xl font-bold text-white mb-1">
-                    Zamówienie przyjęte!
+                    {status === 'success' || confirmation ? 'Zamówienie przyjęte!' : 'Status nieznany'}
                 </h1>
                 <p className="text-white/60">
                     Numer zamówienia
@@ -89,10 +197,13 @@ export default function OrderConfirmationPage() {
                 <div className="bg-meso-dark-800 rounded-xl p-4 border border-white/5">
                     <h3 className="text-white font-medium mb-3">Twoje zamówienie</h3>
                     <div className="space-y-3">
-                        {confirmation.items.map((item) => {
-                            const itemTotal = (item.price + (item.variantPrice || 0) + item.addons.reduce((s, a) => s + a.price, 0)) * item.quantity
+                        {confirmation.items.map((item, idx) => {
+                            // Calculate item total properly
+                            // If coming from DB, price might be total unit price?
+                            // Let's rely on stored price in item
+                            const itemTotal = (item.price + (item.variantPrice || 0) + (item.addons?.reduce((s, a) => s + a.price, 0) || 0)) * item.quantity
                             return (
-                                <div key={item.id} className="flex justify-between items-start">
+                                <div key={item.id || idx} className="flex justify-between items-start">
                                     <div className="flex-1">
                                         <p className="text-white text-sm">
                                             <span className="text-white/50">{item.quantity}x</span>{' '}
@@ -106,7 +217,7 @@ export default function OrderConfirmationPage() {
                                                 {'🔥'.repeat(item.spiceLevel)}
                                             </p>
                                         )}
-                                        {item.addons.length > 0 && (
+                                        {item.addons && item.addons.length > 0 && (
                                             <p className="text-white/40 text-xs">
                                                 + {item.addons.map(a => a.name).join(', ')}
                                             </p>
@@ -163,5 +274,17 @@ export default function OrderConfirmationPage() {
                 </button>
             </div>
         </div>
+    )
+}
+
+export default function OrderConfirmationPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-meso-dark-950">
+                <Loader2 className="w-8 h-8 text-meso-red-500 animate-spin" />
+            </div>
+        }>
+            <OrderConfirmationContent />
+        </Suspense>
     )
 }

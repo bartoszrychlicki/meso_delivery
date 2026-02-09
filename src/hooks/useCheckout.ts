@@ -109,55 +109,25 @@ export function useCheckout() {
                 throw new Error('Błąd podczas dodawania produktów do zamówienia')
             }
 
-            // 4. Mock Payment Success
-            // In real app, we would redirect to P24 or Stripe here.
-            // For MVP, we update status to 'paid' and 'confirmed'
+            // 4. Register Payment with P24
+            const response = await fetch('/api/payments/p24/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId: order.id }),
+            })
 
-            const { error: updateError } = await supabase
-                .from('orders')
-                .update({
-                    status: 'confirmed',
-                    payment_status: 'paid',
-                    paid_at: new Date().toISOString(),
-                    confirmed_at: new Date().toISOString(),
-                })
-                .eq('id', order.id)
+            const data = await response.json()
 
-            if (updateError) {
-                console.error('Payment update error:', updateError)
-                throw new Error('Błąd podczas aktualizacji statusu płatności')
+            if (!response.ok) {
+                throw new Error(data.error || 'Błąd podczas rejestracji płatności')
             }
 
-            // 5. Save confirmation data before clearing cart
-            const confirmationItems = [...items]
-            const confirmationData = {
-                orderId: order.id,
-                orderNumber: order.id.slice(-6).toUpperCase(),
-                items: confirmationItems,
-                deliveryType: deliveryData.type,
-                deliveryAddress: deliveryData.type === 'delivery' ? {
-                    street: addressData.street,
-                    houseNumber: addressData.houseNumber,
-                    apartmentNumber: addressData.apartmentNumber,
-                    city: addressData.city,
-                    firstName: addressData.firstName,
-                    lastName: addressData.lastName,
-                } : null,
-                subtotal,
-                deliveryFee: getDeliveryFee(),
-                discount: getDiscount(),
-                tip,
-                total,
-                paymentMethod: paymentData.method,
-                estimatedTime: deliveryData.type === 'delivery' ? '30-45 min' : '15-20 min',
-                createdAt: new Date().toISOString(),
+            if (data.url) {
+                // Redirect to P24
+                window.location.href = data.url
+            } else {
+                throw new Error('Nie otrzymano linku do płatności')
             }
-
-            setConfirmation(confirmationData)
-            clearCart()
-
-            toast.success('Zamówienie zostało złożone pomyślnie!')
-            router.push('/order-confirmation')
 
         } catch (err) {
             const message = err instanceof Error ? err.message : 'Wystąpił nieoczekiwany błąd'
