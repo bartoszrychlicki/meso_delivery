@@ -46,13 +46,28 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Brak uprawnień do tego zamówienia' }, { status: 403 })
         }
 
+        if (order.customer_id !== user.id) {
+            return NextResponse.json({ error: 'Brak uprawnień do tego zamówienia' }, { status: 403 })
+        }
+
         // Initialize P24
+        const merchantId = parseInt(process.env.P24_MERCHANT_ID || '0')
+        const posId = parseInt(process.env.P24_POS_ID || process.env.P24_MERCHANT_ID || '0')
+        const crcKey = process.env.P24_CRC_KEY || ''
+        const apiKey = process.env.P24_API_KEY || ''
+        const mode = (process.env.P24_MODE as 'sandbox' | 'production') || 'sandbox'
+
+        console.log(`[P24 Config] URL: ${process.env.NEXT_PUBLIC_APP_URL}, Mode: ${mode}`)
+        console.log(`[P24 Config] Merchant: ${merchantId}, POS: ${posId}`)
+        console.log(`[P24 Config] API Key (exists): ${!!apiKey}, CRC (exists): ${!!crcKey}`)
+        // Do NOT log full keys for security, just presence or partial
+
         const p24 = new P24({
-            merchantId: parseInt(process.env.P24_MERCHANT_ID || '0'),
-            posId: parseInt(process.env.P24_POS_ID || process.env.P24_MERCHANT_ID || '0'),
-            crcKey: process.env.P24_CRC_KEY || '',
-            apiKey: process.env.P24_API_KEY || '',
-            mode: (process.env.P24_MODE as 'sandbox' | 'production') || 'sandbox',
+            merchantId,
+            posId,
+            crcKey,
+            apiKey,
+            mode,
         })
 
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
