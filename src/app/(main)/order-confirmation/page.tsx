@@ -22,99 +22,125 @@ function OrderConfirmationContent() {
     const status = searchParams.get('status')
 
     useEffect(() => {
-        // If we have an orderId in URL but no confirmation data, fetch it
+        let pollInterval: NodeJS.Timeout
+
         const fetchOrder = async () => {
-            if (orderId && !confirmation) {
-                setIsLoading(true)
-                try {
-                    const supabase = createClient()
+            // We fetch if we have orderId. 
+            // If we already have confirmation but it's pending, we ALSO fetch to update status.
+            if (!orderId) {
+                if (!confirmation) router.replace('/menu')
+                return
+            }
 
-                    // Fetch order with items
-                    const { data: order, error: orderError } = await supabase
-                        .from('orders')
-                        .select(`
+            try {
+                // Determine if we need to show loading (only if no data yet)
+                if (!confirmation) setIsLoading(true)
+
+                const supabase = createClient()
+
+                const { data: order, error: orderError } = await supabase
+                    .from('orders')
+                    .select(`
+                        *,
+                        items:order_items(
                             *,
-                            items:order_items(
-                                *,
-                                product:products(*)
-                            )
-                        `)
-                        .eq('id', orderId)
-                        .single()
+                            product:products(*)
+                        )
+                    `)
+                    .eq('id', orderId)
+                    .single()
 
-                    if (orderError || !order) {
-                        throw new Error('Nie znaleziono zamówienia')
-                    }
-
-                    // Transform to confirmation format
-                    const deliveryAddress = order.delivery_address as any
-
-                    const confirmationData: OrderConfirmation = {
-                        orderId: order.id.toString(),
-                        orderNumber: order.id.toString().slice(-6).toUpperCase(),
-                        items: order.items.map((item: any) => ({
-                            id: item.id,
-                            productId: item.product_id,
-                            name: item.product?.name || item.custom_name || 'Produkt',
-                            price: item.unit_price, // simplified
-                            variantPrice: 0,
-                            image: item.product?.image_url,
-                            quantity: item.quantity,
-                            spiceLevel: item.spice_level,
-                            variantId: item.variant_id,
-                            variantName: item.variant_name,
-                            addons: item.addons || [],
-                            notes: item.notes
-                        })),
-                        deliveryType: order.delivery_type,
-                        deliveryAddress: order.delivery_type === 'delivery' ? {
-                            street: deliveryAddress?.street,
-                            houseNumber: deliveryAddress?.houseNumber,
-                            apartmentNumber: deliveryAddress?.apartmentNumber,
-                            city: deliveryAddress?.city,
-                            firstName: deliveryAddress?.firstName,
-                            lastName: deliveryAddress?.lastName,
-                        } : null,
-                        subtotal: order.subtotal,
-                        deliveryFee: order.delivery_fee,
-                        discount: order.promo_discount || 0,
-                        tip: order.tip || 0,
-                        total: order.total,
-                        paymentMethod: order.payment_method,
-                        estimatedTime: order.delivery_type === 'delivery' ? '30-45 min' : '15-20 min',
-                        createdAt: order.created_at,
-                    }
-
-                    setConfirmation(confirmationData)
-                } catch (err) {
-                    console.error('Error fetching order:', err)
-                    setError('Nie udało się pobrać szczegółów zamówienia')
-                    toast.error('Nie udało się pobrać szczegółów zamówienia')
-                } finally {
-                    setIsLoading(false)
+                if (orderError || !order) {
+                    throw new Error('Nie znaleziono zamówienia')
                 }
-            } else if (!confirmation && !orderId) {
-                // No confirmation data and no order params -> redirect to menu
-                router.replace('/menu')
+
+                const deliveryAddress = order.delivery_address as any
+
+                const confirmationData: OrderConfirmation = {
+                    orderId: order.id.toString(),
+                    orderNumber: order.id.toString().slice(-6).toUpperCase(),
+                    items: order.items.map((item: any) => ({
+                        id: item.id,
+                        productId: item.product_id,
+                        name: item.product?.name || item.custom_name || 'Produkt',
+                        price: item.unit_price,
+                        variantPrice: 0,
+                        image: item.product?.image_url,
+                        quantity: item.quantity,
+                        spiceLevel: item.spice_level,
+                        variantId: item.variant_id,
+                        variantName: item.variant_name,
+                        addons: item.addons || [],
+                        notes: item.notes
+                    })),
+                    deliveryType: order.delivery_type,
+                    deliveryAddress: order.delivery_type === 'delivery' ? {
+                        street: deliveryAddress?.street,
+                        houseNumber: deliveryAddress?.houseNumber,
+                        apartmentNumber: deliveryAddress?.apartmentNumber,
+                        city: deliveryAddress?.city,
+                        firstName: deliveryAddress?.firstName,
+                        lastName: deliveryAddress?.lastName,
+                    } : null,
+                    subtotal: order.subtotal,
+                    deliveryFee: order.delivery_fee,
+                    discount: order.promo_discount || 0,
+                    tip: order.tip || 0,
+                    total: order.total,
+                    paymentMethod: order.payment_method,
+                    paymentStatus: order.payment_status, // Map from DB
+                    estimatedTime: order.delivery_type === 'delivery' ? '30-45 min' : '15-20 min',
+                    createdAt: order.created_at,
+                }
+
+                setConfirmation(confirmationData)
+
+                // If pending, poll again
+                if (order.payment_status === 'pending' && order.payment_method === 'p24') {
+                    // Poll every 3 seconds
+                    // We handle interval outside to avoid overlaps?
+                    // actually simple recursion or interval in useEffect is fine.
+                }
+
+            } catch (err) {
+                console.error('Error fetching order:', err)
+                setError('Nie udało się pobrać szczegółów zamówienia')
+                toast.error('Nie udało się pobrać szczegółów zamówienia')
+            } finally {
+                setIsLoading(false)
             }
         }
 
         fetchOrder()
-    }, [orderId, confirmation, router, setConfirmation])
+
+        // Set up polling if needed
+        pollInterval = setInterval(() => {
+            // access current confirmation state? Ref might be better or just simpler logic:
+            // logic: if orderId exists, fetch. The fetch function handles updating store.
+            // optimization: only fetch if specifically needed.
+            // For simplicity: just fetch every 5s if we are on this page with orderId.
+            // The user stays here waiting for payment.
+            fetchOrder()
+        }, 5000)
+
+        return () => clearInterval(pollInterval)
+    }, [orderId, router, setConfirmation])
 
     const { clearCart } = useCartStore()
 
     // Separate effect for clearing cart on success status
     useEffect(() => {
-        if (status === 'success' && orderId) {
+        // If payment is confirmed (paid), clear cart
+        if (confirmation?.paymentStatus === 'paid') {
             clearCart()
         }
-    }, [status, orderId, clearCart])
+    }, [confirmation?.paymentStatus, clearCart])
 
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-meso-dark-950">
                 <Loader2 className="w-8 h-8 text-meso-red-500 animate-spin" />
+                <p className="ml-3 text-white/60">Ładowanie zamówienia...</p>
             </div>
         )
     }
@@ -139,6 +165,37 @@ function OrderConfirmationContent() {
         return null
     }
 
+    const { paymentStatus } = confirmation
+    const isPending = paymentStatus === 'pending'
+    const isFailed = paymentStatus === 'failed' || paymentStatus === 'cancelled' || status === 'error' // Callback might set status=error query param
+
+    if (isFailed) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-meso-dark-950 p-4 text-center">
+                <XCircle className="w-16 h-16 text-red-500 mb-6" />
+                <h1 className="text-2xl font-bold text-white mb-2">Płatność nie powiodła się</h1>
+                <p className="text-white/60 mb-8 max-w-md">
+                    Twoja płatność została anulowana lub wystąpił błąd.
+                    Spróbuj ponownie złożyć zamówienie.
+                </p>
+                <div className="flex gap-4">
+                    <Link
+                        href="/menu"
+                        className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-medium transition-colors"
+                    >
+                        Wróć do menu
+                    </Link>
+                    <Link
+                        href="/checkout"
+                        className="bg-meso-red-500 hover:bg-meso-red-600 text-white px-6 py-3 rounded-xl font-medium transition-colors"
+                    >
+                        Spróbuj ponownie
+                    </Link>
+                </div>
+            </div>
+        )
+    }
+
     const handleBackToMenu = () => {
         clearConfirmation()
         router.push('/menu')
@@ -148,15 +205,23 @@ function OrderConfirmationContent() {
         <div className="flex flex-col min-h-screen pb-24">
             {/* Success Header */}
             <div className="bg-gradient-to-b from-green-500/20 to-transparent px-4 pt-8 pb-6 text-center">
-                <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <CheckCircle2 className="w-8 h-8 text-white" />
-                </div>
+                {isPending ? (
+                    <div className="w-16 h-16 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                        <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+                    </div>
+                ) : (
+                    <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <CheckCircle2 className="w-8 h-8 text-white" />
+                    </div>
+                )}
+
                 <h1 className="text-2xl font-bold text-white mb-1">
-                    {status === 'success' || confirmation ? 'Zamówienie przyjęte!' : 'Status nieznany'}
+                    {isPending ? 'Oczekiwanie na płatność...' : 'Zamówienie przyjęte!'}
                 </h1>
                 <p className="text-white/60">
-                    Numer zamówienia
+                    {isPending ? 'Trwa weryfikacja płatności' : 'Numer zamówienia'}
                 </p>
+
                 <p className="text-meso-gold-500 font-mono text-lg font-bold mt-1">
                     #{confirmation.orderNumber}
                 </p>

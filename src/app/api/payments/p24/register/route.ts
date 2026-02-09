@@ -103,7 +103,7 @@ export async function POST(request: Request) {
             amount,
             description,
             email,
-            `${appUrl}/order-confirmation?orderId=${order.id}&status=success`, // urlReturn
+            `${appUrl}/order-confirmation?orderId=${order.id}`, // urlReturn
             `${appUrl}/api/payments/p24/status`, // urlStatus
         )
 

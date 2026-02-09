@@ -20,6 +20,7 @@ export interface OrderConfirmation {
   tip: number
   total: number
   paymentMethod: string
+  paymentStatus: string
   estimatedTime: string
   createdAt: string
 }
