@@ -288,48 +288,50 @@ export default function CheckoutPage() {
             </main>
 
             {/* Footer Actions */}
-            <div className="fixed bottom-0 left-0 right-0 z-20 bg-meso-dark-900 border-t border-white/5 p-4 pb-8">
-                {currentStep === 1 ? (
-                    <button
-                        type="submit"
-                        form="address-form"
-                        className="w-full bg-meso-red-500 hover:bg-meso-red-600 text-white font-bold h-14 rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.3)] flex items-center justify-center gap-2"
-                    >
-                        Dalej
-                    </button>
-                ) : currentStep === 2 ? (
-                    <button
-                        onClick={handleFinalSubmit}
-                        disabled={isSubmitting}
-                        className="w-full bg-meso-gold-500 hover:bg-meso-gold-400 text-black font-bold h-14 rounded-xl shadow-[0_0_20px_rgba(234,179,8,0.3)] flex items-center justify-center gap-2"
-                    >
-                        {isSubmitting ? (
-                            <>
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                                Przetwarzanie...
-                            </>
-                        ) : (
-                            <>
-                                <ShieldCheck className="w-5 h-5" />
-                                Zamawiam i płacę
-                            </>
-                        )}
-                    </button>
-                ) : (
-                    <button
-                        onClick={handleNextStep}
-                        className="w-full bg-meso-red-500 hover:bg-meso-red-600 text-white font-bold h-14 rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.3)] flex items-center justify-center gap-2"
-                    >
-                        Dalej
-                    </button>
-                )}
+            <div className="fixed bottom-[85px] left-0 right-0 z-20 mx-4">
+                <div className="bg-meso-dark-900 border border-white/10 p-4 rounded-2xl shadow-xl">
+                    {currentStep === 1 ? (
+                        <button
+                            type="submit"
+                            form="address-form"
+                            className="w-full bg-meso-red-500 hover:bg-meso-red-600 text-white font-bold h-14 rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.3)] flex items-center justify-center gap-2"
+                        >
+                            Dalej
+                        </button>
+                    ) : currentStep === 2 ? (
+                        <button
+                            onClick={handleFinalSubmit}
+                            disabled={isSubmitting}
+                            className="w-full bg-meso-gold-500 hover:bg-meso-gold-400 text-black font-bold h-14 rounded-xl shadow-[0_0_20px_rgba(234,179,8,0.3)] flex items-center justify-center gap-2"
+                        >
+                            {isSubmitting ? (
+                                <>
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                    Przetwarzanie...
+                                </>
+                            ) : (
+                                <>
+                                    <ShieldCheck className="w-5 h-5" />
+                                    Zamawiam i płacę
+                                </>
+                            )}
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleNextStep}
+                            className="w-full bg-meso-red-500 hover:bg-meso-red-600 text-white font-bold h-14 rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.3)] flex items-center justify-center gap-2"
+                        >
+                            Dalej
+                        </button>
+                    )}
 
-                {currentStep === 2 && (
-                    <div className="text-center mt-3 text-xs text-white/30 flex items-center justify-center gap-1">
-                        <Lock className="w-3 h-3" />
-                        Połączenie szyfrowane SSL
-                    </div>
-                )}
+                    {currentStep === 2 && (
+                        <div className="text-center mt-3 text-xs text-white/30 flex items-center justify-center gap-1">
+                            <Lock className="w-3 h-3" />
+                            Połączenie szyfrowane SSL
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     )
