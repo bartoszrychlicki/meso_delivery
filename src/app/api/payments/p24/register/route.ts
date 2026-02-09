@@ -70,7 +70,22 @@ export async function POST(request: Request) {
             mode,
         })
 
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+        // Determine App URL (Production vs Local)
+        // 1. NEXT_PUBLIC_APP_URL (Custom set in Vercel)
+        // 2. VERCEL_PROJECT_PRODUCTION_URL (Auto-set by Vercel for prod)
+        // 3. VERCEL_URL (Auto-set by Vercel for preview/prod, usually without https://)
+        // 4. Localhost fallback
+        let appUrl = process.env.NEXT_PUBLIC_APP_URL
+
+        if (!appUrl && process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+            appUrl = `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+        } else if (!appUrl && process.env.VERCEL_URL) {
+            appUrl = `https://${process.env.VERCEL_URL}`
+        } else if (!appUrl) {
+            appUrl = 'http://localhost:3000'
+        }
+
+        console.log(`[P24 Register] Resolved App URL: ${appUrl}`)
 
         // Prepare data
         const amount = Math.round(order.total * 100) // Convert to grosze
