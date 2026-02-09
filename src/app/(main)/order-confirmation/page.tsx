@@ -9,6 +9,7 @@ import { formatPriceExact } from '@/lib/formatters'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import type { OrderConfirmation } from '@/stores/orderConfirmationStore'
+import { useCartStore } from '@/stores/cartStore'
 
 function OrderConfirmationContent() {
     const router = useRouter()
@@ -100,6 +101,15 @@ function OrderConfirmationContent() {
 
         fetchOrder()
     }, [orderId, confirmation, router, setConfirmation])
+
+    const { clearCart } = useCartStore()
+
+    // Separate effect for clearing cart on success status
+    useEffect(() => {
+        if (status === 'success' && orderId) {
+            clearCart()
+        }
+    }, [status, orderId, clearCart])
 
     if (isLoading) {
         return (

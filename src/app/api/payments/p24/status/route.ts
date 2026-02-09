@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js' // Direct client for Service Role
 import { P24, P24Notification } from '@/lib/p24'
 
 export async function POST(request: Request) {
@@ -36,10 +36,21 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Invalid session ID format' }, { status: 400 })
         }
 
-        const supabase = await createClient()
+        // Initialize Admin Client to bypass RLS for status updates
+        const supabaseAdmin = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            {
+                auth: {
+                    autoRefreshToken: false,
+                    persistSession: false
+                }
+            }
+        )
 
-        // Update order status
-        const { error: updateError } = await supabase
+
+        // Update order status with Admin/Service Role client
+        const { error: updateError } = await supabaseAdmin
             .from('orders')
             .update({
                 status: 'confirmed',
