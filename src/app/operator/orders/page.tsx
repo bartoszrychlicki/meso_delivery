@@ -1,6 +1,6 @@
 'use client'
 
-import { Loader2, ChefHat, Package, AlertCircle, Bell, BellOff, Utensils } from 'lucide-react'
+import { Loader2, ChefHat, Package, AlertCircle, Bell, BellOff, Utensils, Truck, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useOperatorOrders } from '@/hooks/useOperatorOrders'
 import { OrderCard } from '@/components/operator/OrderCard'
@@ -11,6 +11,8 @@ export default function OperatorOrdersPage() {
         newOrders,
         preparingOrders,
         readyOrders,
+        inDeliveryOrders,
+        deliveredOrders,
         isLoading,
         error
     } = useOperatorOrders()
@@ -42,7 +44,7 @@ export default function OperatorOrdersPage() {
         )
     }
 
-    const totalOrders = newOrders.length + preparingOrders.length + readyOrders.length
+    const totalOrders = newOrders.length + preparingOrders.length + readyOrders.length + inDeliveryOrders.length + deliveredOrders.length
 
     return (
         <div className="container mx-auto px-4 py-6">
@@ -52,7 +54,7 @@ export default function OperatorOrdersPage() {
                     <div className="flex items-center gap-2 text-white">
                         <ChefHat className="w-5 h-5" />
                         <span className="text-lg font-semibold">
-                            {totalOrders} {totalOrders === 1 ? 'zamówienie' : totalOrders < 5 ? 'zamówienia' : 'zamówień'}
+                            {totalOrders} {totalOrders === 1 ? 'zamówienie' : totalOrders < 5 ? 'zamówienia' : 'zamówień'} (aktywne dzisiaj)
                         </span>
                     </div>
                 </div>
@@ -76,10 +78,10 @@ export default function OperatorOrdersPage() {
                     </div>
                 </div>
             ) : (
-                <div className="grid lg:grid-cols-3 gap-6">
+                <div className="grid xl:grid-cols-5 lg:grid-cols-3 gap-6 overflow-x-auto pb-4">
                     {/* New Orders Column */}
                     <OrderColumn
-                        title="NOWE ZAMÓWIENIA"
+                        title="NOWE"
                         icon={<AlertCircle className="w-5 h-5" />}
                         count={newOrders.length}
                         color="text-orange-500"
@@ -93,7 +95,7 @@ export default function OperatorOrdersPage() {
 
                     {/* Preparing Column */}
                     <OrderColumn
-                        title="W PRZYGOTOWANIU"
+                        title="PRZYGOTOWANIE"
                         icon={<ChefHat className="w-5 h-5" />}
                         count={preparingOrders.length}
                         color="text-blue-500"
@@ -116,6 +118,34 @@ export default function OperatorOrdersPage() {
                     >
                         {readyOrders.map(order => (
                             <OrderCard key={order.id} order={order} variant="ready" />
+                        ))}
+                    </OrderColumn>
+
+                    {/* In Delivery Column */}
+                    <OrderColumn
+                        title="W DOSTAWIE"
+                        icon={<Truck className="w-5 h-5" />}
+                        count={inDeliveryOrders.length}
+                        color="text-purple-500"
+                        bgColor="bg-purple-500/10"
+                        borderColor="border-purple-500/50"
+                    >
+                        {inDeliveryOrders.map(order => (
+                            <OrderCard key={order.id} order={order} variant="in_delivery" />
+                        ))}
+                    </OrderColumn>
+
+                    {/* Delivered Column */}
+                    <OrderColumn
+                        title="ZAKOŃCZONE"
+                        icon={<CheckCircle className="w-5 h-5" />}
+                        count={deliveredOrders.length}
+                        color="text-gray-400"
+                        bgColor="bg-white/5"
+                        borderColor="border-white/10"
+                    >
+                        {deliveredOrders.map(order => (
+                            <OrderCard key={order.id} order={order} variant="delivered" />
                         ))}
                     </OrderColumn>
                 </div>

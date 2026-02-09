@@ -12,24 +12,37 @@ import { cn } from '@/lib/utils'
 
 interface OrderCardProps {
     order: OperatorOrder
-    variant: 'new' | 'preparing' | 'ready'
+    variant: 'new' | 'preparing' | 'ready' | 'in_delivery' | 'delivered'
 }
 
 export function OrderCard({ order, variant }: OrderCardProps) {
     const [isUpdating, setIsUpdating] = useState(false)
-    const { startPreparing, markAsReady, awaitingCourier } = useOperatorOrders()
+    const { startPreparing, markAsReady, awaitingCourier, markAsInDelivery, markAsDelivered } = useOperatorOrders()
 
     const age = getOrderAge(order.created_at)
 
     const handleAction = async () => {
         setIsUpdating(true)
 
-        if (variant === 'new') {
-            await startPreparing(order.id)
-        } else if (variant === 'preparing') {
-            await markAsReady(order.id)
-        } else if (variant === 'ready') {
-            await awaitingCourier(order.id)
+        try {
+            if (variant === 'new') {
+                await startPreparing(order.id)
+            } else if (variant === 'preparing') {
+                await markAsReady(order.id)
+            } else if (variant === 'ready') {
+                if (order.delivery_type === 'delivery') {
+                    // Ready -> In Delivery (Courier picked up)
+                    await markAsInDelivery(order.id)
+                } else {
+                    // Ready -> Delivered (Customer picked up)
+                    await markAsDelivered(order.id)
+                }
+            } else if (variant === 'in_delivery') {
+                // In Delivery -> Delivered
+                await markAsDelivered(order.id)
+            }
+        } catch (error) {
+            console.error(error)
         }
 
         setIsUpdating(false)
@@ -38,8 +51,9 @@ export function OrderCard({ order, variant }: OrderCardProps) {
     return (
         <div className={cn(
             'bg-meso-dark-900/80 rounded-xl p-4 border transition-all',
-            age.isUrgent && variant === 'new' && 'border-red-500 animate-pulse',
-            !age.isUrgent && 'border-white/10'
+            age.isUrgent && (variant === 'new' || variant === 'preparing') && 'border-red-500 animate-pulse',
+            !age.isUrgent && 'border-white/10',
+            variant === 'delivered' && 'opacity-75'
         )}>
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
@@ -57,7 +71,7 @@ export function OrderCard({ order, variant }: OrderCardProps) {
 
                 <div className={cn(
                     'flex items-center gap-1 text-sm',
-                    age.isUrgent ? 'text-red-400' : 'text-white/50'
+                    age.isUrgent && (variant === 'new' || variant === 'preparing') ? 'text-red-400' : 'text-white/50'
                 )}>
                     <Clock className="w-4 h-4" />
                     <span>{age.label}</span>
@@ -170,26 +184,58 @@ export function OrderCard({ order, variant }: OrderCardProps) {
                     </Button>
                 )}
 
-                {variant === 'ready' && order.delivery_type === 'delivery' && (
+                {variant === 'ready' && (
                     <Button
                         onClick={handleAction}
                         disabled={isUpdating}
-                        className="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-bold"
+                        className={cn(
+                            "flex-1 text-white font-bold",
+                            order.delivery_type === 'delivery'
+                                ? "bg-purple-500 hover:bg-purple-600"
+                                : "bg-green-600 hover:bg-green-700"
+                        )}
                     >
                         {isUpdating ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
                             <>
-                                <Truck className="w-4 h-4 mr-2" />
-                                KURIER
+                                {order.delivery_type === 'delivery' ? (
+                                    <>
+                                        <Truck className="w-4 h-4 mr-2" />
+                                        WYDANO KURIEROWI
+                                    </>
+                                ) : (
+                                    <>
+                                        <CheckCircle className="w-4 h-4 mr-2" />
+                                        ODBIÓR KLIENTA
+                                    </>
+                                )}
                             </>
                         )}
                     </Button>
                 )}
 
-                {variant === 'ready' && order.delivery_type === 'pickup' && (
-                    <div className="flex-1 bg-green-500/20 text-green-400 font-bold text-center py-2 rounded-lg">
-                        Czeka na odbiór
+                {variant === 'in_delivery' && (
+                    <Button
+                        onClick={handleAction}
+                        disabled={isUpdating}
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold"
+                    >
+                        {isUpdating ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                            <>
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                DOSTARCZONO
+                            </>
+                        )}
+                    </Button>
+                )}
+
+                {variant === 'delivered' && (
+                    <div className="flex-1 bg-white/5 text-white/40 font-bold text-center py-2 rounded-lg flex items-center justify-center gap-2">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>ZAKOŃCZONE</span>
                     </div>
                 )}
 

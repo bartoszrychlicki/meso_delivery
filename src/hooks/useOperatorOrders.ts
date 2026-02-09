@@ -48,7 +48,10 @@ export function useOperatorOrders(options: UseOperatorOrdersOptions = {}) {
     }, [])
 
     const fetchOrders = useCallback(async () => {
-        // Fetch orders with status: confirmed, preparing, ready
+        // Fetch orders. For 'delivered', only fetch recent ones (e.g. last 24h) to avoid clutter
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+
         const query = supabase
             .from('orders')
             .select(`
@@ -60,7 +63,19 @@ export function useOperatorOrders(options: UseOperatorOrdersOptions = {}) {
         ),
         customer:customers(name, phone)
       `)
-            .in('status', ['confirmed', 'preparing', 'ready', 'awaiting_courier'])
+            .in('status', ['confirmed', 'preparing', 'ready', 'awaiting_courier', 'in_delivery', 'delivered'])
+            // For delivered, we ideally want only today's, but mixing OR logic with other statuses in Supabase simple query might be tricky without multiple queries or intricate filters.
+            // For now, let's fetch them, assuming high volume isn't an immediate issue, OR filter locally if we could.
+            // A simple approach is: fetch all active, plus delivered from today.
+            // Actually, let's just fetch all non-cancelled, non-pending_payment for simplicity in Operator view, 
+            // OR stick to explicit statuses. 
+            // We want 'delivered' ONLY if updated_at > today. 
+            // To simplify, let's just fetch them all for now and maybe filter in memory or refinement later if it gets slow.
+            // A better query strategy:
+            // .or(`status.in.(confirmed,preparing,ready,awaiting_courier,in_delivery),and(status.eq.delivered,created_at.gte.${today.toISOString()})`)
+            // but Supabase RLS policies might already helpful.
+            // Let's stick to simple .in() for statuses and maybe limit by date broadly if needed.
+            .gte('created_at', today.toISOString()) // Only orders from today for ALL statuses (Operator usually works on daily basis)
             .order('created_at', { ascending: true })
 
         if (options.locationId) {
@@ -108,7 +123,7 @@ export function useOperatorOrders(options: UseOperatorOrdersOptions = {}) {
 
                     if (payload.eventType === 'INSERT') {
                         const newOrder = payload.new as Order
-                        if (['confirmed', 'preparing', 'ready'].includes(newOrder.status)) {
+                        if (['confirmed', 'preparing', 'ready', 'awaiting_courier', 'in_delivery', 'delivered'].includes(newOrder.status)) {
                             // Play sound for new confirmed order
                             if (newOrder.status === 'confirmed') {
                                 playNotificationSound()
@@ -184,22 +199,39 @@ export function useOperatorOrders(options: UseOperatorOrdersOptions = {}) {
         return updateOrderStatus(orderId, 'awaiting_courier')
     }, [updateOrderStatus])
 
+    // Mark order as in delivery
+    const markAsInDelivery = useCallback(async (orderId: number) => {
+        return updateOrderStatus(orderId, 'in_delivery', 'picked_up_at')
+    }, [updateOrderStatus])
+
+    // Mark order as delivered
+    const markAsDelivered = useCallback(async (orderId: number) => {
+        return updateOrderStatus(orderId, 'delivered', 'delivered_at')
+    }, [updateOrderStatus])
+
     // Filter orders by status
     const newOrders = orders.filter(o => o.status === 'confirmed')
     const preparingOrders = orders.filter(o => o.status === 'preparing')
+    // Ready column includes: ready, awaiting_courier (and for pickup: ready is final step before delivered)
     const readyOrders = orders.filter(o => ['ready', 'awaiting_courier'].includes(o.status))
+    const inDeliveryOrders = orders.filter(o => o.status === 'in_delivery')
+    const deliveredOrders = orders.filter(o => o.status === 'delivered')
 
     return {
         orders,
         newOrders,
         preparingOrders,
         readyOrders,
+        inDeliveryOrders,
+        deliveredOrders,
         isLoading,
         error,
         refetch: fetchOrders,
         startPreparing,
         markAsReady,
         awaitingCourier,
+        markAsInDelivery,
+        markAsDelivered,
     }
 }
 
