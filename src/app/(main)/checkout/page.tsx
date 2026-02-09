@@ -240,17 +240,7 @@ export default function CheckoutPage() {
                             </div>
                         </div>
 
-                        {/* Terms Acceptance */}
-                        <div className="pt-4">
-                            <TermsAcceptance
-                                accepted={termsAccepted}
-                                onChange={(accepted) => {
-                                    setTermsAccepted(accepted)
-                                    if (accepted) setTermsError(undefined)
-                                }}
-                                error={termsError}
-                            />
-                        </div>
+
                     </div>
                 )
             default:
@@ -299,23 +289,35 @@ export default function CheckoutPage() {
                             Dalej
                         </button>
                     ) : currentStep === 2 ? (
-                        <button
-                            onClick={handleFinalSubmit}
-                            disabled={isSubmitting}
-                            className="w-full bg-meso-gold-500 hover:bg-meso-gold-400 text-black font-bold h-14 rounded-xl shadow-[0_0_20px_rgba(234,179,8,0.3)] flex items-center justify-center gap-2"
-                        >
-                            {isSubmitting ? (
-                                <>
-                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                    Przetwarzanie...
-                                </>
-                            ) : (
-                                <>
-                                    <ShieldCheck className="w-5 h-5" />
-                                    Zamawiam i płacę
-                                </>
-                            )}
-                        </button>
+                        <div className="space-y-4">
+                            {/* Terms Acceptance moved to footer */}
+                            <TermsAcceptance
+                                accepted={termsAccepted}
+                                onChange={(accepted) => {
+                                    setTermsAccepted(accepted)
+                                    if (accepted) setTermsError(undefined)
+                                }}
+                                error={termsError}
+                            />
+
+                            <button
+                                onClick={handleFinalSubmit}
+                                disabled={isSubmitting}
+                                className="w-full bg-meso-gold-500 hover:bg-meso-gold-400 text-black font-bold h-14 rounded-xl shadow-[0_0_20px_rgba(234,179,8,0.3)] flex items-center justify-center gap-2"
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        Przetwarzanie...
+                                    </>
+                                ) : (
+                                    <>
+                                        <ShieldCheck className="w-5 h-5" />
+                                        Zamawiam i płacę
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     ) : (
                         <button
                             onClick={handleNextStep}
