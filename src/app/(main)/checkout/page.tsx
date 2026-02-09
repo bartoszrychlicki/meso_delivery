@@ -48,7 +48,7 @@ export default function CheckoutPage() {
     const [contactData, setContactData] = useState<ContactFormData | null>(null)
 
     const [paymentData, setPaymentData] = useState<PaymentFormData>({
-        method: 'blik'
+        method: 'card'
     })
 
     // Terms acceptance state

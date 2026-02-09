@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { createClient } from '@/lib/supabase/client'
 import { useCartStore } from '@/stores/cartStore'
 import { useAuth } from '@/hooks/useAuth'
 import { useOrderConfirmationStore } from '@/stores/orderConfirmationStore'
@@ -11,7 +10,6 @@ import type { AddressFormData, DeliveryFormData, PaymentFormData } from '@/lib/v
 
 export function useCheckout() {
     const router = useRouter()
-    const supabase = createClient()
     const { user } = useAuth()
     const { items, getTotal, getSubtotal, getDeliveryFee, getDiscount, tip, promoDiscount, clearCart } = useCartStore()
     const { setConfirmation } = useOrderConfirmationStore()
@@ -36,103 +34,99 @@ export function useCheckout() {
                 throw new Error('Twój koszyk jest pusty')
             }
 
-            // 1. Get active location (MVP: just get the first one)
-            const { data: locations, error: locationError } = await supabase
-                .from('locations')
-                .select('id')
-                .eq('is_active', true)
-                .limit(1)
-                .single()
-
-            if (locationError || !locations) {
-                throw new Error('Nie znaleziono aktywnej restauracji')
-            }
-
             const total = getTotal()
             const subtotal = getSubtotal()
+            const deliveryFee = getDeliveryFee()
+            const discount = getDiscount()
 
-            // 2. Create Order
-            const { data: order, error: orderError } = await supabase
-                .from('orders')
-                .insert({
-                    customer_id: user.id,
-                    location_id: locations.id,
-                    status: 'pending_payment',
-                    delivery_type: deliveryData.type,
-                    delivery_address: addressData, // JSONB
-                    scheduled_time: deliveryData.time === 'scheduled' ? deliveryData.scheduledTime : null,
-                    payment_method: paymentData.method,
-                    payment_status: 'pending', // Mock payment will update this later
+            // Build delivery address for DB
+            const deliveryAddress = deliveryData.type === 'delivery' ? {
+                street: addressData.street,
+                houseNumber: addressData.houseNumber,
+                apartmentNumber: addressData.apartmentNumber,
+                city: addressData.city,
+                postalCode: addressData.postalCode,
+                firstName: addressData.firstName,
+                lastName: addressData.lastName,
+            } : null
+
+            // Call our payment registration API
+            const response = await fetch('/api/payments/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    deliveryType: deliveryData.type,
+                    deliveryAddress,
+                    scheduledTime: deliveryData.time === 'scheduled' ? deliveryData.scheduledTime : null,
+                    paymentMethod: paymentData.method,
+                    items: items.map(item => ({
+                        productId: item.productId,
+                        quantity: item.quantity,
+                        price: item.price,
+                        variantPrice: item.variantPrice,
+                        variantId: item.variantId,
+                        variantName: item.variantName,
+                        spiceLevel: item.spiceLevel,
+                        addons: item.addons,
+                    })),
                     subtotal,
-                    delivery_fee: getDeliveryFee(),
+                    deliveryFee,
                     tip,
-                    promo_discount: promoDiscount,
+                    promoDiscount,
                     total,
-                    loyalty_points_earned: Math.floor(total), // 1 pkt = 1 PLN
-                    notes: addressData.notes
-                })
-                .select()
-                .single()
-
-            if (orderError) {
-                console.error('Order creation error:', orderError)
-                throw new Error('Błąd podczas tworzenia zamówienia')
-            }
-
-            // 3. Create Order Items
-            const orderItems = items.map(item => {
-                const basePrice = item.price + (item.variantPrice || 0)
-                const addonsPrice = item.addons.reduce((sum, addon) => sum + addon.price, 0)
-                const unitPrice = basePrice + addonsPrice
-                const totalPrice = unitPrice * item.quantity
-
-                return {
-                    order_id: order.id,
-                    product_id: item.productId,
-                    quantity: item.quantity,
-                    unit_price: unitPrice, // Storing final unit price including modifiers
-                    spice_level: item.spiceLevel,
-                    variant_id: item.variantId,
-                    variant_name: item.variantName,
-                    addons: item.addons, // JSONB
-                    total_price: totalPrice,
-                }
+                    notes: addressData.notes,
+                    contactEmail: addressData.email,
+                    contactName: `${addressData.firstName} ${addressData.lastName}`,
+                    contactPhone: addressData.phone,
+                }),
             })
 
-            const { error: itemsError } = await supabase
-                .from('order_items')
-                .insert(orderItems)
-
-            if (itemsError) {
-                console.error('Order items error:', itemsError)
-                // Optionally revert order creation here, but for MVP we skip
-                throw new Error('Błąd podczas dodawania produktów do zamówienia')
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}))
+                throw new Error(errorData.error || 'Błąd podczas składania zamówienia')
             }
 
-            // 4. Mock Payment Success
-            // In real app, we would redirect to P24 or Stripe here.
-            // For MVP, we update status to 'paid' and 'confirmed'
+            const result = await response.json()
 
-            const { error: updateError } = await supabase
-                .from('orders')
-                .update({
-                    status: 'confirmed',
-                    payment_status: 'paid',
-                    paid_at: new Date().toISOString(),
-                    confirmed_at: new Date().toISOString(),
+            // For online payments - redirect to P24
+            if (result.redirectUrl) {
+                // Save cart data before clearing (for order confirmation page)
+                const confirmationItems = [...items]
+                setConfirmation({
+                    orderId: String(result.orderId),
+                    orderNumber: String(result.orderId),
+                    items: confirmationItems,
+                    deliveryType: deliveryData.type,
+                    deliveryAddress: deliveryData.type === 'delivery' ? {
+                        street: addressData.street,
+                        houseNumber: addressData.houseNumber,
+                        apartmentNumber: addressData.apartmentNumber,
+                        city: addressData.city,
+                        firstName: addressData.firstName,
+                        lastName: addressData.lastName,
+                    } : null,
+                    subtotal,
+                    deliveryFee,
+                    discount,
+                    tip,
+                    total,
+                    paymentMethod: paymentData.method,
+                    estimatedTime: deliveryData.type === 'delivery' ? '30-45 min' : '15-20 min',
+                    createdAt: new Date().toISOString(),
                 })
-                .eq('id', order.id)
 
-            if (updateError) {
-                console.error('Payment update error:', updateError)
-                throw new Error('Błąd podczas aktualizacji statusu płatności')
+                clearCart()
+
+                // Redirect to Przelewy24 payment page
+                window.location.href = result.redirectUrl
+                return
             }
 
-            // 5. Save confirmation data before clearing cart
+            // For cash payments - go directly to confirmation
             const confirmationItems = [...items]
-            const confirmationData = {
-                orderId: order.id,
-                orderNumber: order.id.slice(-6).toUpperCase(),
+            setConfirmation({
+                orderId: String(result.orderId),
+                orderNumber: String(result.orderId),
                 items: confirmationItems,
                 deliveryType: deliveryData.type,
                 deliveryAddress: deliveryData.type === 'delivery' ? {
@@ -144,18 +138,16 @@ export function useCheckout() {
                     lastName: addressData.lastName,
                 } : null,
                 subtotal,
-                deliveryFee: getDeliveryFee(),
-                discount: getDiscount(),
+                deliveryFee,
+                discount,
                 tip,
                 total,
                 paymentMethod: paymentData.method,
                 estimatedTime: deliveryData.type === 'delivery' ? '30-45 min' : '15-20 min',
                 createdAt: new Date().toISOString(),
-            }
+            })
 
-            setConfirmation(confirmationData)
             clearCart()
-
             toast.success('Zamówienie zostało złożone pomyślnie!')
             router.push('/order-confirmation')
 

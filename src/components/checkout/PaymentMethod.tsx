@@ -1,7 +1,8 @@
 'use client'
 
-import { CreditCard, Smartphone, Banknote, Landmark } from 'lucide-react'
+import { CreditCard, Banknote, Landmark } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useCartStore } from '@/stores/cartStore'
 
 interface PaymentMethodProps {
     value: string
@@ -9,38 +10,34 @@ interface PaymentMethodProps {
 }
 
 export function PaymentMethod({ value, onChange }: PaymentMethodProps) {
+    const { deliveryType } = useCartStore()
+
     const methods = [
         {
-            id: 'blik',
-            name: 'BLIK',
-            icon: <span className="font-bold text-lg">BLIK</span>,
-            description: 'Szybka płatność kodem',
-        },
-        {
-            id: 'card',
-            name: 'Karta płatnicza',
+            id: 'card' as const,
+            name: 'Płatność online',
             icon: <CreditCard className="w-6 h-6" />,
-            description: 'Visa, Mastercard',
+            description: 'BLIK, karta, przelew (Przelewy24)',
+            alwaysVisible: true,
         },
         {
-            id: 'google_pay',
-            name: 'Google Pay',
-            icon: <Smartphone className="w-6 h-6" />,
-            description: 'Szybka płatność mobilna',
-        },
-        {
-            id: 'cash',
+            id: 'cash' as const,
             name: 'Gotówka',
             icon: <Banknote className="w-6 h-6" />,
             description: 'Płatność przy odbiorze',
+            alwaysVisible: false,
         },
-    ] as const
+    ]
+
+    const visibleMethods = methods.filter(
+        m => m.alwaysVisible || (m.id === 'cash' && deliveryType === 'pickup')
+    )
 
     return (
         <div className="space-y-4">
             <h3 className="text-white font-medium">Metoda płatności</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {methods.map((method) => (
+            <div className="grid grid-cols-1 gap-3">
+                {visibleMethods.map((method) => (
                     <button
                         key={method.id}
                         type="button"
@@ -71,7 +68,7 @@ export function PaymentMethod({ value, onChange }: PaymentMethodProps) {
                     <Landmark className="w-4 h-4 flex-shrink-0" />
                     <span>Bezpieczne płatności obsługiwane przez Przelewy24</span>
                 </p>
-                {value === 'card' && (
+                {value !== 'cash' && (
                     <p className="text-xs text-blue-400/70 leading-relaxed">
                         Operatorem kart płatniczych jest PayPro SA Agent Rozliczeniowy, ul. Pastelowa 8, 60-198 Poznań,
                         KRS 0000347935, NIP 7792369887, REGON 301345068.
@@ -81,4 +78,3 @@ export function PaymentMethod({ value, onChange }: PaymentMethodProps) {
         </div>
     )
 }
-
