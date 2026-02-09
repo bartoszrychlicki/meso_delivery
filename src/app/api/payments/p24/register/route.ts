@@ -4,6 +4,10 @@ import { P24 } from '@/lib/p24'
 
 export const dynamic = 'force-dynamic'
 
+export async function GET() {
+    return NextResponse.json({ status: 'ok', message: 'P24 Register Endpoint Reachable' })
+}
+
 export async function POST(request: Request) {
     try {
         const supabase = await createClient()
