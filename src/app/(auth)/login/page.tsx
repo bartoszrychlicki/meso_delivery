@@ -210,7 +210,7 @@ function LoginForm() {
       <div className="text-center pt-4 border-t border-white/10">
         <p className="text-white/50">
           Nie masz jeszcze konta?{' '}
-          <Link href="/account/upgrade" className="text-meso-gold-400 hover:text-meso-gold-300 font-medium">
+          <Link href="/register" className="text-meso-gold-400 hover:text-meso-gold-300 font-medium">
             Załóż za darmo
           </Link>
         </p>

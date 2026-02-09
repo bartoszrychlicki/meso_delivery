@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
+import { MesoLogo } from '@/components/brand/MesoLogo'
 
 const upgradeSchema = z.object({
   email: z.string().email('Nieprawidłowy adres email'),
@@ -163,8 +164,8 @@ export default function UpgradeAccountPage() {
     <div className="max-w-lg mx-auto px-4 py-8">
       {/* Header */}
       <div className="text-center mb-8">
-        <div className="w-16 h-16 rounded-full bg-meso-gold-500/20 flex items-center justify-center mx-auto mb-4">
-          <Gift className="w-8 h-8 text-meso-gold-400" />
+        <div className="mb-4">
+          <MesoLogo size="xl" />
         </div>
         <h1 className="text-2xl font-bold text-white mb-2">
           Dołącz do MESO Club

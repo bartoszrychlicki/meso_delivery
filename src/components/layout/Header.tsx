@@ -93,7 +93,7 @@ export function Header({
                   ) : (
                     <>
                       <Link
-                        href="/account/upgrade"
+                        href="/register"
                         className="flex items-center gap-2 text-meso-gold-400 hover:text-meso-gold-300"
                       >
                         <UserPlus className="w-4 h-4" />
@@ -177,7 +177,7 @@ export function Header({
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Link href="/account/upgrade">
+              <Link href="/register">
                 <Button
                   variant="outline"
                   className="border-meso-gold-500/30 text-meso-gold-400 hover:bg-meso-gold-500/10 hover:border-meso-gold-500/50"

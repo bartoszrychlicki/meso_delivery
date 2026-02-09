@@ -129,7 +129,7 @@ export default function AccountPage() {
           </Button>
         ) : (
           <div className="flex gap-3">
-            <Link href="/account/upgrade" className="flex-1">
+            <Link href="/register" className="flex-1">
               <Button className="w-full h-12 bg-meso-gold-500 hover:bg-meso-gold-600 text-black font-semibold">
                 Załóż konto
               </Button>

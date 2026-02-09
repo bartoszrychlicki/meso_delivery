@@ -22,7 +22,7 @@ export function AnonymousBanner({ variant = 'default', className }: AnonymousBan
   if (variant === 'compact') {
     return (
       <Link
-        href="/account/upgrade"
+        href="/register"
         className={cn(
           'flex items-center justify-between gap-3 p-3 rounded-lg',
           'bg-meso-gold-500/10 border border-meso-gold-500/30',
@@ -63,7 +63,7 @@ export function AnonymousBanner({ variant = 'default', className }: AnonymousBan
               Załóż darmowe konto i odbierz <span className="text-meso-gold-400 font-semibold">50 punktów</span> na start.
               Za to zamówienie możesz zdobyć dodatkowe punkty!
             </p>
-            <Link href="/account/upgrade">
+            <Link href="/register">
               <Button
                 variant="outline"
                 size="sm"
@@ -118,7 +118,7 @@ export function AnonymousBanner({ variant = 'default', className }: AnonymousBan
             </div>
           </div>
 
-          <Link href="/account/upgrade">
+          <Link href="/register">
             <Button className="bg-meso-gold-500 hover:bg-meso-gold-600 text-black font-semibold">
               Załóż konto i odbierz 50 pkt
               <ArrowRight className="w-4 h-4 ml-2" />
