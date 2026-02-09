@@ -32,7 +32,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen pb-32 bg-meso-dark-900">
+    <div className="min-h-screen pb-52 bg-meso-dark-900">
       {/* Header */}
       <header className="sticky top-0 z-10 flex items-center bg-meso-dark-900/80 backdrop-blur-sm p-4 pb-2 justify-between border-b border-meso-red-500/20">
         <div className="flex w-12 items-center justify-start">
@@ -110,22 +110,24 @@ export default function CartPage() {
       </main>
 
       {/* Fixed CTA Button */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-meso-dark-900 to-transparent p-4 pb-6">
-        <Link
-          href={checkout.allowed ? '/checkout' : '#'}
-          onClick={(e) => !checkout.allowed && e.preventDefault()}
-          className={cn(
-            'w-full h-14 flex items-center justify-center rounded-xl',
-            'font-bold text-lg transition-all',
-            checkout.allowed
-              ? 'bg-meso-red-500 text-white shadow-[0_0_15px_rgba(244,37,175,0.8)] hover:shadow-[0_0_25px_rgba(244,37,175,0.9)] active:scale-95'
-              : 'bg-white/10 text-white/50 cursor-not-allowed'
-          )}
-        >
-          <span>Zamów</span>
-          <span className="mx-2">·</span>
-          <span>{formatPrice(total)}</span>
-        </Link>
+      <div className="fixed bottom-[85px] left-0 right-0 z-50 mx-4">
+        <div className="bg-meso-dark-900 border border-white/10 p-4 rounded-2xl shadow-xl">
+          <Link
+            href={checkout.allowed ? '/checkout' : '#'}
+            onClick={(e) => !checkout.allowed && e.preventDefault()}
+            className={cn(
+              'w-full h-14 flex items-center justify-center rounded-xl',
+              'font-bold text-lg transition-all flex items-center justify-center gap-2',
+              checkout.allowed
+                ? 'bg-meso-red-500 text-white shadow-[0_0_15px_rgba(244,37,175,0.8)] hover:shadow-[0_0_25px_rgba(244,37,175,0.9)] active:scale-95'
+                : 'bg-white/10 text-white/50 cursor-not-allowed'
+            )}
+          >
+            <span>Zamów</span>
+            <span className="mx-2">·</span>
+            <span>{formatPrice(total)}</span>
+          </Link>
+        </div>
       </div>
     </div>
   )
