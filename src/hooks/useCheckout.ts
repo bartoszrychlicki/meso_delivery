@@ -24,6 +24,9 @@ export function useCheckout() {
         addressData: AddressFormData,
         paymentData: PaymentFormData
     ) => {
+        // Prevent double submission
+        if (isLoading) return
+
         try {
             setIsLoading(true)
             setError(null)
@@ -116,7 +119,17 @@ export function useCheckout() {
                 body: JSON.stringify({ orderId: order.id }),
             })
 
-            const data = await response.json()
+            let data
+            const contentType = response.headers.get('content-type')
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json()
+            } else {
+                // If not JSON (e.g. 404 HTML), throw specific error or generic one
+                if (response.status === 404) {
+                    throw new Error('Usługa płatności jest niedostępna (404). Spróbuj ponownie później.')
+                }
+                throw new Error(`Błąd serwera płatności: ${response.status}`)
+            }
 
             if (!response.ok) {
                 throw new Error(data.error || 'Błąd podczas rejestracji płatności')
@@ -133,9 +146,14 @@ export function useCheckout() {
             const message = err instanceof Error ? err.message : 'Wystąpił nieoczekiwany błąd'
             setError(message)
             toast.error(message)
-        } finally {
+            // If we failed after setting isLoading to true, we must unset it to allow retry
+            // BUT for the "duplicate order" issue, validation/logic errors should allow retry.
+            // Network errors/404 should allow retry? Yes.
             setIsLoading(false)
         }
+        // Note: We removed 'finally { setIsLoading(false) }' because if we redirect, 
+        // we want the button to stay loading until unmount.
+        // But if we catch an error, we MUST set it back to false (done in catch).
     }
 
     return {

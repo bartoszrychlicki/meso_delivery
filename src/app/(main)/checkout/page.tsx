@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import { ArrowLeft, Loader2, ShieldCheck, Lock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useCartStore } from '@/stores/cartStore'
@@ -160,6 +161,7 @@ export default function CheckoutPage() {
         // Validate terms acceptance
         if (!termsAccepted) {
             setTermsError('Musisz zaakceptować Regulamin i Politykę Prywatności')
+            toast.error('Musisz zaakceptować Regulamin i Politykę Prywatności')
             return
         }
 
