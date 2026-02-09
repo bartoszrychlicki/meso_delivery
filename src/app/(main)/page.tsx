@@ -1,7 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { HeroBanner, CategoryGrid, ProductCarousel, PromoBanner } from '@/components/home'
 
+
 export const revalidate = 60
+
 
 async function getHomeData() {
   const supabase = await createClient()
