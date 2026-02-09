@@ -7,7 +7,7 @@ export async function POST(request: Request) {
         const body = await request.json() as P24Notification
         const { merchantId, posId, sessionId, amount, originAmount, currency, orderId, methodId, statement, sign } = body
 
-        console.log('Received P24 notification:', body)
+        console.log('[P24 Status] Received notification:', JSON.stringify(body, null, 2))
 
         const p24 = new P24({
             merchantId: parseInt(process.env.P24_MERCHANT_ID || '0'),
@@ -21,9 +21,11 @@ export async function POST(request: Request) {
         const isValid = await p24.verifyTransaction(body)
 
         if (!isValid) {
-            console.error('Invalid P24 signature or verification failed')
+            console.error('[P24 Status] Invalid signature or verification failed. Body:', body)
             return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
         }
+
+        console.log('[P24 Status] Signature verified successfully.')
 
         // Parse order ID from sessionId or use returned orderId if P24 sends our ID there?
         // P24 'orderId' in notification is P24's transaction ID, NOT our database ID.
@@ -31,8 +33,10 @@ export async function POST(request: Request) {
         // logic: sessionId was `${order.id}-${timestamp}`
         const paramOrderId = sessionId.split('-')[0]
 
+        console.log(`[P24 Status] Extracted Order ID: ${paramOrderId} from Session ID: ${sessionId}`)
+
         if (!paramOrderId) {
-            console.error('Could not extract order ID from session ID:', sessionId)
+            console.error('[P24 Status] Could not extract order ID from session ID:', sessionId)
             return NextResponse.json({ error: 'Invalid session ID format' }, { status: 400 })
         }
 
@@ -50,7 +54,7 @@ export async function POST(request: Request) {
 
 
         // Update order status with Admin/Service Role client
-        const { error: updateError } = await supabaseAdmin
+        const { error: updateError, data: updatedOrder } = await supabaseAdmin
             .from('orders')
             .update({
                 status: 'confirmed',
@@ -58,14 +62,18 @@ export async function POST(request: Request) {
                 paid_at: new Date().toISOString(),
                 confirmed_at: new Date().toISOString(),
                 // Optionally store P24 transaction ID
-                // p24_transaction_id: orderId 
+                // p24_transaction_id: orderId
             })
             .eq('id', paramOrderId)
+            .select() // Select to verify update
+            .single()
 
         if (updateError) {
-            console.error('Failed to update order status:', updateError)
+            console.error('[P24 Status] Failed to update order status:', updateError)
             return NextResponse.json({ error: 'Database update failed' }, { status: 500 })
         }
+
+        console.log('[P24 Status] Order updated successfully:', updatedOrder)
 
         return NextResponse.json({ status: 'OK' })
 

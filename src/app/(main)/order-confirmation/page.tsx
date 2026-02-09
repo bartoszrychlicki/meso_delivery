@@ -339,14 +339,16 @@ function OrderConfirmationContent() {
             </div>
 
             {/* Back to Menu Button */}
-            <div className="fixed bottom-0 left-0 right-0 z-20 bg-meso-dark-900 border-t border-white/5 p-4 pb-8">
-                <button
-                    onClick={handleBackToMenu}
-                    className="w-full bg-meso-red-500 hover:bg-meso-red-600 text-white font-bold h-14 rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.3)] flex items-center justify-center gap-2"
-                >
-                    <ArrowLeft className="w-5 h-5" />
-                    Wróć do menu
-                </button>
+            <div className="fixed bottom-[85px] left-0 right-0 z-20 mx-4">
+                <div className="bg-meso-dark-900 border border-white/10 p-4 rounded-2xl shadow-xl">
+                    <button
+                        onClick={handleBackToMenu}
+                        className="w-full bg-meso-red-500 hover:bg-meso-red-600 text-white font-bold h-14 rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.3)] flex items-center justify-center gap-2"
+                    >
+                        <ArrowLeft className="w-5 h-5" />
+                        Wróć do menu
+                    </button>
+                </div>
             </div>
         </div>
     )
