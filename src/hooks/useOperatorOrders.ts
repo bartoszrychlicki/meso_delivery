@@ -30,6 +30,9 @@ export function useOperatorOrders(options: UseOperatorOrdersOptions = {}) {
     const [error, setError] = useState<string | null>(null)
     const audioRef = useRef<HTMLAudioElement | null>(null)
 
+    // Use stable client instance
+    const [supabase] = useState(() => createClient())
+
     // Initialize notification sound
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -45,8 +48,6 @@ export function useOperatorOrders(options: UseOperatorOrdersOptions = {}) {
     }, [])
 
     const fetchOrders = useCallback(async () => {
-        const supabase = createClient()
-
         // Fetch orders with status: confirmed, preparing, ready
         const query = supabase
             .from('orders')
@@ -85,18 +86,16 @@ export function useOperatorOrders(options: UseOperatorOrdersOptions = {}) {
             setOrders(transformedOrders)
         }
         setIsLoading(false)
-    }, [options.locationId])
+    }, [options.locationId, supabase])
 
     // Subscribe to real-time updates
     useEffect(() => {
-        const supabase = createClient()
-
         // Initial fetch
         fetchOrders()
 
         // Subscribe to order changes
-        const subscription = supabase
-            .channel('operator-orders')
+        const channel = supabase
+            .channel('operator-orders-changes')
             .on(
                 'postgres_changes',
                 {
@@ -105,7 +104,7 @@ export function useOperatorOrders(options: UseOperatorOrdersOptions = {}) {
                     table: 'orders',
                 },
                 (payload) => {
-                    console.log('Order change:', payload)
+                    console.log('[Operator] Realtime update:', payload)
 
                     if (payload.eventType === 'INSERT') {
                         const newOrder = payload.new as Order
@@ -121,20 +120,28 @@ export function useOperatorOrders(options: UseOperatorOrdersOptions = {}) {
                             fetchOrders()
                         }
                     } else if (payload.eventType === 'UPDATE') {
-                        const updatedOrder = payload.new as Order
-                        // Refetch to get updated data
+                        // Refetch to get updated data regardless of status change (it might be status update or details update)
                         fetchOrders()
                     } else if (payload.eventType === 'DELETE') {
                         setOrders(prev => prev.filter(o => o.id !== (payload.old as Order).id))
                     }
                 }
             )
-            .subscribe()
+            .subscribe((status) => {
+                console.log('[Operator] Subscription status:', status)
+                if (status === 'SUBSCRIBED') {
+                    // Optional: show toast connected?
+                }
+                if (status === 'CHANNEL_ERROR') {
+                    console.error('[Operator] Subscription error')
+                    toast.error('Błąd połączenia z serwerem aktualizacji')
+                }
+            })
 
         return () => {
-            subscription.unsubscribe()
+            supabase.removeChannel(channel)
         }
-    }, [fetchOrders, playNotificationSound])
+    }, [fetchOrders, playNotificationSound, supabase])
 
     // Update order status
     const updateOrderStatus = useCallback(async (
@@ -142,8 +149,6 @@ export function useOperatorOrders(options: UseOperatorOrdersOptions = {}) {
         newStatus: OrderStatus,
         timestampField?: string
     ) => {
-        const supabase = createClient()
-
         const updateData: Record<string, any> = { status: newStatus }
         if (timestampField) {
             updateData[timestampField] = new Date().toISOString()

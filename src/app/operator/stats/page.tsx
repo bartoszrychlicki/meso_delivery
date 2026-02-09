@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 
 interface DailyStats {
     totalOrders: number
+    unpaidOrders: number
     completedOrders: number
     avgPrepTime: number
     totalRevenue: number
@@ -28,7 +29,7 @@ export default function OperatorStatsPage() {
             // Fetch today's orders
             const { data: orders, error } = await supabase
                 .from('orders')
-                .select('id, status, total, created_at, confirmed_at, ready_at')
+                .select('id, status, payment_status, total, created_at, confirmed_at, ready_at')
                 .gte('created_at', today.toISOString())
                 .lt('created_at', tomorrow.toISOString())
                 .not('status', 'eq', 'cancelled')
@@ -40,7 +41,14 @@ export default function OperatorStatsPage() {
             }
 
             // Calculate stats
-            const totalOrders = orders?.length || 0
+            // "Orders today" should be only PAID orders
+            const paidOrders = orders?.filter((o: any) => o.payment_status === 'paid') || []
+            const totalOrders = paidOrders.length
+
+            // "Started/Unpaid" orders (pending payment)
+            const unpaidOrders = orders?.filter((o: any) => o.payment_status === 'pending') || []
+            const unpaidCount = unpaidOrders.length
+
             const completedOrders = orders?.filter((o: any) =>
                 ['ready', 'awaiting_courier', 'in_delivery', 'delivered'].includes(o.status)
             ).length || 0
@@ -57,10 +65,11 @@ export default function OperatorStatsPage() {
                 avgPrepTime = Math.round(totalPrepTime / ordersWithPrepTime.length / 60000) // in minutes
             }
 
-            const totalRevenue = orders?.reduce((sum: number, o: any) => sum + (o.total || 0), 0) || 0
+            const totalRevenue = paidOrders.reduce((sum: number, o: any) => sum + (o.total || 0), 0)
 
             setStats({
                 totalOrders,
+                unpaidOrders: unpaidCount,
                 completedOrders,
                 avgPrepTime,
                 totalRevenue,
@@ -92,10 +101,18 @@ export default function OperatorStatsPage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <StatCard
                     icon={<Package className="w-8 h-8" />}
-                    label="Zamówienia dzisiaj"
+                    label="Opłacone dzisiaj"
                     value={stats?.totalOrders || 0}
                     color="text-blue-500"
                     bgColor="bg-blue-500/10"
+                />
+
+                <StatCard
+                    icon={<Loader2 className="w-8 h-8" />}
+                    label="Rozpoczęte (nieopłacone)"
+                    value={stats?.unpaidOrders || 0}
+                    color="text-gray-400"
+                    bgColor="bg-gray-500/10"
                 />
 
                 <StatCard
