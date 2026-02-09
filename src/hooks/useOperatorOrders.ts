@@ -135,8 +135,14 @@ export function useOperatorOrders(options: UseOperatorOrdersOptions = {}) {
                             fetchOrders()
                         }
                     } else if (payload.eventType === 'UPDATE') {
-                        // Refetch to get updated data regardless of status change (it might be status update or details update)
-                        fetchOrders()
+                        // Optimistically update local state with new data (merging to preserve relations)
+                        // This provides instant feedback without waiting for refetch
+                        const updated = payload.new as Order
+                        setOrders(prev => prev.map(o =>
+                            o.id === updated.id
+                                ? { ...o, ...updated, items: o.items, customer: o.customer }
+                                : o
+                        ))
                     } else if (payload.eventType === 'DELETE') {
                         setOrders(prev => prev.filter(o => o.id !== (payload.old as Order).id))
                     }
@@ -164,6 +170,20 @@ export function useOperatorOrders(options: UseOperatorOrdersOptions = {}) {
         newStatus: OrderStatus,
         timestampField?: string
     ) => {
+        // Optimistic update
+        setOrders(prev => prev.map(o => {
+            if (o.id === orderId) {
+                return {
+                    ...o,
+                    status: newStatus,
+                    [timestampField || 'updated_at']: new Date().toISOString(),
+                    items: o.items,
+                    customer: o.customer
+                }
+            }
+            return o
+        }))
+
         const updateData: Record<string, any> = { status: newStatus }
         if (timestampField) {
             updateData[timestampField] = new Date().toISOString()
@@ -177,12 +197,15 @@ export function useOperatorOrders(options: UseOperatorOrdersOptions = {}) {
         if (updateError) {
             console.error('Error updating order:', updateError)
             toast.error('Nie udało się zaktualizować statusu')
+            // Revert on error? For now, fetchOrders will eventually adhere to truth, 
+            // or we could trigger a refetch here.
+            fetchOrders()
             return false
         }
 
         toast.success('Status zaktualizowany')
         return true
-    }, [])
+    }, [fetchOrders, supabase])
 
     // Start preparing an order
     const startPreparing = useCallback(async (orderId: number) => {
