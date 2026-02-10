@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
   const type = requestUrl.searchParams.get('type')
-  const next = requestUrl.searchParams.get('next') || '/menu'
+  const next = requestUrl.searchParams.get('next') || '/'
 
   if (code) {
     const supabase = await createClient()
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
         }
 
         return NextResponse.redirect(
-          new URL('/menu?welcome=true', requestUrl.origin)
+          new URL('/?welcome=true', requestUrl.origin)
         )
       }
     }

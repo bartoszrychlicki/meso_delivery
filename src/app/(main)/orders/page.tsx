@@ -54,7 +54,7 @@ export default function OrdersPage() {
                             Jeszcze nic nie zamawiałeś. Sprawdź nasze menu i złóż pierwsze zamówienie!
                         </p>
                         <Button
-                            onClick={() => router.push('/menu')}
+                            onClick={() => router.push('/')}
                             className="bg-meso-red-500 hover:bg-meso-red-600 text-white"
                         >
                             Przejdź do menu

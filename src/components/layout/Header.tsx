@@ -26,8 +26,7 @@ export function Header({
   const { isAnonymous, isPermanent, isLoading, signOut, user } = useAuth()
 
   const navLinks = [
-    { href: '/', label: 'Home' },
-    { href: '/menu', label: 'Menu' },
+    { href: '/', label: 'Menu' },
     { href: '/orders', label: 'Zamówienia' },
   ]
 

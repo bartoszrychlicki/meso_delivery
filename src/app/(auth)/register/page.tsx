@@ -127,7 +127,7 @@ export default function UpgradeAccountPage() {
       )
 
       // Redirect to menu with a note
-      router.push('/menu?upgrade=pending')
+      router.push('/?upgrade=pending')
     } catch (error) {
       toast.error('Wystąpił błąd. Spróbuj ponownie.')
     } finally {

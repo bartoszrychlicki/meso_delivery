@@ -11,7 +11,7 @@ export default function AuthLayout({
       {/* Header */}
       <header className="p-4">
         <Link
-          href="/menu"
+          href="/"
           className="flex items-center gap-2 text-white/60 hover:text-white transition-colors w-fit"
         >
           <ArrowLeft className="w-5 h-5" />

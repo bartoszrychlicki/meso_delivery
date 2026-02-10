@@ -28,7 +28,7 @@ function OrderConfirmationContent() {
             // We fetch if we have orderId. 
             // If we already have confirmation but it's pending, we ALSO fetch to update status.
             if (!orderId) {
-                if (!confirmation) router.replace('/menu')
+                if (!confirmation) router.replace('/')
                 return
             }
 
@@ -152,7 +152,7 @@ function OrderConfirmationContent() {
                 <h1 className="text-xl font-bold text-white mb-2">Wystąpił błąd</h1>
                 <p className="text-white/60 mb-6">{error}</p>
                 <Link
-                    href="/menu"
+                    href="/"
                     className="bg-meso-red-500 text-white px-6 py-3 rounded-xl font-medium"
                 >
                     Wróć do menu
@@ -180,7 +180,7 @@ function OrderConfirmationContent() {
                 </p>
                 <div className="flex gap-4">
                     <Link
-                        href="/menu"
+                        href="/"
                         className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-medium transition-colors"
                     >
                         Wróć do menu
@@ -198,7 +198,7 @@ function OrderConfirmationContent() {
 
     const handleBackToMenu = () => {
         clearConfirmation()
-        router.push('/menu')
+        router.push('/')
     }
 
     return (

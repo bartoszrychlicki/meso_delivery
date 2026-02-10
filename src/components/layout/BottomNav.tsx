@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, UtensilsCrossed, ShoppingCart, User, Receipt, LogIn, UserPlus } from 'lucide-react'
+import { UtensilsCrossed, ShoppingCart, User, Receipt, LogIn } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -13,7 +13,7 @@ interface BottomNavProps {
 
 interface NavItem {
   href: string
-  icon: typeof Home
+  icon: typeof UtensilsCrossed
   label: string
   badge?: number
 }
@@ -24,7 +24,7 @@ export function BottomNav({ cartItemCount = 0, className }: BottomNavProps) {
 
   // Base nav items (always shown)
   const baseNavItems: NavItem[] = [
-    { href: '/', icon: Home, label: 'Home' },
+    { href: '/', icon: UtensilsCrossed, label: 'Menu' },
     { href: '/cart', icon: ShoppingCart, label: 'Koszyk', badge: cartItemCount },
     { href: '/orders', icon: Receipt, label: 'Zamówienia' },
   ]

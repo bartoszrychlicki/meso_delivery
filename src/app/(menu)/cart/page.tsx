@@ -26,7 +26,7 @@ export default function CartPage() {
     return (
       <EmptyState
         type="cart"
-        action={{ label: 'Przejdź do menu', href: '/menu' }}
+        action={{ label: 'Przejdź do menu', href: '/' }}
       />
     )
   }
@@ -37,7 +37,7 @@ export default function CartPage() {
       <header className="sticky top-0 z-10 flex items-center bg-meso-dark-900/80 backdrop-blur-sm p-4 pb-2 justify-between border-b border-meso-red-500/20">
         <div className="flex w-12 items-center justify-start">
           <Link
-            href="/menu"
+            href="/"
             className="flex h-10 w-10 items-center justify-center rounded-full text-white hover:text-meso-red-500 transition-colors"
           >
             <ArrowLeft className="w-6 h-6" />

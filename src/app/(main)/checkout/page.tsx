@@ -130,7 +130,7 @@ export default function CheckoutPage() {
     }
 
     if (items.length === 0) {
-        return <EmptyState type="cart" action={{ label: 'Wróć do menu', href: '/menu' }} />
+        return <EmptyState type="cart" action={{ label: 'Wróć do menu', href: '/' }} />
     }
 
     const handleNextStep = () => {

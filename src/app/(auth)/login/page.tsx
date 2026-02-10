@@ -30,7 +30,7 @@ function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const supabase = createClient()
 
-  const redirectTo = searchParams.get('redirect') || '/menu'
+  const redirectTo = searchParams.get('redirect') || '/'
 
   const {
     register,

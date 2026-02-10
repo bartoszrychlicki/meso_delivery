@@ -133,7 +133,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       {/* Header */}
       <div className="sticky top-0 z-50 flex items-center justify-between bg-meso-dark-900/80 backdrop-blur-sm p-4 pb-2">
         <Link
-          href="/menu"
+          href="/"
           className="flex w-12 h-12 items-center justify-center rounded-full text-white hover:text-meso-red-500 transition-colors"
         >
           <ArrowLeft className="w-6 h-6" />
