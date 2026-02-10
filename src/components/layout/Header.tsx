@@ -46,7 +46,7 @@ export function Header({
         <div className="lg:hidden flex items-center justify-between px-4 h-14">
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-white/80 hover:text-white">
+              <Button variant="ghost" size="icon" className="text-white/80 hover:text-white hover:bg-white/10">
                 <Menu className="w-5 h-5" />
               </Button>
             </SheetTrigger>
@@ -118,7 +118,7 @@ export function Header({
 
           <div className="flex items-center gap-2">
             <Link href="/cart">
-              <Button variant="ghost" size="icon" className="text-white/80 hover:text-white relative">
+              <Button variant="ghost" size="icon" className="text-white/80 hover:text-white hover:bg-white/10 relative">
                 <ShoppingCart className="w-5 h-5" />
                 {cartItemCount > 0 && (
                   <span className="absolute top-0 right-0 w-4 h-4 bg-meso-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold shadow-[0_0_8px_rgba(244,37,175,0.6)]">
@@ -139,7 +139,7 @@ export function Header({
 
         <div className="flex items-center gap-4">
           <Link href="/cart">
-            <Button variant="ghost" size="icon" className="text-white/80 hover:text-white relative">
+            <Button variant="ghost" size="icon" className="text-white/80 hover:text-white hover:bg-white/10 relative">
               <ShoppingCart className="w-5 h-5" />
               {cartItemCount > 0 && (
                 <span className="absolute top-0 right-0 w-4 h-4 bg-meso-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold shadow-[0_0_8px_rgba(244,37,175,0.6)]">
@@ -156,9 +156,9 @@ export function Header({
               <Link href="/account">
                 <Button
                   variant="ghost"
-                  className="text-white/80 hover:text-white gap-2"
+                  className="text-white/80 hover:text-white hover:bg-white/10 gap-2"
                 >
-                  <div className="w-7 h-7 rounded-full bg-meso-red-500 flex items-center justify-center text-xs font-bold">
+                  <div className="w-7 h-7 rounded-full bg-meso-red-500 flex items-center justify-center text-xs font-bold text-white">
                     {userDisplayName?.[0]?.toUpperCase() || 'U'}
                   </div>
                   <span className="hidden xl:inline">{userDisplayName}</span>
@@ -168,7 +168,7 @@ export function Header({
                 variant="ghost"
                 size="icon"
                 onClick={() => signOut()}
-                className="text-white/50 hover:text-white"
+                className="text-white/50 hover:text-white hover:bg-white/10"
                 title="Wyloguj się"
               >
                 <LogOut className="w-4 h-4" />
@@ -188,7 +188,7 @@ export function Header({
               <Link href="/login">
                 <Button
                   variant="ghost"
-                  className="text-white/60 hover:text-white"
+                  className="text-white/60 hover:text-white hover:bg-white/10"
                 >
                   <LogIn className="w-4 h-4 mr-2" />
                   Zaloguj
