@@ -4,7 +4,7 @@ import { Loader2, ChefHat, Package, AlertCircle, Bell, BellOff, Utensils, Truck,
 import { Button } from '@/components/ui/button'
 import { useOperatorOrders } from '@/hooks/useOperatorOrders'
 import { OrderCard } from '@/components/operator/OrderCard'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 export default function OperatorOrdersPage() {
     const {
@@ -14,7 +14,11 @@ export default function OperatorOrdersPage() {
         inDeliveryOrders,
         deliveredOrders,
         isLoading,
-        error
+        error,
+        startPreparing,
+        markAsReady,
+        markAsInDelivery,
+        markAsDelivered,
     } = useOperatorOrders()
 
     const [soundEnabled, setSoundEnabled] = useState(true)
@@ -47,7 +51,7 @@ export default function OperatorOrdersPage() {
     const totalOrders = newOrders.length + preparingOrders.length + readyOrders.length + inDeliveryOrders.length + deliveredOrders.length
 
     return (
-        <div className="container mx-auto px-4 py-6">
+        <div className="max-w-[1800px] mx-auto px-4 py-6">
             {/* Stats Bar */}
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
@@ -78,7 +82,7 @@ export default function OperatorOrdersPage() {
                     </div>
                 </div>
             ) : (
-                <div className="grid xl:grid-cols-5 lg:grid-cols-3 gap-6 overflow-x-auto pb-4">
+                <div className="flex gap-4 overflow-x-auto pb-4">
                     {/* New Orders Column */}
                     <OrderColumn
                         title="NOWE"
@@ -89,7 +93,12 @@ export default function OperatorOrdersPage() {
                         borderColor="border-orange-500/50"
                     >
                         {newOrders.map(order => (
-                            <OrderCard key={order.id} order={order} variant="new" />
+                            <OrderCard
+                                key={order.id}
+                                order={order}
+                                variant="new"
+                                onStartPreparing={startPreparing}
+                            />
                         ))}
                     </OrderColumn>
 
@@ -103,7 +112,12 @@ export default function OperatorOrdersPage() {
                         borderColor="border-blue-500/50"
                     >
                         {preparingOrders.map(order => (
-                            <OrderCard key={order.id} order={order} variant="preparing" />
+                            <OrderCard
+                                key={order.id}
+                                order={order}
+                                variant="preparing"
+                                onMarkAsReady={markAsReady}
+                            />
                         ))}
                     </OrderColumn>
 
@@ -117,7 +131,13 @@ export default function OperatorOrdersPage() {
                         borderColor="border-green-500/50"
                     >
                         {readyOrders.map(order => (
-                            <OrderCard key={order.id} order={order} variant="ready" />
+                            <OrderCard
+                                key={order.id}
+                                order={order}
+                                variant="ready"
+                                onMarkAsInDelivery={markAsInDelivery}
+                                onMarkAsDelivered={markAsDelivered}
+                            />
                         ))}
                     </OrderColumn>
 
@@ -131,7 +151,12 @@ export default function OperatorOrdersPage() {
                         borderColor="border-purple-500/50"
                     >
                         {inDeliveryOrders.map(order => (
-                            <OrderCard key={order.id} order={order} variant="in_delivery" />
+                            <OrderCard
+                                key={order.id}
+                                order={order}
+                                variant="in_delivery"
+                                onMarkAsDelivered={markAsDelivered}
+                            />
                         ))}
                     </OrderColumn>
 
@@ -166,15 +191,15 @@ interface OrderColumnProps {
 
 function OrderColumn({ title, icon, count, color, bgColor, borderColor, children }: OrderColumnProps) {
     return (
-        <div className={`rounded-xl border-2 ${borderColor} ${bgColor} p-4`}>
-            <div className={`flex items-center gap-2 mb-4 ${color}`}>
+        <div className={`rounded-xl border-2 ${borderColor} ${bgColor} p-3 min-w-[280px] flex-1`}>
+            <div className={`flex items-center gap-2 mb-3 ${color}`}>
                 {icon}
-                <h2 className="font-bold">{title}</h2>
-                <span className={`ml-auto px-2 py-0.5 rounded-full text-sm font-bold ${bgColor} ${color}`}>
+                <h2 className="font-bold text-sm">{title}</h2>
+                <span className={`ml-auto px-2 py-0.5 rounded-full text-xs font-bold ${bgColor} ${color}`}>
                     {count}
                 </span>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2">
                 {children}
             </div>
         </div>

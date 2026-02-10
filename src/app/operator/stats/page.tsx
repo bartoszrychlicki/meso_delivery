@@ -1,89 +1,108 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Loader2, TrendingUp, Clock, Package, DollarSign, ChefHat, UtensilsCrossed } from 'lucide-react'
+import { useEffect, useState, useCallback } from 'react'
+import { Loader2, TrendingUp, Clock, Package, DollarSign, ChefHat, ShoppingCart, Truck, CheckCircle, CalendarDays } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
 
-interface DailyStats {
-    totalOrders: number
-    unpaidOrders: number
-    completedOrders: number
+interface Stats {
+    totalPaidOrders: number
+    pendingPaymentOrders: number
+    inProgressOrders: number
+    deliveredOrders: number
     avgPrepTime: number
     totalRevenue: number
 }
 
+function getToday() {
+    const d = new Date()
+    return d.toISOString().slice(0, 10)
+}
+
 export default function OperatorStatsPage() {
-    const [stats, setStats] = useState<DailyStats | null>(null)
-    const [isLoading, setIsLoading] = useState(true)
+    const [todayStats, setTodayStats] = useState<Stats | null>(null)
+    const [rangeStats, setRangeStats] = useState<Stats | null>(null)
+    const [isLoadingToday, setIsLoadingToday] = useState(true)
+    const [isLoadingRange, setIsLoadingRange] = useState(false)
 
-    useEffect(() => {
-        async function fetchStats() {
-            const supabase = createClient()
+    const [dateFrom, setDateFrom] = useState(getToday())
+    const [dateTo, setDateTo] = useState(getToday())
 
-            // Get today's date range
-            const today = new Date()
-            today.setHours(0, 0, 0, 0)
-            const tomorrow = new Date(today)
-            tomorrow.setDate(tomorrow.getDate() + 1)
+    const supabase = createClient()
 
-            // Fetch today's orders
-            const { data: orders, error } = await supabase
-                .from('orders')
-                .select('id, status, payment_status, total, created_at, confirmed_at, ready_at')
-                .gte('created_at', today.toISOString())
-                .lt('created_at', tomorrow.toISOString())
-                .not('status', 'eq', 'cancelled')
+    const calculateStats = (orders: any[]): Stats => {
+        const paidOrders = orders.filter(o => o.payment_status === 'paid')
+        const pendingPaymentOrders = orders.filter(o => o.payment_status === 'pending')
+        const inProgressOrders = orders.filter(o =>
+            ['confirmed', 'preparing', 'ready', 'awaiting_courier', 'in_delivery'].includes(o.status)
+        )
+        const deliveredOrders = orders.filter(o => o.status === 'delivered')
 
-            if (error) {
-                console.error('Error fetching stats:', error)
-                setIsLoading(false)
-                return
-            }
-
-            // Calculate stats
-            // "Orders today" should be only PAID orders
-            const paidOrders = orders?.filter((o: any) => o.payment_status === 'paid') || []
-            const totalOrders = paidOrders.length
-
-            // "Started/Unpaid" orders (pending payment)
-            const unpaidOrders = orders?.filter((o: any) => o.payment_status === 'pending') || []
-            const unpaidCount = unpaidOrders.length
-
-            const completedOrders = orders?.filter((o: any) =>
-                ['ready', 'awaiting_courier', 'in_delivery', 'delivered'].includes(o.status)
-            ).length || 0
-
-            // Calculate average prep time (confirmed -> ready)
-            const ordersWithPrepTime = orders?.filter((o: any) => o.confirmed_at && o.ready_at) || []
-            let avgPrepTime = 0
-            if (ordersWithPrepTime.length > 0) {
-                const totalPrepTime = ordersWithPrepTime.reduce((sum: number, o: any) => {
-                    const confirmed = new Date(o.confirmed_at).getTime()
-                    const ready = new Date(o.ready_at).getTime()
-                    return sum + (ready - confirmed)
-                }, 0)
-                avgPrepTime = Math.round(totalPrepTime / ordersWithPrepTime.length / 60000) // in minutes
-            }
-
-            const totalRevenue = paidOrders.reduce((sum: number, o: any) => sum + (o.total || 0), 0)
-
-            setStats({
-                totalOrders,
-                unpaidOrders: unpaidCount,
-                completedOrders,
-                avgPrepTime,
-                totalRevenue,
-            })
-            setIsLoading(false)
+        const ordersWithPrepTime = orders.filter(o => o.confirmed_at && o.ready_at)
+        let avgPrepTime = 0
+        if (ordersWithPrepTime.length > 0) {
+            const totalPrepTime = ordersWithPrepTime.reduce((sum: number, o: any) => {
+                const confirmed = new Date(o.confirmed_at).getTime()
+                const ready = new Date(o.ready_at).getTime()
+                return sum + (ready - confirmed)
+            }, 0)
+            avgPrepTime = Math.round(totalPrepTime / ordersWithPrepTime.length / 60000)
         }
 
-        fetchStats()
-        // Refresh every 5 minutes
-        const interval = setInterval(fetchStats, 5 * 60 * 1000)
-        return () => clearInterval(interval)
-    }, [])
+        const totalRevenue = paidOrders.reduce((sum: number, o: any) => sum + (o.total || 0), 0)
 
-    if (isLoading) {
+        return {
+            totalPaidOrders: paidOrders.length,
+            pendingPaymentOrders: pendingPaymentOrders.length,
+            inProgressOrders: inProgressOrders.length,
+            deliveredOrders: deliveredOrders.length,
+            avgPrepTime,
+            totalRevenue,
+        }
+    }
+
+    const fetchOrdersForRange = useCallback(async (from: string, to: string) => {
+        const fromDate = new Date(from)
+        fromDate.setHours(0, 0, 0, 0)
+        const toDate = new Date(to)
+        toDate.setDate(toDate.getDate() + 1)
+        toDate.setHours(0, 0, 0, 0)
+
+        const { data: orders, error } = await supabase
+            .from('orders')
+            .select('id, status, payment_status, total, created_at, confirmed_at, ready_at')
+            .gte('created_at', fromDate.toISOString())
+            .lt('created_at', toDate.toISOString())
+            .not('status', 'eq', 'cancelled')
+
+        if (error) {
+            console.error('Error fetching stats:', error)
+            return null
+        }
+
+        return calculateStats(orders || [])
+    }, [supabase])
+
+    // Fetch today's stats
+    useEffect(() => {
+        async function load() {
+            const stats = await fetchOrdersForRange(getToday(), getToday())
+            if (stats) setTodayStats(stats)
+            setIsLoadingToday(false)
+        }
+        load()
+        const interval = setInterval(load, 5 * 60 * 1000)
+        return () => clearInterval(interval)
+    }, [fetchOrdersForRange])
+
+    const handleRangeSearch = async () => {
+        setIsLoadingRange(true)
+        const stats = await fetchOrdersForRange(dateFrom, dateTo)
+        if (stats) setRangeStats(stats)
+        setIsLoadingRange(false)
+    }
+
+    if (isLoadingToday) {
         return (
             <div className="min-h-[60vh] flex items-center justify-center">
                 <Loader2 className="w-12 h-12 animate-spin text-meso-red-500" />
@@ -92,60 +111,115 @@ export default function OperatorStatsPage() {
     }
 
     return (
-        <div className="container mx-auto px-4 py-6">
+        <div className="max-w-[1200px] mx-auto px-4 py-6">
             <h1 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
                 <TrendingUp className="w-6 h-6 text-meso-red-500" />
                 Statystyki dnia
             </h1>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <StatCard
-                    icon={<Package className="w-8 h-8" />}
-                    label="Opłacone dzisiaj"
-                    value={stats?.totalOrders || 0}
-                    color="text-blue-500"
-                    bgColor="bg-blue-500/10"
-                />
+            {/* Today's stats boxes */}
+            <StatsGrid stats={todayStats} />
 
-                <StatCard
-                    icon={<Loader2 className="w-8 h-8" />}
-                    label="Rozpoczęte (nieopłacone)"
-                    value={stats?.unpaidOrders || 0}
-                    color="text-gray-400"
-                    bgColor="bg-gray-500/10"
-                />
+            {/* Detailed stats with date range */}
+            <div className="mt-10">
+                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <CalendarDays className="w-5 h-5 text-meso-red-500" />
+                    Statystyki za okres
+                </h2>
 
-                <StatCard
-                    icon={<ChefHat className="w-8 h-8" />}
-                    label="Ukończone"
-                    value={stats?.completedOrders || 0}
-                    color="text-green-500"
-                    bgColor="bg-green-500/10"
-                />
+                {/* Date range picker */}
+                <div className="flex flex-wrap items-end gap-3 mb-6">
+                    <div>
+                        <label className="block text-white/60 text-sm mb-1">Od</label>
+                        <input
+                            type="date"
+                            value={dateFrom}
+                            onChange={(e) => setDateFrom(e.target.value)}
+                            className="bg-meso-dark-800 border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-meso-red-500"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-white/60 text-sm mb-1">Do</label>
+                        <input
+                            type="date"
+                            value={dateTo}
+                            onChange={(e) => setDateTo(e.target.value)}
+                            className="bg-meso-dark-800 border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-meso-red-500"
+                        />
+                    </div>
+                    <Button
+                        onClick={handleRangeSearch}
+                        disabled={isLoadingRange}
+                        className="bg-meso-red-500 hover:bg-meso-red-600 text-white font-semibold h-10"
+                    >
+                        {isLoadingRange ? (
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        ) : null}
+                        Pokaż
+                    </Button>
+                </div>
 
-                <StatCard
-                    icon={<Clock className="w-8 h-8" />}
-                    label="Śr. czas przygotowania"
-                    value={stats?.avgPrepTime ? `${stats.avgPrepTime} min` : '-'}
-                    color="text-orange-500"
-                    bgColor="bg-orange-500/10"
-                />
-
-                <StatCard
-                    icon={<DollarSign className="w-8 h-8" />}
-                    label="Przychód"
-                    value={`${(stats?.totalRevenue || 0).toFixed(2)} zł`}
-                    color="text-meso-gold-500"
-                    bgColor="bg-meso-gold-500/10"
-                />
+                {/* Range stats results */}
+                {rangeStats ? (
+                    <StatsGrid stats={rangeStats} />
+                ) : (
+                    <div className="bg-meso-dark-800/50 rounded-xl p-8 border border-white/5 text-center">
+                        <CalendarDays className="w-12 h-12 text-white/20 mx-auto mb-3" />
+                        <p className="text-white/40">Wybierz zakres dat i kliknij &quot;Pokaż&quot;</p>
+                    </div>
+                )}
             </div>
+        </div>
+    )
+}
 
-            {/* Placeholder for more detailed stats */}
-            <div className="bg-meso-dark-800/50 rounded-xl p-8 border border-white/5 text-center">
-                <UtensilsCrossed className="w-16 h-16 text-white/20 mx-auto mb-4" />
-                <p className="text-lg text-white/60 mb-2">Szczegółowe statystyki</p>
-                <p className="text-white/40">Rozszerzone raporty dostępne wkrótce</p>
-            </div>
+function StatsGrid({ stats }: { stats: Stats | null }) {
+    return (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <StatCard
+                icon={<ShoppingCart className="w-8 h-8" />}
+                label="Zamówienia opłacone"
+                description="Zamówienia z potwierdzoną płatnością"
+                value={stats?.totalPaidOrders || 0}
+                color="text-blue-500"
+                bgColor="bg-blue-500/10"
+            />
+
+            <StatCard
+                icon={<Truck className="w-8 h-8" />}
+                label="W realizacji"
+                description="Przyjęte, w przygotowaniu lub w dostawie"
+                value={stats?.inProgressOrders || 0}
+                color="text-orange-500"
+                bgColor="bg-orange-500/10"
+            />
+
+            <StatCard
+                icon={<CheckCircle className="w-8 h-8" />}
+                label="Dostarczone"
+                description="Zamówienia wydane klientom"
+                value={stats?.deliveredOrders || 0}
+                color="text-green-500"
+                bgColor="bg-green-500/10"
+            />
+
+            <StatCard
+                icon={<Clock className="w-8 h-8" />}
+                label="Śr. czas przygotowania"
+                description="Od przyjęcia do gotowości"
+                value={stats?.avgPrepTime ? `${stats.avgPrepTime} min` : '-'}
+                color="text-purple-500"
+                bgColor="bg-purple-500/10"
+            />
+
+            <StatCard
+                icon={<DollarSign className="w-8 h-8" />}
+                label="Przychód"
+                description="Suma opłaconych zamówień"
+                value={`${(stats?.totalRevenue || 0).toFixed(2)} zł`}
+                color="text-meso-gold-500"
+                bgColor="bg-meso-gold-500/10"
+            />
         </div>
     )
 }
@@ -153,16 +227,20 @@ export default function OperatorStatsPage() {
 interface StatCardProps {
     icon: React.ReactNode
     label: string
+    description?: string
     value: string | number
     color: string
     bgColor: string
 }
 
-function StatCard({ icon, label, value, color, bgColor }: StatCardProps) {
+function StatCard({ icon, label, description, value, color, bgColor }: StatCardProps) {
     return (
-        <div className={`rounded-xl p-6 ${bgColor} border border-white/5`}>
-            <div className={`${color} mb-4`}>{icon}</div>
-            <p className="text-white/60 text-sm mb-1">{label}</p>
+        <div className={`rounded-xl p-5 ${bgColor} border border-white/5`}>
+            <div className={`${color} mb-3`}>{icon}</div>
+            <p className="text-white/80 text-sm font-medium mb-0.5">{label}</p>
+            {description && (
+                <p className="text-white/40 text-xs mb-2">{description}</p>
+            )}
             <p className="text-2xl font-bold text-white">{value}</p>
         </div>
     )

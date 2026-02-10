@@ -3,64 +3,75 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import {
-    Clock, ChevronRight, Loader2, PlayCircle, CheckCircle,
-    Truck, Phone, MapPin, Flame, Plus, UtensilsCrossed
+    Clock, ChevronRight, ChevronDown, ChevronUp, Loader2, PlayCircle, CheckCircle,
+    Truck, Phone, MapPin, Flame, Plus, User
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { OperatorOrder, getOrderAge, useOperatorOrders } from '@/hooks/useOperatorOrders'
+import { OperatorOrder, getOrderAge } from '@/hooks/useOperatorOrders'
 import { cn } from '@/lib/utils'
 
 interface OrderCardProps {
     order: OperatorOrder
     variant: 'new' | 'preparing' | 'ready' | 'in_delivery' | 'delivered'
+    onStartPreparing?: (id: number) => Promise<boolean>
+    onMarkAsReady?: (id: number) => Promise<boolean>
+    onMarkAsInDelivery?: (id: number) => Promise<boolean>
+    onMarkAsDelivered?: (id: number) => Promise<boolean>
 }
 
-export function OrderCard({ order, variant }: OrderCardProps) {
+export function OrderCard({
+    order,
+    variant,
+    onStartPreparing,
+    onMarkAsReady,
+    onMarkAsInDelivery,
+    onMarkAsDelivered,
+}: OrderCardProps) {
     const [isUpdating, setIsUpdating] = useState(false)
-    const { startPreparing, markAsReady, awaitingCourier, markAsInDelivery, markAsDelivered } = useOperatorOrders()
+    const [updatingAction, setUpdatingAction] = useState<string | null>(null)
+    const [isExpanded, setIsExpanded] = useState(false)
 
     const age = getOrderAge(order.created_at)
 
-    const handleAction = async () => {
+    const handleAction = async (action: string) => {
         setIsUpdating(true)
+        setUpdatingAction(action)
 
         try {
-            if (variant === 'new') {
-                await startPreparing(order.id)
-            } else if (variant === 'preparing') {
-                await markAsReady(order.id)
-            } else if (variant === 'ready') {
-                if (order.delivery_type === 'delivery') {
-                    // Ready -> In Delivery (Courier picked up)
-                    await markAsInDelivery(order.id)
-                } else {
-                    // Ready -> Delivered (Customer picked up)
-                    await markAsDelivered(order.id)
-                }
-            } else if (variant === 'in_delivery') {
-                // In Delivery -> Delivered
-                await markAsDelivered(order.id)
+            if (action === 'start' && onStartPreparing) {
+                await onStartPreparing(order.id)
+            } else if (action === 'ready' && onMarkAsReady) {
+                await onMarkAsReady(order.id)
+            } else if (action === 'courier' && onMarkAsInDelivery) {
+                await onMarkAsInDelivery(order.id)
+            } else if (action === 'delivered' && onMarkAsDelivered) {
+                await onMarkAsDelivered(order.id)
             }
         } catch (error) {
             console.error(error)
         }
 
         setIsUpdating(false)
+        setUpdatingAction(null)
     }
+
+    const firstItem = order.items[0]
+    const remainingItems = order.items.slice(1)
+    const hasMoreItems = remainingItems.length > 0
 
     return (
         <div className={cn(
-            'bg-meso-dark-900/80 rounded-xl p-4 border transition-all',
+            'bg-meso-dark-900/80 rounded-xl p-3 border transition-all',
             age.isUrgent && (variant === 'new' || variant === 'preparing') && 'border-red-500 animate-pulse',
             !age.isUrgent && 'border-white/10',
             variant === 'delivered' && 'opacity-75'
         )}>
             {/* Header */}
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                    <span className="text-xl font-bold text-white">#{order.id}</span>
+                    <span className="text-lg font-bold text-white">#{order.id}</span>
                     <span className={cn(
-                        'text-sm px-2 py-0.5 rounded',
+                        'text-xs px-1.5 py-0.5 rounded',
                         order.delivery_type === 'delivery'
                             ? 'bg-blue-500/20 text-blue-400'
                             : 'bg-purple-500/20 text-purple-400'
@@ -70,184 +81,229 @@ export function OrderCard({ order, variant }: OrderCardProps) {
                 </div>
 
                 <div className={cn(
-                    'flex items-center gap-1 text-sm',
+                    'flex items-center gap-1 text-xs',
                     age.isUrgent && (variant === 'new' || variant === 'preparing') ? 'text-red-400' : 'text-white/50'
                 )}>
-                    <Clock className="w-4 h-4" />
+                    <Clock className="w-3 h-3" />
                     <span>{age.label}</span>
                 </div>
             </div>
 
-            {/* Items */}
-            <div className="space-y-2 mb-4">
-                {order.items.map((item) => (
-                    <div key={item.id} className="flex items-start gap-2 text-sm">
-                        <span className="font-bold text-meso-red-500 w-5">{item.quantity}x</span>
-                        <div className="flex-1">
-                            <span className="text-white">{item.product?.name || 'Produkt'}</span>
-                            {item.variant_name && (
-                                <span className="text-white/50 ml-1">({item.variant_name})</span>
-                            )}
-
-                            {/* Spice level */}
-                            {item.spice_level && item.spice_level > 1 && (
-                                <div className="flex items-center gap-1 text-orange-400 mt-0.5">
-                                    <Flame className="w-3 h-3" />
-                                    <span className="text-xs">
-                                        {item.spice_level === 2 ? 'Ostre' : 'Bardzo ostre'}
-                                    </span>
-                                </div>
-                            )}
-
-                            {/* Addons */}
-                            {item.addons && item.addons.length > 0 && (
-                                <div className="flex flex-wrap gap-1 mt-1">
-                                    {item.addons.map((addon, i) => (
-                                        <span key={i} className="flex items-center gap-0.5 text-xs text-green-400">
-                                            <Plus className="w-2 h-2" />
-                                            {addon.name}
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* Notes */}
-                            {item.notes && (
-                                <p className="text-xs text-yellow-400 mt-1 italic">
-                                    📝 {item.notes}
-                                </p>
-                            )}
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Order notes */}
-            {order.notes && (
-                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-2 mb-3 text-sm text-yellow-300">
-                    📋 {order.notes}
-                </div>
+            {/* First item (always visible) */}
+            {firstItem && (
+                <ItemRow item={firstItem} />
             )}
 
-            {/* Customer info (for delivery) */}
-            {order.delivery_type === 'delivery' && order.delivery_address && (
-                <div className="bg-white/5 rounded-lg p-2 mb-3 text-sm text-white/60">
-                    <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4" />
-                        <span>
-                            {order.delivery_address.street} {order.delivery_address.building_number}
-                            {order.delivery_address.apartment_number && `/${order.delivery_address.apartment_number}`}
-                        </span>
-                    </div>
-                    {order.customer?.phone && (
-                        <div className="flex items-center gap-2 mt-1">
-                            <Phone className="w-4 h-4" />
-                            <span>{order.customer.phone}</span>
+            {/* Expandable: remaining items + notes + address */}
+            {(hasMoreItems || order.notes || (order.delivery_type === 'delivery' && order.delivery_address)) && (
+                <>
+                    {isExpanded && (
+                        <div className="space-y-1 mt-1">
+                            {remainingItems.map((item) => (
+                                <ItemRow key={item.id} item={item} />
+                            ))}
+
+                            {/* Order notes */}
+                            {order.notes && (
+                                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-2 text-xs text-yellow-300">
+                                    📋 {order.notes}
+                                </div>
+                            )}
+
+                            {/* Customer info (for delivery) */}
+                            {order.delivery_type === 'delivery' && order.delivery_address && (
+                                <div className="bg-white/5 rounded-lg p-2 text-xs text-white/60">
+                                    <div className="flex items-center gap-1.5">
+                                        <MapPin className="w-3 h-3 shrink-0" />
+                                        <span>
+                                            {order.delivery_address.street} {order.delivery_address.building_number}
+                                            {order.delivery_address.apartment_number && `/${order.delivery_address.apartment_number}`}
+                                        </span>
+                                    </div>
+                                    {order.customer?.phone && (
+                                        <div className="flex items-center gap-1.5 mt-1">
+                                            <Phone className="w-3 h-3 shrink-0" />
+                                            <span>{order.customer.phone}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    <button
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        className="flex items-center gap-1 text-xs text-white/40 hover:text-white/60 mt-1.5 mb-2 transition-colors"
+                    >
+                        {isExpanded ? (
+                            <>
+                                <ChevronUp className="w-3 h-3" />
+                                Zwiń
+                            </>
+                        ) : (
+                            <>
+                                <ChevronDown className="w-3 h-3" />
+                                {hasMoreItems
+                                    ? `+${remainingItems.length} więcej pozycji`
+                                    : 'Pokaż szczegóły'}
+                            </>
+                        )}
+                    </button>
+                </>
+            )}
+
+            {/* Spacer if no expandable content */}
+            {!hasMoreItems && !order.notes && !(order.delivery_type === 'delivery' && order.delivery_address) && (
+                <div className="mb-2" />
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-2">
+                <div className="flex-1 space-y-2">
+                    {variant === 'new' && (
+                        <Button
+                            onClick={() => handleAction('start')}
+                            disabled={isUpdating}
+                            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold h-9 text-sm"
+                        >
+                            {isUpdating ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <>
+                                    <PlayCircle className="w-4 h-4 mr-1.5" />
+                                    ROZPOCZNIJ
+                                </>
+                            )}
+                        </Button>
+                    )}
+
+                    {variant === 'preparing' && (
+                        <Button
+                            onClick={() => handleAction('ready')}
+                            disabled={isUpdating}
+                            className="w-full bg-green-500 hover:bg-green-600 text-white font-bold h-9 text-sm"
+                        >
+                            {isUpdating ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <>
+                                    <CheckCircle className="w-4 h-4 mr-1.5" />
+                                    GOTOWE
+                                </>
+                            )}
+                        </Button>
+                    )}
+
+                    {variant === 'ready' && (
+                        <>
+                            <Button
+                                onClick={() => handleAction('courier')}
+                                disabled={isUpdating}
+                                className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold h-9 text-sm"
+                            >
+                                {isUpdating && updatingAction === 'courier' ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <>
+                                        <Truck className="w-4 h-4 mr-1.5" />
+                                        WYDANO KURIEROWI
+                                    </>
+                                )}
+                            </Button>
+                            <Button
+                                onClick={() => handleAction('delivered')}
+                                disabled={isUpdating}
+                                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold h-9 text-sm"
+                            >
+                                {isUpdating && updatingAction === 'delivered' ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <>
+                                        <User className="w-4 h-4 mr-1.5" />
+                                        WYDANO KLIENTOWI
+                                    </>
+                                )}
+                            </Button>
+                        </>
+                    )}
+
+                    {variant === 'in_delivery' && (
+                        <Button
+                            onClick={() => handleAction('delivered')}
+                            disabled={isUpdating}
+                            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold h-9 text-sm"
+                        >
+                            {isUpdating ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <>
+                                    <CheckCircle className="w-4 h-4 mr-1.5" />
+                                    DOSTARCZONO
+                                </>
+                            )}
+                        </Button>
+                    )}
+
+                    {variant === 'delivered' && (
+                        <div className="w-full bg-white/5 text-white/40 font-bold text-center py-2 rounded-lg flex items-center justify-center gap-1.5 text-sm">
+                            <CheckCircle className="w-4 h-4" />
+                            <span>ZAKOŃCZONE</span>
                         </div>
                     )}
                 </div>
-            )}
-
-            {/* Action Button */}
-            <div className="flex gap-2">
-                {variant === 'new' && (
-                    <Button
-                        onClick={handleAction}
-                        disabled={isUpdating}
-                        className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold"
-                    >
-                        {isUpdating ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                            <>
-                                <PlayCircle className="w-4 h-4 mr-2" />
-                                ROZPOCZNIJ
-                            </>
-                        )}
-                    </Button>
-                )}
-
-                {variant === 'preparing' && (
-                    <Button
-                        onClick={handleAction}
-                        disabled={isUpdating}
-                        className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold"
-                    >
-                        {isUpdating ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                            <>
-                                <CheckCircle className="w-4 h-4 mr-2" />
-                                GOTOWE
-                            </>
-                        )}
-                    </Button>
-                )}
-
-                {variant === 'ready' && (
-                    <Button
-                        onClick={handleAction}
-                        disabled={isUpdating}
-                        className={cn(
-                            "flex-1 text-white font-bold",
-                            order.delivery_type === 'delivery'
-                                ? "bg-purple-500 hover:bg-purple-600"
-                                : "bg-green-600 hover:bg-green-700"
-                        )}
-                    >
-                        {isUpdating ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                            <>
-                                {order.delivery_type === 'delivery' ? (
-                                    <>
-                                        <Truck className="w-4 h-4 mr-2" />
-                                        WYDANO KURIEROWI
-                                    </>
-                                ) : (
-                                    <>
-                                        <CheckCircle className="w-4 h-4 mr-2" />
-                                        ODBIÓR KLIENTA
-                                    </>
-                                )}
-                            </>
-                        )}
-                    </Button>
-                )}
-
-                {variant === 'in_delivery' && (
-                    <Button
-                        onClick={handleAction}
-                        disabled={isUpdating}
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold"
-                    >
-                        {isUpdating ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                            <>
-                                <CheckCircle className="w-4 h-4 mr-2" />
-                                DOSTARCZONO
-                            </>
-                        )}
-                    </Button>
-                )}
-
-                {variant === 'delivered' && (
-                    <div className="flex-1 bg-white/5 text-white/40 font-bold text-center py-2 rounded-lg flex items-center justify-center gap-2">
-                        <CheckCircle className="w-4 h-4" />
-                        <span>ZAKOŃCZONE</span>
-                    </div>
-                )}
 
                 <Link href={`/operator/orders/${order.id}`}>
                     <Button
                         variant="outline"
                         size="icon"
-                        className="border-white/10 text-white/50 hover:text-white hover:bg-white/5"
+                        className="border-white/10 text-white/50 hover:text-white hover:bg-white/5 h-9 w-9"
                     >
-                        <ChevronRight className="w-5 h-5" />
+                        <ChevronRight className="w-4 h-4" />
                     </Button>
                 </Link>
+            </div>
+        </div>
+    )
+}
+
+function ItemRow({ item }: { item: OperatorOrder['items'][0] }) {
+    return (
+        <div className="flex items-start gap-1.5 text-sm">
+            <span className="font-bold text-meso-red-500 w-5 shrink-0">{item.quantity}x</span>
+            <div className="flex-1 min-w-0">
+                <span className="text-white">{item.product?.name || 'Produkt'}</span>
+                {item.variant_name && (
+                    <span className="text-white/50 ml-1">({item.variant_name})</span>
+                )}
+
+                {/* Spice level */}
+                {item.spice_level && item.spice_level > 1 && (
+                    <span className="inline-flex items-center gap-0.5 text-orange-400 ml-1">
+                        <Flame className="w-3 h-3" />
+                        <span className="text-xs">
+                            {item.spice_level === 2 ? 'Ostre' : 'Bardzo ostre'}
+                        </span>
+                    </span>
+                )}
+
+                {/* Addons */}
+                {item.addons && item.addons.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-0.5">
+                        {item.addons.map((addon, i) => (
+                            <span key={i} className="flex items-center gap-0.5 text-xs text-green-400">
+                                <Plus className="w-2 h-2" />
+                                {addon.name}
+                            </span>
+                        ))}
+                    </div>
+                )}
+
+                {/* Notes */}
+                {item.notes && (
+                    <p className="text-xs text-yellow-400 mt-0.5 italic">
+                        📝 {item.notes}
+                    </p>
+                )}
             </div>
         </div>
     )
