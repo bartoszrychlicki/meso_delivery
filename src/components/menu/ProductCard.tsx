@@ -17,6 +17,7 @@ interface Product {
   slug: string
   description?: string
   price: number
+  original_price?: number
   image_url?: string
   is_spicy?: boolean
   spice_level?: 1 | 2 | 3
@@ -40,6 +41,10 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
   const hasOptions = product.has_variants || product.has_addons || product.has_spice_level
+  const hasDiscount = product.original_price && product.original_price > product.price
+  const discountPercent = hasDiscount
+    ? Math.round((1 - product.price / product.original_price!) * 100)
+    : 0
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -101,6 +106,11 @@ export function ProductCard({ product, className }: ProductCardProps) {
               <span className="text-6xl">🍜</span>
             </div>
           )}
+          {hasDiscount && (
+            <span className="absolute top-3 left-3 rounded-lg bg-meso-red-500 px-2 py-1 text-sm font-bold text-white shadow-lg">
+              -{discountPercent}%
+            </span>
+          )}
         </div>
 
         {/* Content */}
@@ -117,9 +127,16 @@ export function ProductCard({ product, className }: ProductCardProps) {
 
           {/* Price and Add Button */}
           <div className="flex items-center justify-between mt-2">
-            <p className="text-meso-red-500 text-2xl font-bold leading-tight">
-              {formatPrice(product.price)}
-            </p>
+            <div className="flex flex-col">
+              {hasDiscount && (
+                <p className="text-white/40 text-base font-medium leading-tight line-through">
+                  {formatPrice(product.original_price!)}
+                </p>
+              )}
+              <p className="text-meso-red-500 text-2xl font-bold leading-tight">
+                {formatPrice(product.price)}
+              </p>
+            </div>
             <button
               onClick={handleQuickAdd}
               className={cn(

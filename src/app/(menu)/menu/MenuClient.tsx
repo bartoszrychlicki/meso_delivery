@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Search, ArrowLeft, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
-import { useSearchParams, useRouter } from 'next/navigation'
-import { CategoryTabs, ProductGrid } from '@/components/menu'
+import { CategoryTabs, ProductGrid, ProductCard, PromoCarousel } from '@/components/menu'
 import { useCartStore } from '@/stores/cartStore'
 
 interface Category {
@@ -24,6 +23,7 @@ interface Product {
   slug: string
   description?: string
   price: number
+  original_price?: number
   image_url?: string
   is_spicy?: boolean
   spice_level?: 1 | 2 | 3
@@ -54,29 +54,14 @@ interface MenuClientProps {
 }
 
 export function MenuClient({ categories, products, location }: MenuClientProps) {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const initialCategory = searchParams.get('category') || 'all'
-
-  const [activeCategory, setActiveCategory] = useState<string>(initialCategory)
+  const [activeCategory, setActiveCategory] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const cartItemCount = useCartStore((state) => state.getItemCount())
 
-  // Sync state with URL
-  useEffect(() => {
-    const category = searchParams.get('category')
-    if (category) {
-      setActiveCategory(category)
-    } else {
-      setActiveCategory('all')
-    }
-  }, [searchParams])
-
-  // Add "Start" and "All" categories
+  // Add "All" category at the beginning
   const allCategories = [
-    { id: 'home', name: 'Start', slug: 'home', icon: '🏠' },
-    { id: 'all', name: 'Wszystko', slug: 'all', icon: '🍱' },
-    ...categories,
+    { id: 'all', name: 'Start', slug: 'all', icon: '🍱' },
+    ...categories.filter(c => c.slug !== 'bestsellery'),
   ]
 
   // Filter products by search query
@@ -138,12 +123,19 @@ export function MenuClient({ categories, products, location }: MenuClientProps) 
         </label>
       </div>
 
+      {/* Promotional Carousel (mobile, only on Start screen) */}
+      {activeCategory === 'all' && (
+        <div className="lg:hidden px-4 pb-2">
+          <PromoCarousel />
+        </div>
+      )}
+
       {/* Category navigation */}
       <div className="px-4 lg:hidden">
         <CategoryTabs
           categories={allCategories}
           activeCategory={activeCategory}
-          useLinks={true}
+          onCategoryChange={setActiveCategory}
         />
       </div>
 
@@ -154,17 +146,74 @@ export function MenuClient({ categories, products, location }: MenuClientProps) 
           <CategoryTabs
             categories={allCategories}
             activeCategory={activeCategory}
-            useLinks={true}
+            onCategoryChange={setActiveCategory}
           />
         </aside>
 
         {/* Products */}
         <main className="flex flex-col gap-6 px-4 pb-6 pt-4">
-          <ProductGrid
-            products={filteredProducts}
-            categories={categories}
-            activeCategory={activeCategory}
-          />
+          {/* Promotional Carousel (desktop, only on Start screen) */}
+          {activeCategory === 'all' && (
+            <div className="hidden lg:block">
+              <PromoCarousel />
+            </div>
+          )}
+
+          {activeCategory === 'all' ? (
+            <div className="space-y-8">
+              {/* Aktualne promocje */}
+              {(() => {
+                const promoProducts = filteredProducts.filter(
+                  (p) => p.original_price && p.original_price > p.price
+                )
+                if (promoProducts.length === 0) return null
+                return (
+                  <section>
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="text-2xl">🏷️</span>
+                      <h2 className="text-xl font-bold text-white">
+                        Aktualne promocje
+                      </h2>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {promoProducts.map((product) => (
+                        <ProductCard key={product.id} product={product} />
+                      ))}
+                    </div>
+                  </section>
+                )
+              })()}
+
+              {/* Bestsellery */}
+              {(() => {
+                const bestsellerProducts = filteredProducts.filter(
+                  (p) => p.is_bestseller
+                )
+                if (bestsellerProducts.length === 0) return null
+                return (
+                  <section>
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="text-2xl">⭐</span>
+                      <h2 className="text-xl font-bold text-white">
+                        Bestsellery
+                      </h2>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {bestsellerProducts.map((product) => (
+                        <ProductCard key={product.id} product={product} />
+                      ))}
+                    </div>
+                  </section>
+                )
+              })()}
+            </div>
+          ) : (
+            <ProductGrid
+              products={filteredProducts}
+              categories={categories}
+              activeCategory={activeCategory}
+            />
+          )}
         </main>
       </div>
     </div>

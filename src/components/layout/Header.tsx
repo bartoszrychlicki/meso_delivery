@@ -94,7 +94,7 @@ export function Header({
                     <>
                       <Link
                         href="/register"
-                        className="flex items-center gap-2 text-meso-gold-400 hover:text-meso-gold-300"
+                        className="flex items-center gap-2 text-meso-red-400 hover:text-meso-red-300"
                       >
                         <UserPlus className="w-4 h-4" />
                         Załóż konto
@@ -180,7 +180,7 @@ export function Header({
               <Link href="/register">
                 <Button
                   variant="outline"
-                  className="border-meso-gold-500/30 text-meso-gold-400 hover:bg-meso-gold-500/10 hover:border-meso-gold-500/50"
+                  className="border-meso-red-500/50 bg-meso-red-500/10 text-white hover:bg-meso-red-500 hover:border-meso-red-500 hover:text-white"
                 >
                   <UserPlus className="w-4 h-4 mr-2" />
                   Załóż konto

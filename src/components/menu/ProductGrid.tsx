@@ -10,6 +10,7 @@ interface Product {
   slug: string
   description?: string
   price: number
+  original_price?: number
   image_url?: string
   is_spicy?: boolean
   spice_level?: 1 | 2 | 3
@@ -39,11 +40,8 @@ interface ProductGridProps {
 
 export function ProductGrid({ products, categories, activeCategory }: ProductGridProps) {
   // Filter products by active category
-  // Special case: "bestsellery" category shows all products with is_bestseller=true
   const filteredProducts = activeCategory && activeCategory !== 'all'
-    ? activeCategory === 'bestsellery'
-      ? products.filter((p) => p.is_bestseller === true)
-      : products.filter((p) => {
+    ? products.filter((p) => {
         const category = categories.find((c) => c.slug === activeCategory)
         return category && p.category_id === category.id
       })

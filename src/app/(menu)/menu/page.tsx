@@ -33,6 +33,7 @@ async function getMenuData() {
         has_variants,
         has_addons,
         has_spice_level,
+        original_price,
         allergens,
         tags
       `)
