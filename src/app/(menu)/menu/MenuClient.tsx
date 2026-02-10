@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Search, ArrowLeft, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { CategoryTabs, ProductGrid } from '@/components/menu'
 import { useCartStore } from '@/stores/cartStore'
 
@@ -53,12 +54,27 @@ interface MenuClientProps {
 }
 
 export function MenuClient({ categories, products, location }: MenuClientProps) {
-  const [activeCategory, setActiveCategory] = useState<string>('all')
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const initialCategory = searchParams.get('category') || 'all'
+
+  const [activeCategory, setActiveCategory] = useState<string>(initialCategory)
   const [searchQuery, setSearchQuery] = useState('')
   const cartItemCount = useCartStore((state) => state.getItemCount())
 
-  // Add "All" category at the beginning
+  // Sync state with URL
+  useEffect(() => {
+    const category = searchParams.get('category')
+    if (category) {
+      setActiveCategory(category)
+    } else {
+      setActiveCategory('all')
+    }
+  }, [searchParams])
+
+  // Add "Start" and "All" categories
   const allCategories = [
+    { id: 'home', name: 'Start', slug: 'home', icon: '🏠' },
     { id: 'all', name: 'Wszystko', slug: 'all', icon: '🍱' },
     ...categories,
   ]
@@ -127,7 +143,7 @@ export function MenuClient({ categories, products, location }: MenuClientProps) 
         <CategoryTabs
           categories={allCategories}
           activeCategory={activeCategory}
-          onCategoryChange={setActiveCategory}
+          useLinks={true}
         />
       </div>
 
@@ -138,7 +154,7 @@ export function MenuClient({ categories, products, location }: MenuClientProps) 
           <CategoryTabs
             categories={allCategories}
             activeCategory={activeCategory}
-            onCategoryChange={setActiveCategory}
+            useLinks={true}
           />
         </aside>
 
