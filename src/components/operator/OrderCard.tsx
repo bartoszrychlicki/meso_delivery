@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import {
-    Clock, ChevronRight, ChevronDown, ChevronUp, Loader2, PlayCircle, CheckCircle,
+    Clock, ChevronDown, ChevronUp, Loader2, PlayCircle, CheckCircle,
     Truck, Phone, MapPin, Flame, Plus, User
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -157,10 +157,17 @@ export function OrderCard({
                 <div className="mb-2" />
             )}
 
+            {/* Details link */}
+            <Link
+                href={`/operator/orders/${order.id}`}
+                className="text-xs text-white/40 hover:text-white/70 transition-colors mb-2 inline-block"
+            >
+                Szczegóły →
+            </Link>
+
             {/* Action Buttons */}
-            <div className="flex gap-2">
-                <div className="flex-1 space-y-2">
-                    {variant === 'new' && (
+            <div className="space-y-2">
+                {variant === 'new' && (
                         <Button
                             onClick={() => handleAction('start')}
                             disabled={isUpdating}
@@ -250,17 +257,6 @@ export function OrderCard({
                             <span>ZAKOŃCZONE</span>
                         </div>
                     )}
-                </div>
-
-                <Link href={`/operator/orders/${order.id}`}>
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        className="border-white/10 text-white/50 hover:text-white hover:bg-white/5 h-9 w-9"
-                    >
-                        <ChevronRight className="w-4 h-4" />
-                    </Button>
-                </Link>
             </div>
         </div>
     )
