@@ -285,7 +285,7 @@ export async function GET() {
         spice_level: 2,
         variant_id: largeVariant?.id || null,
         variant_name: largeVariant?.name || 'Duży (550ml)',
-        addons: JSON.stringify([{ name: 'Jajko marynowane', price: 5 }]),
+        addons: [{ name: 'Jajko marynowane', price: 5 }],
         notes: 'Bez dymki',
         total_price: smLargePrice * 2 + 5 * 2,
       },
@@ -294,7 +294,7 @@ export async function GET() {
         product_id: gc.id,
         quantity: 1,
         unit_price: gc.price,
-        addons: '[]',
+        addons: [],
         total_price: gc.price,
       },
       // Order 2: preparing - 1x Tonkotsu + 1x Edamame + 1x Ramune
@@ -303,7 +303,7 @@ export async function GET() {
         product_id: tc.id,
         quantity: 1,
         unit_price: tc.price,
-        addons: JSON.stringify([{ name: 'Extra chashu (2 plastry)', price: 12 }]),
+        addons: [{ name: 'Extra chashu (2 plastry)', price: 12 }],
         total_price: tc.price + 12,
       },
       {
@@ -311,7 +311,7 @@ export async function GET() {
         product_id: ed.id,
         quantity: 1,
         unit_price: ed.price,
-        addons: '[]',
+        addons: [],
         total_price: ed.price,
       },
       {
@@ -319,7 +319,7 @@ export async function GET() {
         product_id: ra.id,
         quantity: 1,
         unit_price: ra.price,
-        addons: '[]',
+        addons: [],
         total_price: ra.price,
       },
       // Order 3: ready - 1x Karaage Rice Teriyaki + 1x Matcha Latte
@@ -328,7 +328,7 @@ export async function GET() {
         product_id: krt.id,
         quantity: 1,
         unit_price: krt.price,
-        addons: '[]',
+        addons: [],
         total_price: krt.price,
       },
       {
@@ -336,7 +336,7 @@ export async function GET() {
         product_id: ml.id,
         quantity: 1,
         unit_price: ml.price,
-        addons: '[]',
+        addons: [],
         total_price: ml.price,
       },
       // Order 4: in_delivery - 2x Shoyu Chicken + 1x Gyoza shrimp
@@ -345,7 +345,7 @@ export async function GET() {
         product_id: sc.id,
         quantity: 2,
         unit_price: sc.price,
-        addons: '[]',
+        addons: [],
         total_price: sc.price * 2,
       },
       {
@@ -353,7 +353,7 @@ export async function GET() {
         product_id: gs.id,
         quantity: 1,
         unit_price: gs.price,
-        addons: '[]',
+        addons: [],
         total_price: gs.price,
       },
       // Order 5: delivered - 1x Vege Tantanmen + 1x Gyoza vegan + 1x Yuzu Soda
@@ -363,7 +363,7 @@ export async function GET() {
         quantity: 1,
         unit_price: vt.price,
         spice_level: 3,
-        addons: '[]',
+        addons: [],
         total_price: vt.price,
       },
       {
@@ -371,7 +371,7 @@ export async function GET() {
         product_id: gv.id,
         quantity: 1,
         unit_price: gv.price,
-        addons: '[]',
+        addons: [],
         total_price: gv.price,
       },
       {
@@ -379,7 +379,7 @@ export async function GET() {
         product_id: ys.id,
         quantity: 1,
         unit_price: ys.price,
-        addons: '[]',
+        addons: [],
         total_price: ys.price,
       },
     ]

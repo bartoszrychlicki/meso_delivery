@@ -309,6 +309,13 @@ function ActionButtons({
 
 // ─── Item row for full cards ────────────────────────────────
 function ItemRow({ item }: { item: OperatorOrder['items'][0] }) {
+    // Addons may come as a JSON string from JSONB column — ensure it's an array
+    const addons = Array.isArray(item.addons)
+        ? item.addons
+        : typeof item.addons === 'string'
+            ? (() => { try { return JSON.parse(item.addons) } catch { return [] } })()
+            : []
+
     return (
         <div className="flex items-start gap-2 text-sm">
             <span className="font-bold text-meso-red-500 w-6 shrink-0 text-base">{item.quantity}x</span>
@@ -329,9 +336,9 @@ function ItemRow({ item }: { item: OperatorOrder['items'][0] }) {
                 )}
 
                 {/* Addons */}
-                {item.addons && item.addons.length > 0 && (
+                {addons.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-0.5">
-                        {item.addons.map((addon, i) => (
+                        {addons.map((addon: { name: string }, i: number) => (
                             <span key={i} className="flex items-center gap-0.5 text-xs text-green-400">
                                 <Plus className="w-2.5 h-2.5" />
                                 {addon.name}
