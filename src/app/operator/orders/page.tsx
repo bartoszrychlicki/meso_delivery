@@ -83,8 +83,8 @@ export default function OperatorOrdersPage() {
                 </div>
             ) : (
                 <div className="flex gap-4 h-[calc(100vh-140px)]">
-                    {/* ── LEFT: 2 wide "kitchen" columns (~2/3 width) ── */}
-                    <div className="flex gap-4 flex-[2] min-w-0">
+                    {/* ── LEFT: 2 wide "kitchen" columns (~55% width) ── */}
+                    <div className="flex gap-4 flex-[3] min-w-0">
                         {/* New Orders */}
                         <OrderColumn
                             title="NOWE"
@@ -124,8 +124,8 @@ export default function OperatorOrdersPage() {
                         </OrderColumn>
                     </div>
 
-                    {/* ── RIGHT: 3 narrow "info" columns (~1/3 width) ── */}
-                    <div className="flex gap-3 flex-1 min-w-0">
+                    {/* ── RIGHT: 3 compact "info" columns (~45% width) ── */}
+                    <div className="flex gap-3 flex-[2] min-w-0">
                         {/* Ready */}
                         <OrderColumn
                             title="GOTOWE"
