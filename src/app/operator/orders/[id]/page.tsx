@@ -8,8 +8,8 @@ import {
     AlertCircle, User
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { createClient } from '@/lib/supabase/client'
 import { OperatorOrder, getOrderAge, useOperatorOrders } from '@/hooks/useOperatorOrders'
+import { useOperatorAuthStore } from '@/stores/operatorAuthStore'
 import { ORDER_STATUS_MESSAGES, formatOrderDate } from '@/types/order'
 import { cn } from '@/lib/utils'
 
@@ -22,43 +22,27 @@ export default function OrderDetailPage({ params }: PageProps) {
     const [order, setOrder] = useState<OperatorOrder | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [isUpdating, setIsUpdating] = useState(false)
+    const { pin } = useOperatorAuthStore()
     const { startPreparing, markAsReady, awaitingCourier } = useOperatorOrders()
 
-    useEffect(() => {
-        async function fetchOrder() {
-            const supabase = createClient()
-
-            const { data, error } = await supabase
-                .from('orders')
-                .select(`
-          *,
-          items:order_items(
-            *,
-            product:products(id, name, image_url),
-            variant:product_variants(name)
-          ),
-          customer:customers(name, phone, email)
-        `)
-                .eq('id', id)
-                .single()
-
-            if (error) {
-                console.error('Error fetching order:', error)
-            } else if (data) {
-                const transformedOrder = {
-                    ...data,
-                    items: data.items?.map((item: any) => ({
-                        ...item,
-                        product: item.product,
-                        variant_name: item.variant?.name || null,
-                    })) || [],
-                    customer: data.customer,
-                }
-                setOrder(transformedOrder)
+    const fetchOrder = async () => {
+        try {
+            const res = await fetch(`/api/operator/orders?orderId=${id}`, {
+                headers: { 'x-operator-pin': pin },
+            })
+            if (!res.ok) throw new Error('Failed to fetch')
+            const data = await res.json()
+            if (data.order) {
+                setOrder(data.order)
             }
+        } catch (err) {
+            console.error('Error fetching order:', err)
+        } finally {
             setIsLoading(false)
         }
+    }
 
+    useEffect(() => {
         fetchOrder()
     }, [id])
 
@@ -77,33 +61,7 @@ export default function OrderDetailPage({ params }: PageProps) {
         }
 
         if (success) {
-            // Refetch order
-            const supabase = createClient()
-            const { data } = await supabase
-                .from('orders')
-                .select(`
-          *,
-          items:order_items(
-            *,
-            product:products(id, name, image_url),
-            variant:product_variants(name)
-          ),
-          customer:customers(name, phone, email)
-        `)
-                .eq('id', id)
-                .single()
-
-            if (data) {
-                setOrder({
-                    ...data,
-                    items: data.items?.map((item: any) => ({
-                        ...item,
-                        product: item.product,
-                        variant_name: item.variant?.name || null,
-                    })) || [],
-                    customer: data.customer,
-                })
-            }
+            await fetchOrder()
         }
 
         setIsUpdating(false)
@@ -195,7 +153,6 @@ export default function OrderDetailPage({ params }: PageProps) {
                                                 </span>
                                             )}
 
-                                            {/* Spice level */}
                                             {item.spice_level && item.spice_level > 1 && (
                                                 <div className="flex items-center gap-2 mt-2">
                                                     <Flame className={cn(
@@ -213,7 +170,6 @@ export default function OrderDetailPage({ params }: PageProps) {
                                                 </div>
                                             )}
 
-                                            {/* Addons */}
                                             {item.addons && item.addons.length > 0 && (
                                                 <div className="mt-2 flex flex-wrap gap-2">
                                                     {item.addons.map((addon, i) => (
@@ -228,7 +184,6 @@ export default function OrderDetailPage({ params }: PageProps) {
                                                 </div>
                                             )}
 
-                                            {/* Notes */}
                                             {item.notes && (
                                                 <div className="mt-3 bg-yellow-500/10 border border-yellow-500/30 rounded p-2 text-sm text-yellow-300">
                                                     📝 {item.notes}
@@ -241,7 +196,6 @@ export default function OrderDetailPage({ params }: PageProps) {
                         </div>
                     </div>
 
-                    {/* Order notes */}
                     {order.notes && (
                         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 text-yellow-300">
                             <h3 className="font-semibold mb-2">Uwagi do zamówienia:</h3>
@@ -252,7 +206,6 @@ export default function OrderDetailPage({ params }: PageProps) {
 
                 {/* Sidebar */}
                 <div className="space-y-4">
-                    {/* Timer */}
                     <div className={cn(
                         'rounded-xl p-6 text-center',
                         age.isUrgent ? 'bg-red-500/20 border-2 border-red-500' : 'bg-meso-dark-800/50 border border-white/5'
@@ -270,7 +223,6 @@ export default function OrderDetailPage({ params }: PageProps) {
                         <p className="text-white/50 text-sm">od złożenia zamówienia</p>
                     </div>
 
-                    {/* Customer */}
                     <div className="bg-meso-dark-800/50 rounded-xl p-4 border border-white/5">
                         <h3 className="font-semibold text-white mb-3 flex items-center gap-2">
                             <User className="w-5 h-5 text-meso-red-500" />
@@ -292,7 +244,6 @@ export default function OrderDetailPage({ params }: PageProps) {
                         )}
                     </div>
 
-                    {/* Delivery */}
                     <div className="bg-meso-dark-800/50 rounded-xl p-4 border border-white/5">
                         <h3 className="font-semibold text-white mb-3 flex items-center gap-2">
                             {order.delivery_type === 'delivery' ? (
@@ -319,7 +270,6 @@ export default function OrderDetailPage({ params }: PageProps) {
                         )}
                     </div>
 
-                    {/* Actions */}
                     <div className="space-y-3">
                         {order.status === 'confirmed' && (
                             <Button

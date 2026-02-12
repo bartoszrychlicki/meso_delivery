@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { Loader2, TrendingUp, Clock, Package, DollarSign, ChefHat, ShoppingCart, Truck, CheckCircle, CalendarDays } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
+import { useOperatorAuthStore } from '@/stores/operatorAuthStore'
 
 interface Stats {
     totalPaidOrders: number
@@ -28,7 +28,7 @@ export default function OperatorStatsPage() {
     const [dateFrom, setDateFrom] = useState(getToday())
     const [dateTo, setDateTo] = useState(getToday())
 
-    const supabase = createClient()
+    const { pin } = useOperatorAuthStore()
 
     const calculateStats = (orders: any[]): Stats => {
         const paidOrders = orders.filter(o => o.payment_status === 'paid')
@@ -62,26 +62,18 @@ export default function OperatorStatsPage() {
     }
 
     const fetchOrdersForRange = useCallback(async (from: string, to: string) => {
-        const fromDate = new Date(from)
-        fromDate.setHours(0, 0, 0, 0)
-        const toDate = new Date(to)
-        toDate.setDate(toDate.getDate() + 1)
-        toDate.setHours(0, 0, 0, 0)
-
-        const { data: orders, error } = await supabase
-            .from('orders')
-            .select('id, status, payment_status, total, created_at, confirmed_at, ready_at')
-            .gte('created_at', fromDate.toISOString())
-            .lt('created_at', toDate.toISOString())
-            .not('status', 'eq', 'cancelled')
-
-        if (error) {
-            console.error('Error fetching stats:', error)
+        try {
+            const res = await fetch(`/api/operator/stats?from=${from}&to=${to}`, {
+                headers: { 'x-operator-pin': pin },
+            })
+            if (!res.ok) return null
+            const data = await res.json()
+            return calculateStats(data.orders || [])
+        } catch (err) {
+            console.error('Error fetching stats:', err)
             return null
         }
-
-        return calculateStats(orders || [])
-    }, [supabase])
+    }, [pin])
 
     // Fetch today's stats
     useEffect(() => {
