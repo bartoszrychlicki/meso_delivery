@@ -53,6 +53,11 @@ export function ContactForm({ defaultValues, savedPhone, onSubmit }: ContactForm
     const showError = (field: keyof ContactFormData) =>
         errors[field] && (touchedFields[field] || isSubmitted)
 
+    const fieldProps = (field: keyof ContactFormData) => ({
+        ...register(field),
+        'aria-invalid': showError(field) ? true : undefined,
+    })
+
     return (
         <form id="address-form" onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
             {/* Pickup location info */}
@@ -76,19 +81,19 @@ export function ContactForm({ defaultValues, savedPhone, onSubmit }: ContactForm
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="firstName">Imię</Label>
-                        <Input id="firstName" {...register('firstName')} placeholder="Jan" className="bg-meso-dark-800 border-white/10" />
+                        <Input id="firstName" {...fieldProps('firstName')} placeholder="Jan" className="bg-meso-dark-800 border-white/10" />
                         {showError('firstName') && <p className="text-red-400 text-sm">{errors.firstName?.message}</p>}
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="lastName">Nazwisko</Label>
-                        <Input id="lastName" {...register('lastName')} placeholder="Kowalski" className="bg-meso-dark-800 border-white/10" />
+                        <Input id="lastName" {...fieldProps('lastName')} placeholder="Kowalski" className="bg-meso-dark-800 border-white/10" />
                         {showError('lastName') && <p className="text-red-400 text-sm">{errors.lastName?.message}</p>}
                     </div>
                 </div>
 
                 <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" {...register('email')} placeholder="jan@example.com" className="bg-meso-dark-800 border-white/10" />
+                    <Input id="email" type="email" {...fieldProps('email')} placeholder="jan@example.com" className="bg-meso-dark-800 border-white/10" />
                     {showError('email') && <p className="text-red-400 text-sm">{errors.email?.message}</p>}
                 </div>
 
@@ -97,7 +102,7 @@ export function ContactForm({ defaultValues, savedPhone, onSubmit }: ContactForm
                         <MessageSquare className="w-4 h-4 text-meso-gold-400" />
                         Numer telefonu
                     </Label>
-                    <Input id="phone" type="tel" {...register('phone')} placeholder="123456789" maxLength={9} className="bg-meso-dark-800 border-white/10" />
+                    <Input id="phone" type="tel" {...fieldProps('phone')} placeholder="123456789" maxLength={9} className="bg-meso-dark-800 border-white/10" />
                     <p className="text-white/40 text-xs">Na ten numer wyślemy SMS o statusie Twojego zamówienia</p>
                     {showError('phone') && <p className="text-red-400 text-sm">{errors.phone?.message}</p>}
                 </div>

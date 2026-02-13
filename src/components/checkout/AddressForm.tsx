@@ -56,17 +56,22 @@ export function AddressForm({ defaultValues, savedPhone, onSubmit }: AddressForm
     const showError = (field: keyof AddressFormData) =>
         errors[field] && (touchedFields[field] || isSubmitted)
 
+    const fieldProps = (field: keyof AddressFormData) => ({
+        ...register(field),
+        'aria-invalid': showError(field) ? true : undefined,
+    })
+
     return (
         <form id="address-form" onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="firstName">Imię</Label>
-                    <Input id="firstName" {...register('firstName')} placeholder="Jan" className="bg-meso-dark-800 border-white/10" />
+                    <Input id="firstName" {...fieldProps('firstName')} placeholder="Jan" className="bg-meso-dark-800 border-white/10" />
                     {showError('firstName') && <p className="text-red-400 text-sm">{errors.firstName?.message}</p>}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="lastName">Nazwisko</Label>
-                    <Input id="lastName" {...register('lastName')} placeholder="Kowalski" className="bg-meso-dark-800 border-white/10" />
+                    <Input id="lastName" {...fieldProps('lastName')} placeholder="Kowalski" className="bg-meso-dark-800 border-white/10" />
                     {showError('lastName') && <p className="text-red-400 text-sm">{errors.lastName?.message}</p>}
                 </div>
             </div>
@@ -74,7 +79,7 @@ export function AddressForm({ defaultValues, savedPhone, onSubmit }: AddressForm
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" {...register('email')} placeholder="jan@example.com" className="bg-meso-dark-800 border-white/10" />
+                    <Input id="email" type="email" {...fieldProps('email')} placeholder="jan@example.com" className="bg-meso-dark-800 border-white/10" />
                     {showError('email') && <p className="text-red-400 text-sm">{errors.email?.message}</p>}
                 </div>
                 <div className="space-y-2">
@@ -82,7 +87,7 @@ export function AddressForm({ defaultValues, savedPhone, onSubmit }: AddressForm
                         <MessageSquare className="w-4 h-4 text-meso-gold-400" />
                         Numer telefonu
                     </Label>
-                    <Input id="phone" type="tel" {...register('phone')} placeholder="123456789" maxLength={9} className="bg-meso-dark-800 border-white/10" />
+                    <Input id="phone" type="tel" {...fieldProps('phone')} placeholder="123456789" maxLength={9} className="bg-meso-dark-800 border-white/10" />
                     {showError('phone') && <p className="text-red-400 text-sm">{errors.phone?.message}</p>}
                 </div>
             </div>
@@ -104,14 +109,14 @@ export function AddressForm({ defaultValues, savedPhone, onSubmit }: AddressForm
 
             <div className="space-y-2">
                 <Label htmlFor="street">Ulica</Label>
-                <Input id="street" {...register('street')} placeholder="Długa" className="bg-meso-dark-800 border-white/10" />
+                <Input id="street" {...fieldProps('street')} placeholder="Długa" className="bg-meso-dark-800 border-white/10" />
                 {showError('street') && <p className="text-red-400 text-sm">{errors.street?.message}</p>}
             </div>
 
             <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="houseNumber">Nr domu</Label>
-                    <Input id="houseNumber" {...register('houseNumber')} placeholder="12A" className="bg-meso-dark-800 border-white/10" />
+                    <Input id="houseNumber" {...fieldProps('houseNumber')} placeholder="12A" className="bg-meso-dark-800 border-white/10" />
                     {showError('houseNumber') && <p className="text-red-400 text-sm">{errors.houseNumber?.message}</p>}
                 </div>
                 <div className="space-y-2">
@@ -120,7 +125,7 @@ export function AddressForm({ defaultValues, savedPhone, onSubmit }: AddressForm
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="postalCode">Kod pocztowy</Label>
-                    <Input id="postalCode" {...register('postalCode')} placeholder="80-001" maxLength={6} className="bg-meso-dark-800 border-white/10" />
+                    <Input id="postalCode" {...fieldProps('postalCode')} placeholder="80-001" maxLength={6} className="bg-meso-dark-800 border-white/10" />
                     {showError('postalCode') && <p className="text-red-400 text-sm">{errors.postalCode?.message}</p>}
                 </div>
             </div>
