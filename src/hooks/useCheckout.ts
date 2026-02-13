@@ -22,7 +22,8 @@ export function useCheckout() {
     const submitOrder = async (
         deliveryData: DeliveryFormData,
         addressData: AddressFormData,
-        paymentData: PaymentFormData
+        paymentData: PaymentFormData,
+        savePhoneToProfile?: boolean
     ) => {
         // Prevent double submission
         if (isLoading) return
@@ -63,6 +64,7 @@ export function useCheckout() {
                     status: 'pending_payment',
                     delivery_type: deliveryData.type,
                     delivery_address: addressData, // JSONB
+                    contact_phone: addressData.phone,
                     scheduled_time: deliveryData.time === 'scheduled' ? deliveryData.scheduledTime : null,
                     payment_method: paymentData.method,
                     payment_status: 'pending', // Mock payment will update this later
@@ -80,6 +82,14 @@ export function useCheckout() {
             if (orderError) {
                 console.error('Order creation error:', orderError)
                 throw new Error('Błąd podczas tworzenia zamówienia')
+            }
+
+            // 2b. Save phone to customer profile if requested
+            if (savePhoneToProfile && addressData.phone) {
+                await supabase
+                    .from('customers')
+                    .update({ phone: addressData.phone })
+                    .eq('id', user.id)
             }
 
             // 3. Create Order Items
@@ -151,7 +161,7 @@ export function useCheckout() {
             // Network errors/404 should allow retry? Yes.
             setIsLoading(false)
         }
-        // Note: We removed 'finally { setIsLoading(false) }' because if we redirect, 
+        // Note: We removed 'finally { setIsLoading(false) }' because if we redirect,
         // we want the button to stay loading until unmount.
         // But if we catch an error, we MUST set it back to false (done in catch).
     }

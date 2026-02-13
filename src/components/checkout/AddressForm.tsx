@@ -1,22 +1,26 @@
 'use client'
 
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { addressSchema, type AddressFormData } from '@/lib/validators/checkout'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
+import { MessageSquare } from 'lucide-react'
 
 interface AddressFormProps {
     defaultValues?: Partial<AddressFormData>
-    onSubmit: (data: AddressFormData) => void
+    savedPhone?: string
+    onSubmit: (data: AddressFormData, savePhone: boolean) => void
 }
 
-export function AddressForm({ defaultValues, onSubmit }: AddressFormProps) {
+export function AddressForm({ defaultValues, savedPhone, onSubmit }: AddressFormProps) {
     const {
         register,
         handleSubmit,
+        watch,
         formState: { errors, touchedFields, isSubmitted },
     } = useForm<AddressFormData>({
         resolver: zodResolver(addressSchema),
@@ -26,11 +30,34 @@ export function AddressForm({ defaultValues, onSubmit }: AddressFormProps) {
         mode: 'onTouched',
     })
 
+    const currentPhone = watch('phone')
+    const [savePhoneChecked, setSavePhoneChecked] = useState(true)
+
+    // Show checkbox only when savedPhone exists AND user typed a different number
+    const showSaveCheckbox = !!savedPhone && !!currentPhone && currentPhone !== savedPhone
+
+    const handleFormSubmit = (data: AddressFormData) => {
+        let shouldSavePhone: boolean
+
+        if (!savedPhone) {
+            // First time - always save
+            shouldSavePhone = true
+        } else if (data.phone === savedPhone) {
+            // Same number - no action needed
+            shouldSavePhone = false
+        } else {
+            // Different number - respect checkbox
+            shouldSavePhone = savePhoneChecked
+        }
+
+        onSubmit(data, shouldSavePhone)
+    }
+
     const showError = (field: keyof AddressFormData) =>
         errors[field] && (touchedFields[field] || isSubmitted)
 
     return (
-        <form id="address-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form id="address-form" onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="firstName">Imię</Label>
@@ -51,11 +78,29 @@ export function AddressForm({ defaultValues, onSubmit }: AddressFormProps) {
                     {showError('email') && <p className="text-red-400 text-sm">{errors.email?.message}</p>}
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="phone">Telefon</Label>
+                    <Label htmlFor="phone" className="flex items-center gap-1.5">
+                        <MessageSquare className="w-4 h-4 text-meso-gold-400" />
+                        Numer telefonu
+                    </Label>
                     <Input id="phone" type="tel" {...register('phone')} placeholder="123456789" maxLength={9} className="bg-meso-dark-800 border-white/10" />
                     {showError('phone') && <p className="text-red-400 text-sm">{errors.phone?.message}</p>}
                 </div>
             </div>
+
+            <p className="text-white/40 text-xs -mt-2">Na ten numer wyślemy SMS o statusie Twojego zamówienia</p>
+
+            {showSaveCheckbox && (
+                <div className="flex items-center gap-2">
+                    <Checkbox
+                        id="savePhone"
+                        checked={savePhoneChecked}
+                        onCheckedChange={(checked) => setSavePhoneChecked(checked === true)}
+                    />
+                    <label htmlFor="savePhone" className="text-white/60 text-sm cursor-pointer">
+                        Zapisz jako domyślny numer telefonu
+                    </label>
+                </div>
+            )}
 
             <div className="space-y-2">
                 <Label htmlFor="street">Ulica</Label>

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { toast } from 'sonner'
 import { ArrowLeft, Loader2, ShieldCheck, Lock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -57,6 +56,10 @@ export default function CheckoutPage() {
     const [termsAccepted, setTermsAccepted] = useState(false)
     const [termsError, setTermsError] = useState<string | undefined>(undefined)
 
+    // Phone saved in customer profile
+    const [savedPhone, setSavedPhone] = useState<string>('')
+    const [savePhoneToProfile, setSavePhoneToProfile] = useState(false)
+
     // Redirect if cart is empty or user not logged in
     useEffect(() => {
         if (!authLoading && !user) {
@@ -86,6 +89,11 @@ export default function CheckoutPage() {
                     .eq('customer_id', user.id)
                     .eq('is_default', true)
                     .single()
+
+                // Save customer phone for later comparison
+                if (customer?.phone) {
+                    setSavedPhone(customer.phone)
+                }
 
                 if (customer || address) {
                     const nameParts = (customer?.name || '').split(' ')
@@ -148,13 +156,15 @@ export default function CheckoutPage() {
         }
     }
 
-    const handleAddressSubmit = (data: AddressFormData) => {
+    const handleAddressSubmit = (data: AddressFormData, savePhone: boolean) => {
         setAddressData(data)
+        setSavePhoneToProfile(savePhone)
         handleNextStep()
     }
 
-    const handleContactSubmit = (data: ContactFormData) => {
+    const handleContactSubmit = (data: ContactFormData, savePhone: boolean) => {
         setContactData(data)
+        setSavePhoneToProfile(savePhone)
         handleNextStep()
     }
 
@@ -170,7 +180,7 @@ export default function CheckoutPage() {
         const customerData = deliveryData.type === 'pickup' ? contactData : addressData
         if (!customerData) return
 
-        await submitOrder(deliveryData, customerData as AddressFormData, paymentData)
+        await submitOrder(deliveryData, customerData as AddressFormData, paymentData, savePhoneToProfile)
     }
 
     const renderStepContent = () => {
@@ -193,6 +203,7 @@ export default function CheckoutPage() {
                                 email: addressData?.email || '',
                                 phone: addressData?.phone || '',
                             }}
+                            savedPhone={savedPhone}
                             onSubmit={handleContactSubmit}
                         />
                     )
@@ -200,6 +211,7 @@ export default function CheckoutPage() {
                 return (
                     <AddressForm
                         defaultValues={addressData || undefined}
+                        savedPhone={savedPhone}
                         onSubmit={handleAddressSubmit}
                     />
                 )
