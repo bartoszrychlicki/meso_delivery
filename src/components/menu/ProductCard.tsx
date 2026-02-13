@@ -2,12 +2,9 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/formatters'
-import { useCartStore } from '@/stores/cartStore'
-import { toast } from 'sonner'
 import { ProductDrawer } from './ProductDrawer'
 
 interface Product {
@@ -37,54 +34,30 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, className }: ProductCardProps) {
-  const addItem = useCartStore((state) => state.addItem)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
-  const hasOptions = product.has_variants || product.has_addons || product.has_spice_level
   const hasDiscount = product.original_price && product.original_price > product.price
   const discountPercent = hasDiscount
     ? Math.round((1 - product.price / product.original_price!) * 100)
     : 0
 
   const handleQuickAdd = (e: React.MouseEvent) => {
-    e.preventDefault()
     e.stopPropagation()
-
-    if (hasOptions) {
-      setIsDrawerOpen(true)
-      return
-    }
-
-    addItem({
-      productId: product.id,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
-      image: product.image_url,
-      addons: [],
-    })
-
-    toast.success(`${product.name} dodano do koszyka`, {
-      duration: 2000,
-    })
+    setIsDrawerOpen(true)
   }
 
-  const handleCardClick = (e: React.MouseEvent) => {
-    if (hasOptions) {
-      e.preventDefault()
-      setIsDrawerOpen(true)
-    }
+  const handleCardClick = () => {
+    setIsDrawerOpen(true)
   }
 
 
 
   return (
     <>
-      <Link
-        href={hasOptions ? '#' : `/menu/${product.slug}`}
+      <div
         onClick={handleCardClick}
         className={cn(
-          'group flex flex-col rounded-xl overflow-hidden',
+          'group flex flex-col rounded-xl overflow-hidden cursor-pointer',
           'bg-white/5 border border-meso-red-500/20',
           'shadow-lg hover:border-meso-red-500',
           'transition-all duration-200',
@@ -154,16 +127,14 @@ export function ProductCard({ product, className }: ProductCardProps) {
             </button>
           </div>
         </div>
-      </Link>
+      </div>
 
-      {hasOptions && (
-        <ProductDrawer
-          productSlug={product.slug}
-          isOpen={isDrawerOpen}
-          onOpenChange={setIsDrawerOpen}
-          initialData={product}
-        />
-      )}
+      <ProductDrawer
+        productSlug={product.slug}
+        isOpen={isDrawerOpen}
+        onOpenChange={setIsDrawerOpen}
+        initialData={product}
+      />
     </>
   )
 }

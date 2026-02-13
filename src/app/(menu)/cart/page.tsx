@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { ArrowLeft, ShoppingCart } from 'lucide-react'
 import { useCartStore } from '@/stores/cartStore'
-import { CartItem, CartSummary, PromoCodeInput, TipSelector } from '@/components/cart'
+import { CartItem, CartSummary, PromoCodeInput } from '@/components/cart'
 import { EmptyState } from '@/components/common/EmptyState'
 import { AnonymousBanner } from '@/components/auth'
 import { cn } from '@/lib/utils'
@@ -77,11 +77,6 @@ export default function CartPage() {
         <div>
           <h2 className="text-white font-semibold mb-3">Kod promocyjny</h2>
           <PromoCodeInput />
-        </div>
-
-        {/* Tip */}
-        <div>
-          <TipSelector />
         </div>
 
         {/* Summary */}

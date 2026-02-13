@@ -19,17 +19,12 @@ export function DeliveryForm({ value, onChange }: DeliveryFormProps) {
                 <div className="grid grid-cols-2 gap-3">
                     <button
                         type="button"
-                        onClick={() => onChange({ ...value, type: 'delivery' })}
-                        className={cn(
-                            "flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all",
-                            value.type === 'delivery'
-                                ? "bg-meso-red-500/10 border-meso-red-500 text-white"
-                                : "bg-meso-dark-800 border-white/5 text-white/60 hover:bg-meso-dark-700"
-                        )}
+                        disabled
+                        className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all bg-meso-dark-800 border-white/5 text-white/30 cursor-not-allowed opacity-50"
                     >
-                        <Truck className={cn("w-6 h-6", value.type === 'delivery' ? "text-meso-red-500" : "text-white/40")} />
+                        <Truck className="w-6 h-6 text-white/20" />
                         <span className="font-medium">Dostawa</span>
-                        <span className="text-xs opacity-60">od 7.99 zł</span>
+                        <span className="text-xs opacity-60">Wkrótce</span>
                     </button>
 
                     <button

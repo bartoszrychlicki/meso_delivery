@@ -35,7 +35,7 @@ export function TipSelector() {
     <div className="space-y-3">
       <div className="flex items-center gap-2 text-white/70">
         <Heart className="w-4 h-4 text-meso-red-500" />
-        <span className="text-sm font-medium">Napiwek dla kuriera</span>
+        <span className="text-sm font-medium">Napiwek dla kucharzy w Meso</span>
       </div>
 
       <div className="grid grid-cols-4 gap-2">

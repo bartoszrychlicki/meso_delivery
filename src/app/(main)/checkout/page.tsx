@@ -19,6 +19,7 @@ import { AddressForm } from '@/components/checkout/AddressForm'
 import { ContactForm } from '@/components/checkout/ContactForm'
 import { PaymentMethod } from '@/components/checkout/PaymentMethod'
 import { TermsAcceptance } from '@/components/checkout/TermsAcceptance'
+import { TipSelector } from '@/components/cart/TipSelector'
 import { EmptyState } from '@/components/common/EmptyState'
 
 // Types
@@ -41,7 +42,7 @@ export default function CheckoutPage() {
 
     // Form States
     const [deliveryData, setDeliveryData] = useState<DeliveryFormData>({
-        type: 'delivery',
+        type: 'pickup',
         time: 'asap'
     })
 
@@ -209,6 +210,10 @@ export default function CheckoutPage() {
                             value={paymentData.method}
                             onChange={(val) => setPaymentData({ ...paymentData, method: val })}
                         />
+
+                        <div className="pt-4 border-t border-white/10">
+                            <TipSelector />
+                        </div>
 
                         <div className="pt-4 border-t border-white/10">
                             <h3 className="text-white font-medium mb-2">Podsumowanie</h3>
