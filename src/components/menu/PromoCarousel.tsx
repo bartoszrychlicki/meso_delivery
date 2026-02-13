@@ -23,20 +23,14 @@ const PROMO_BANNERS: PromoBanner[] = [
   {
     id: 'promo-1',
     imageUrl: '/images/promos/promo-1.png',
-    alt: 'Darmowa dostawa od 40 PLN - kod DOSTAWAZERO',
+    alt: 'MESO IS BACK - Wracamy do Trójmiasta po 3 latach!',
     href: '/',
   },
   {
     id: 'promo-2',
     imageUrl: '/images/promos/promo-2.png',
-    alt: 'MESO Club - dołącz i zyskaj -10%',
-    href: '/account',
-  },
-  {
-    id: 'promo-3',
-    imageUrl: '/images/promos/promo-3.png',
-    alt: 'Nowość: Tonkotsu z truflą',
-    href: '/',
+    alt: 'Autorskie Gyoza - mrożone pierożki z dostawą do paczkomatu',
+    href: '/menu',
   },
 ]
 
