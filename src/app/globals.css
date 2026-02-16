@@ -269,3 +269,14 @@ html {
 .animate-shake {
   animation: shake 0.4s ease-in-out;
 }
+
+/* Fix Chrome autofill white background on dark theme */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px hsl(264 80% 8%) inset !important;
+  -webkit-text-fill-color: hsl(220 20% 92%) !important;
+  transition: background-color 5000s ease-in-out 0s;
+  caret-color: hsl(220 20% 92%);
+}
