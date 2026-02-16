@@ -6,15 +6,12 @@ import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { LogIn, Loader2, Mail, Lock, Smartphone, Chrome } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
-import { MesoLogo } from '@/components/brand/MesoLogo'
 
 const loginSchema = z.object({
   email: z.string().email('Nieprawidłowy adres email'),
@@ -28,6 +25,7 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const { isPermanent, isLoading: authLoading } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showPass, setShowPass] = useState(false)
   const supabase = createClient()
 
   const redirectTo = searchParams.get('redirect') || '/'
@@ -40,14 +38,12 @@ function LoginForm() {
     resolver: zodResolver(loginSchema),
   })
 
-  // Redirect if already logged in as permanent user
   useEffect(() => {
     if (!authLoading && isPermanent) {
       router.push(redirectTo)
     }
   }, [authLoading, isPermanent, redirectTo, router])
 
-  // Show nothing while redirecting
   if (!authLoading && isPermanent) {
     return null
   }
@@ -75,7 +71,7 @@ function LoginForm() {
       toast.success('Witaj ponownie!')
       router.push(redirectTo)
       router.refresh()
-    } catch (error) {
+    } catch {
       toast.error('Wystąpił błąd. Spróbuj ponownie.')
     } finally {
       setIsSubmitting(false)
@@ -90,132 +86,121 @@ function LoginForm() {
     )
   }
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <div className="mb-4">
-          <MesoLogo size="xl" />
-        </div>
-        <h1 className="text-2xl font-bold text-white mb-2">
-          Zaloguj się
-        </h1>
-        <p className="text-white/60">
-          Wróć do swojego konta MESO Club
-        </p>
-      </div>
+  const inputCls = 'w-full rounded-xl border border-border bg-secondary/50 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none'
 
-      {/* Form */}
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="w-full max-w-sm mx-auto"
+    >
+      {/* Neon MESO heading */}
+      <Link href="/" className="mb-8 block text-center font-display text-3xl font-bold tracking-[0.3em] text-primary neon-text">
+        MESO
+      </Link>
+
+      <h2 className="mb-6 text-center font-display text-lg font-semibold tracking-wider">
+        ZALOGUJ SIĘ
+      </h2>
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email" className="text-white/80">
-            Email
-          </Label>
+        {/* Email */}
+        <div>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-            <Input
-              id="email"
+            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
               type="email"
-              placeholder="twoj@email.pl"
+              placeholder="Email"
               {...register('email')}
-              className="pl-10 bg-card border-white/10 text-white placeholder:text-white/40 focus:border-primary"
+              className={`${inputCls} pl-10 pr-4`}
             />
           </div>
           {errors.email && (
-            <p className="text-red-400 text-sm">{errors.email.message}</p>
+            <p className="text-red-400 text-xs mt-1">{errors.email.message}</p>
           )}
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password" className="text-white/80">
-              Hasło
-            </Label>
+        {/* Password */}
+        <div>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type={showPass ? 'text' : 'password'}
+              placeholder="Hasło"
+              {...register('password')}
+              className={`${inputCls} pl-10 pr-10`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPass(!showPass)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            >
+              {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          <div className="flex justify-end mt-1">
             <Link
               href="/forgot-password"
-              className="text-sm text-primary hover:text-primary"
+              className="text-xs text-primary hover:underline"
             >
               Zapomniałeś hasła?
             </Link>
           </div>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              {...register('password')}
-              className="pl-10 bg-card border-white/10 text-white placeholder:text-white/40 focus:border-primary"
-            />
-          </div>
           {errors.password && (
-            <p className="text-red-400 text-sm">{errors.password.message}</p>
+            <p className="text-red-400 text-xs mt-1">{errors.password.message}</p>
           )}
         </div>
 
-        <Button
+        {/* Submit CTA */}
+        <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-primary hover:bg-primary/90 text-white font-semibold h-11 neon-glow"
+          className="w-full rounded-xl bg-accent py-3 font-display text-sm font-semibold tracking-wider text-accent-foreground neon-glow-yellow transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
         >
           {isSubmitting ? (
-            <>
-              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              Logowanie...
-            </>
+            <span className="flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              LOGOWANIE...
+            </span>
           ) : (
-            <>
-              Zaloguj się
-              <LogIn className="w-5 h-5 ml-2" />
-            </>
+            'ZALOGUJ'
           )}
-        </Button>
+        </button>
       </form>
 
       {/* Divider */}
-      <div className="relative">
-        <Separator className="bg-white/10" />
-        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-3 text-sm text-white/40">
+      <div className="relative my-5">
+        <Separator className="bg-border" />
+        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-4 text-xs text-muted-foreground">
           lub
         </span>
       </div>
 
-      {/* Social login (mock) */}
-      <div className="space-y-3">
-        <Button
-          type="button"
-          variant="outline"
-          disabled
-          className="w-full h-11 bg-card/50 border-white/10 text-white/40 cursor-not-allowed"
-          title="Wkrótce dostępne"
-        >
-          <Smartphone className="w-5 h-5 mr-3" />
-          Zaloguj przez Telefon
-          <span className="ml-auto text-xs opacity-50">Wkrótce</span>
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          disabled
-          className="w-full h-11 bg-card/50 border-white/10 text-white/40 cursor-not-allowed"
-          title="Wkrótce dostępne"
-        >
-          <Chrome className="w-5 h-5 mr-3" />
-          Zaloguj przez Google
-          <span className="ml-auto text-xs opacity-50">Wkrótce</span>
-        </Button>
-      </div>
+      {/* Google button */}
+      <button
+        type="button"
+        disabled
+        className="w-full rounded-xl border border-border py-3 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-50"
+      >
+        Kontynuuj z Google
+      </button>
+
+      {/* Skip link */}
+      <Link
+        href="/"
+        className="block text-center text-xs text-muted-foreground hover:text-foreground mt-3"
+      >
+        Pomiń i przeglądaj menu →
+      </Link>
 
       {/* Register link */}
-      <div className="text-center pt-4 border-t border-white/10">
-        <p className="text-white/50">
-          Nie masz jeszcze konta?{' '}
-          <Link href="/register" className="text-accent hover:text-accent font-medium">
-            Załóż za darmo
-          </Link>
-        </p>
-      </div>
-    </div>
+      <p className="mt-6 text-center text-xs text-muted-foreground">
+        Nie masz konta?{' '}
+        <Link href="/register" className="text-primary hover:underline">
+          Zarejestruj się
+        </Link>
+      </p>
+    </motion.div>
   )
 }
 

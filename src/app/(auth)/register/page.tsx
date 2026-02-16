@@ -6,17 +6,17 @@ import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Gift, Star, Check, Loader2, ArrowRight } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Mail, Lock, Eye, EyeOff, User, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
-import { MesoLogo } from '@/components/brand/MesoLogo'
 
 const upgradeSchema = z.object({
+  name: z.string().min(2, 'Imię musi mieć minimum 2 znaki'),
   email: z.string().email('Nieprawidłowy adres email'),
   password: z.string().min(8, 'Hasło musi mieć minimum 8 znaków'),
   confirmPassword: z.string(),
@@ -28,26 +28,18 @@ const upgradeSchema = z.object({
 
 type UpgradeFormData = z.infer<typeof upgradeSchema>
 
-const BENEFITS = [
-  { icon: '🎁', text: '50 punktów na start' },
-  { icon: '🍜', text: '1 zł = 1 punkt za zamówienia' },
-  { icon: '🎉', text: 'Darmowe dania za punkty' },
-  { icon: '🎂', text: '2x punkty w urodziny' },
-  { icon: '👥', text: 'Bonus za polecenia znajomych' },
-]
-
 export default function UpgradeAccountPage() {
   const router = useRouter()
-  const { isPermanent, isLoading: authLoading, refreshSession, session } = useAuth()
+  const { isPermanent, isLoading: authLoading, session } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showPass, setShowPass] = useState(false)
+  const [showConfirmPass, setShowConfirmPass] = useState(false)
   const [sessionError, setSessionError] = useState(false)
   const supabase = createClient()
 
-  // Ensure session exists on page load
   useEffect(() => {
     const ensureSession = async () => {
       if (!authLoading && !session) {
-        // Try to create anonymous session
         const { error } = await supabase.auth.signInAnonymously()
         if (error) {
           setSessionError(true)
@@ -72,7 +64,6 @@ export default function UpgradeAccountPage() {
 
   const marketingConsent = watch('marketingConsent')
 
-  // Redirect if already permanent user
   if (!authLoading && isPermanent) {
     router.push('/account')
     return null
@@ -82,24 +73,21 @@ export default function UpgradeAccountPage() {
     setIsSubmitting(true)
 
     try {
-      // First check if we have a session
       const { data: { session: currentSession } } = await supabase.auth.getSession()
 
       if (!currentSession) {
-        // No session - try to create anonymous session first
         const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously()
-
         if (anonError || !anonData.session) {
           toast.error('Nie udało się nawiązać połączenia. Odśwież stronę i spróbuj ponownie.')
           return
         }
       }
 
-      // Update the anonymous user with email and password
       const { error } = await supabase.auth.updateUser({
         email: data.email,
         password: data.password,
         data: {
+          name: data.name,
           marketing_consent: data.marketingConsent,
         },
       })
@@ -109,7 +97,6 @@ export default function UpgradeAccountPage() {
           toast.error('Ten email jest już zarejestrowany. Spróbuj się zalogować.')
         } else if (error.message.includes('Auth session missing')) {
           toast.error('Sesja wygasła. Odśwież stronę i spróbuj ponownie.')
-          // Try to restore session
           await supabase.auth.signInAnonymously()
         } else {
           toast.error(error.message)
@@ -117,7 +104,6 @@ export default function UpgradeAccountPage() {
         return
       }
 
-      // Success - email verification required
       toast.success(
         'Sprawdź swoją skrzynkę email!',
         {
@@ -126,9 +112,8 @@ export default function UpgradeAccountPage() {
         }
       )
 
-      // Redirect to menu with a note
       router.push('/?upgrade=pending')
-    } catch (error) {
+    } catch {
       toast.error('Wystąpił błąd. Spróbuj ponownie.')
     } finally {
       setIsSubmitting(false)
@@ -137,7 +122,7 @@ export default function UpgradeAccountPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     )
@@ -146,156 +131,191 @@ export default function UpgradeAccountPage() {
   if (sessionError) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 px-4">
-        <p className="text-white/60 text-center">
+        <p className="text-muted-foreground text-center">
           Nie udało się nawiązać połączenia z serwerem.
         </p>
-        <Button
+        <button
           onClick={() => window.location.reload()}
-          variant="outline"
-          className="border-primary/30 text-primary"
+          className="rounded-xl border border-border px-4 py-2 text-sm text-primary hover:bg-secondary"
         >
           Odśwież stronę
-        </Button>
+        </button>
       </div>
     )
   }
 
+  const inputCls = 'w-full rounded-xl border border-border bg-secondary/50 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none'
+
   return (
-    <div className="max-w-lg mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <div className="mb-4">
-          <MesoLogo size="xl" />
-        </div>
-        <h1 className="text-2xl font-bold text-white mb-2">
-          Dołącz do MESO Club
-        </h1>
-        <p className="text-white/60">
-          Załóż darmowe konto i zacznij zbierać punkty za zamówienia!
-        </p>
-      </div>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="w-full max-w-sm mx-auto"
+    >
+      {/* Neon MESO heading */}
+      <Link href="/" className="mb-8 block text-center font-display text-3xl font-bold tracking-[0.3em] text-primary neon-text">
+        MESO
+      </Link>
 
-      {/* Benefits */}
-      <div className="bg-card/50 rounded-xl p-4 mb-8 border border-accent/20">
-        <div className="flex items-center gap-2 mb-3">
-          <Star className="w-5 h-5 text-accent" />
-          <span className="font-medium text-white">Co zyskujesz?</span>
-        </div>
-        <div className="space-y-2">
-          {BENEFITS.map((benefit, index) => (
-            <div key={index} className="flex items-center gap-3 text-sm">
-              <span>{benefit.icon}</span>
-              <span className="text-white/70">{benefit.text}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <h2 className="mb-6 text-center font-display text-lg font-semibold tracking-wider">
+        ZAREJESTRUJ SIĘ
+      </h2>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-        <div className="space-y-2">
-          <Label htmlFor="email" className="text-white/80">
-            Adres email
-          </Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="twoj@email.pl"
-            {...register('email')}
-            className="bg-card border-white/10 text-white placeholder:text-white/40 focus:border-primary"
-          />
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {/* Name */}
+        <div>
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              placeholder="Imię"
+              {...register('name')}
+              className={`${inputCls} pl-10 pr-4`}
+            />
+          </div>
+          {errors.name && (
+            <p className="text-red-400 text-xs mt-1">{errors.name.message}</p>
+          )}
+        </div>
+
+        {/* Email */}
+        <div>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="email"
+              placeholder="Email"
+              {...register('email')}
+              className={`${inputCls} pl-10 pr-4`}
+            />
+          </div>
           {errors.email && (
-            <p className="text-red-400 text-sm">{errors.email.message}</p>
+            <p className="text-red-400 text-xs mt-1">{errors.email.message}</p>
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="password" className="text-white/80">
-            Hasło
-          </Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="Minimum 8 znaków"
-            {...register('password')}
-            className="bg-card border-white/10 text-white placeholder:text-white/40 focus:border-primary"
-          />
+        {/* Password */}
+        <div>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type={showPass ? 'text' : 'password'}
+              placeholder="Hasło (min. 8 znaków)"
+              {...register('password')}
+              className={`${inputCls} pl-10 pr-10`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPass(!showPass)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            >
+              {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
           {errors.password && (
-            <p className="text-red-400 text-sm">{errors.password.message}</p>
+            <p className="text-red-400 text-xs mt-1">{errors.password.message}</p>
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="confirmPassword" className="text-white/80">
-            Powtórz hasło
-          </Label>
-          <Input
-            id="confirmPassword"
-            type="password"
-            placeholder="Powtórz hasło"
-            {...register('confirmPassword')}
-            className="bg-card border-white/10 text-white placeholder:text-white/40 focus:border-primary"
-          />
+        {/* Confirm Password */}
+        <div>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type={showConfirmPass ? 'text' : 'password'}
+              placeholder="Powtórz hasło"
+              {...register('confirmPassword')}
+              className={`${inputCls} pl-10 pr-10`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPass(!showConfirmPass)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            >
+              {showConfirmPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
           {errors.confirmPassword && (
-            <p className="text-red-400 text-sm">{errors.confirmPassword.message}</p>
+            <p className="text-red-400 text-xs mt-1">{errors.confirmPassword.message}</p>
           )}
         </div>
 
-        <div className="flex items-start gap-3">
+        {/* Marketing consent */}
+        <div className="flex items-start gap-3 pt-1">
           <Checkbox
             id="marketingConsent"
             checked={marketingConsent}
             onCheckedChange={(checked) => setValue('marketingConsent', !!checked)}
-            className="mt-1 border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+            className="mt-0.5 border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
           />
           <Label
             htmlFor="marketingConsent"
-            className="text-sm text-white/60 cursor-pointer"
+            className="text-xs text-muted-foreground cursor-pointer leading-relaxed"
           >
             Chcę otrzymywać informacje o promocjach, nowościach i ekskluzywnych ofertach MESO
           </Label>
         </div>
 
-        <Button
+        {/* Submit CTA */}
+        <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-accent hover:bg-accent/90 text-black font-semibold h-12 neon-glow-yellow"
+          className="w-full rounded-xl bg-accent py-3 font-display text-sm font-semibold tracking-wider text-accent-foreground neon-glow-yellow transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
         >
           {isSubmitting ? (
-            <>
-              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              Tworzenie konta...
-            </>
+            <span className="flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              TWORZENIE KONTA...
+            </span>
           ) : (
-            <>
-              Załóż konto i odbierz 50 pkt
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </>
+            'ZAREJESTRUJ'
           )}
-        </Button>
+        </button>
       </form>
 
-      {/* Login link */}
-      <div className="text-center mt-6 pt-6 border-t border-white/10">
-        <p className="text-white/50 text-sm">
-          Masz już konto?{' '}
-          <Link href="/login" className="text-primary hover:text-primary">
-            Zaloguj się
-          </Link>
-        </p>
+      {/* Divider */}
+      <div className="relative my-5">
+        <Separator className="bg-border" />
+        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-4 text-xs text-muted-foreground">
+          lub
+        </span>
       </div>
 
+      {/* Google button */}
+      <button
+        type="button"
+        disabled
+        className="w-full rounded-xl border border-border py-3 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-50"
+      >
+        Kontynuuj z Google
+      </button>
+
+      {/* Skip link */}
+      <Link
+        href="/"
+        className="block text-center text-xs text-muted-foreground hover:text-foreground mt-3"
+      >
+        Pomiń i przeglądaj menu →
+      </Link>
+
+      {/* Login link */}
+      <p className="mt-6 text-center text-xs text-muted-foreground">
+        Masz już konto?{' '}
+        <Link href="/login" className="text-primary hover:underline">
+          Zaloguj się
+        </Link>
+      </p>
+
       {/* Terms */}
-      <p className="text-center text-white/40 text-xs mt-6">
+      <p className="text-center text-muted-foreground/60 text-[10px] mt-4">
         Zakładając konto akceptujesz{' '}
-        <Link href="/regulamin" className="underline hover:text-white/60">
+        <Link href="/regulamin" className="underline hover:text-muted-foreground">
           Regulamin
         </Link>{' '}
         oraz{' '}
-        <Link href="/polityka-prywatnosci" className="underline hover:text-white/60">
+        <Link href="/polityka-prywatnosci" className="underline hover:text-muted-foreground">
           Politykę Prywatności
         </Link>
       </p>
-    </div>
+    </motion.div>
   )
 }
