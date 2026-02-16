@@ -148,13 +148,13 @@ export function MenuClient({ categories, products, location }: MenuClientProps) 
         {/* Promo Banner */}
         <PromoCarousel />
 
-        {/* Previously ordered / Bestsellers section */}
-        {bestsellerProducts.length > 0 && (
+        {/* Ostatnio zamawiane (only for logged-in users) */}
+        {isPermanent && bestsellerProducts.length > 0 && (
           <section className="mb-8">
             <div className="mb-4 flex items-center gap-2">
               <RotateCcw className="h-4 w-4 text-primary" />
               <h2 className="font-display text-sm font-bold tracking-wider uppercase text-foreground">
-                {isPermanent ? 'Ostatnio zamawiane' : 'Bestsellery'}
+                Ostatnio zamawiane
               </h2>
             </div>
             <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide sm:grid sm:grid-cols-4 xl:grid-cols-5 sm:overflow-x-visible sm:pb-0">

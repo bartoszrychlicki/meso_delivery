@@ -187,7 +187,7 @@ function LoginForm() {
 
       {/* Skip link */}
       <Link
-        href="/"
+        href="/menu"
         className="block text-center text-xs text-muted-foreground hover:text-foreground mt-3"
       >
         Pomiń i przeglądaj menu →

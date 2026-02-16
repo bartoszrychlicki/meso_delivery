@@ -2,9 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Trophy, ClipboardList, User, LogIn } from 'lucide-react'
+import { Home, Trophy, ClipboardList, User } from 'lucide-react'
 import { useCartStore } from '@/stores/cartStore'
-import { useAuth } from '@/hooks/useAuth'
 import { motion, AnimatePresence } from 'framer-motion'
 import { formatPrice } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
@@ -17,7 +16,6 @@ const baseNavItems = [
 
 export function MobileNav() {
   const pathname = usePathname()
-  const { isPermanent } = useAuth()
   const totalItems = useCartStore((s) => s.getItemCount())
   const subtotal = useCartStore((s) => s.getSubtotal())
 
@@ -26,11 +24,7 @@ export function MobileNav() {
     pathname === '/checkout' ||
     pathname.startsWith('/product/')
 
-  const authItem = isPermanent
-    ? { path: '/account', label: 'Profil', icon: User }
-    : { path: '/login', label: 'Zaloguj', icon: LogIn }
-
-  const navItems = [...baseNavItems, authItem]
+  const navItems = [...baseNavItems, { path: '/account', label: 'Profil', icon: User }]
 
   return (
     <>
