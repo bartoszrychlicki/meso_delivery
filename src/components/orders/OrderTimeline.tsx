@@ -16,7 +16,7 @@ export function OrderTimeline({ status, className }: OrderTimelineProps) {
 
     if (isCancelled || isPendingPayment) {
         return (
-            <div className={cn('rounded-lg bg-meso-dark-800 p-4 text-center', className)}>
+            <div className={cn('rounded-lg bg-card p-4 text-center', className)}>
                 <p className={cn(
                     'text-lg font-medium',
                     isCancelled ? 'text-red-500' : 'text-yellow-500'
@@ -43,9 +43,9 @@ export function OrderTimeline({ status, className }: OrderTimelineProps) {
                                     className={cn(
                                         'flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all duration-300',
                                         isCompleted
-                                            ? 'border-meso-red-500 bg-meso-red-500 text-white'
-                                            : 'border-zinc-600 bg-meso-dark-800 text-zinc-500',
-                                        isCurrent && 'ring-4 ring-meso-red-500/30 animate-pulse'
+                                            ? 'border-primary bg-primary text-white'
+                                            : 'border-zinc-600 bg-card text-zinc-500',
+                                        isCurrent && 'ring-4 ring-ring/30 animate-pulse'
                                     )}
                                 >
                                     {isCompleted ? (
@@ -57,7 +57,7 @@ export function OrderTimeline({ status, className }: OrderTimelineProps) {
                                 <span
                                     className={cn(
                                         'mt-2 text-xs font-medium text-center max-w-[60px]',
-                                        isCompleted ? 'text-meso-red-500' : 'text-zinc-500'
+                                        isCompleted ? 'text-primary' : 'text-zinc-500'
                                     )}
                                 >
                                     {step.shortLabel}
@@ -71,7 +71,7 @@ export function OrderTimeline({ status, className }: OrderTimelineProps) {
                                         className={cn(
                                             'h-0.5 w-full transition-all duration-300',
                                             index < currentStepIndex
-                                                ? 'bg-meso-red-500'
+                                                ? 'bg-primary'
                                                 : 'bg-zinc-700'
                                         )}
                                     />

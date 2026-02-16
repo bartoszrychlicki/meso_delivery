@@ -18,7 +18,7 @@ const sizeClasses = {
 export function LoadingSpinner({ size = 'md', className, text }: LoadingSpinnerProps) {
   return (
     <div className={cn('flex flex-col items-center justify-center gap-3', className)}>
-      <Loader2 className={cn('animate-spin text-meso-red-500', sizeClasses[size])} />
+      <Loader2 className={cn('animate-spin text-primary', sizeClasses[size])} />
       {text && <p className="text-sm text-white/70">{text}</p>}
     </div>
   )
@@ -26,7 +26,7 @@ export function LoadingSpinner({ size = 'md', className, text }: LoadingSpinnerP
 
 export function FullPageLoader({ text = 'Ładowanie...' }: { text?: string }) {
   return (
-    <div className="fixed inset-0 bg-meso-dark-950 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-background flex items-center justify-center z-50">
       <LoadingSpinner size="lg" text={text} />
     </div>
   )

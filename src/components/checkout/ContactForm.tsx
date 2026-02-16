@@ -61,10 +61,10 @@ export function ContactForm({ defaultValues, savedPhone, onSubmit }: ContactForm
     return (
         <form id="address-form" onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
             {/* Pickup location info */}
-            <div className="bg-meso-dark-800 border border-meso-red-500/20 rounded-xl p-4">
+            <div className="bg-card border border-border rounded-xl p-4">
                 <div className="flex items-start gap-3">
-                    <div className="p-2 bg-meso-red-500/10 rounded-lg">
-                        <MapPin className="w-5 h-5 text-meso-red-500" />
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                        <MapPin className="w-5 h-5 text-primary" />
                     </div>
                     <div>
                         <h4 className="text-white font-medium">Punkt odbioru</h4>
@@ -81,28 +81,28 @@ export function ContactForm({ defaultValues, savedPhone, onSubmit }: ContactForm
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="firstName">Imię</Label>
-                        <Input id="firstName" {...fieldProps('firstName')} placeholder="Jan" className="bg-meso-dark-800 border-white/10" />
+                        <Input id="firstName" {...fieldProps('firstName')} placeholder="Jan" className="bg-card border-white/10" />
                         {showError('firstName') && <p className="text-red-400 text-sm">{errors.firstName?.message}</p>}
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="lastName">Nazwisko</Label>
-                        <Input id="lastName" {...fieldProps('lastName')} placeholder="Kowalski" className="bg-meso-dark-800 border-white/10" />
+                        <Input id="lastName" {...fieldProps('lastName')} placeholder="Kowalski" className="bg-card border-white/10" />
                         {showError('lastName') && <p className="text-red-400 text-sm">{errors.lastName?.message}</p>}
                     </div>
                 </div>
 
                 <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" {...fieldProps('email')} placeholder="jan@example.com" className="bg-meso-dark-800 border-white/10" />
+                    <Input id="email" type="email" {...fieldProps('email')} placeholder="jan@example.com" className="bg-card border-white/10" />
                     {showError('email') && <p className="text-red-400 text-sm">{errors.email?.message}</p>}
                 </div>
 
                 <div className="space-y-2">
                     <Label htmlFor="phone" className="flex items-center gap-1.5">
-                        <MessageSquare className="w-4 h-4 text-meso-gold-400" />
+                        <MessageSquare className="w-4 h-4 text-accent" />
                         Numer telefonu
                     </Label>
-                    <Input id="phone" type="tel" {...fieldProps('phone')} placeholder="123456789" maxLength={9} className="bg-meso-dark-800 border-white/10" />
+                    <Input id="phone" type="tel" {...fieldProps('phone')} placeholder="123456789" maxLength={9} className="bg-card border-white/10" />
                     <p className="text-white/40 text-xs">Na ten numer wyślemy SMS o statusie Twojego zamówienia</p>
                     {showError('phone') && <p className="text-red-400 text-sm">{errors.phone?.message}</p>}
                 </div>

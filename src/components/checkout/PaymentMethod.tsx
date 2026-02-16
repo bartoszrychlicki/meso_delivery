@@ -48,13 +48,13 @@ export function PaymentMethod({ value, onChange }: PaymentMethodProps) {
                         className={cn(
                             "flex items-center gap-4 p-4 rounded-xl border transition-all text-left",
                             value === method.id
-                                ? "bg-meso-red-500/10 border-meso-red-500 text-white"
-                                : "bg-meso-dark-800 border-white/5 text-white/60 hover:bg-meso-dark-700"
+                                ? "bg-primary/10 border-primary text-white"
+                                : "bg-card border-white/5 text-white/60 hover:bg-muted"
                         )}
                     >
                         <div className={cn(
                             "p-2 rounded-lg flex items-center justify-center w-12 h-12",
-                            value === method.id ? "bg-meso-red-500/20 text-meso-red-500" : "bg-white/5 text-white/40"
+                            value === method.id ? "bg-primary/20 text-primary" : "bg-white/5 text-white/40"
                         )}>
                             {method.icon}
                         </div>

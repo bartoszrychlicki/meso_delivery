@@ -138,7 +138,7 @@ export default function UpgradeAccountPage() {
   if (authLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-meso-red-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     )
   }
@@ -152,7 +152,7 @@ export default function UpgradeAccountPage() {
         <Button
           onClick={() => window.location.reload()}
           variant="outline"
-          className="border-meso-red-500/30 text-meso-red-400"
+          className="border-primary/30 text-primary"
         >
           Odśwież stronę
         </Button>
@@ -176,9 +176,9 @@ export default function UpgradeAccountPage() {
       </div>
 
       {/* Benefits */}
-      <div className="bg-meso-dark-800/50 rounded-xl p-4 mb-8 border border-meso-gold-500/20">
+      <div className="bg-card/50 rounded-xl p-4 mb-8 border border-accent/20">
         <div className="flex items-center gap-2 mb-3">
-          <Star className="w-5 h-5 text-meso-gold-400" />
+          <Star className="w-5 h-5 text-accent" />
           <span className="font-medium text-white">Co zyskujesz?</span>
         </div>
         <div className="space-y-2">
@@ -202,7 +202,7 @@ export default function UpgradeAccountPage() {
             type="email"
             placeholder="twoj@email.pl"
             {...register('email')}
-            className="bg-meso-dark-800 border-white/10 text-white placeholder:text-white/40 focus:border-meso-red-500"
+            className="bg-card border-white/10 text-white placeholder:text-white/40 focus:border-primary"
           />
           {errors.email && (
             <p className="text-red-400 text-sm">{errors.email.message}</p>
@@ -218,7 +218,7 @@ export default function UpgradeAccountPage() {
             type="password"
             placeholder="Minimum 8 znaków"
             {...register('password')}
-            className="bg-meso-dark-800 border-white/10 text-white placeholder:text-white/40 focus:border-meso-red-500"
+            className="bg-card border-white/10 text-white placeholder:text-white/40 focus:border-primary"
           />
           {errors.password && (
             <p className="text-red-400 text-sm">{errors.password.message}</p>
@@ -234,7 +234,7 @@ export default function UpgradeAccountPage() {
             type="password"
             placeholder="Powtórz hasło"
             {...register('confirmPassword')}
-            className="bg-meso-dark-800 border-white/10 text-white placeholder:text-white/40 focus:border-meso-red-500"
+            className="bg-card border-white/10 text-white placeholder:text-white/40 focus:border-primary"
           />
           {errors.confirmPassword && (
             <p className="text-red-400 text-sm">{errors.confirmPassword.message}</p>
@@ -246,7 +246,7 @@ export default function UpgradeAccountPage() {
             id="marketingConsent"
             checked={marketingConsent}
             onCheckedChange={(checked) => setValue('marketingConsent', !!checked)}
-            className="mt-1 border-white/30 data-[state=checked]:bg-meso-red-500 data-[state=checked]:border-meso-red-500"
+            className="mt-1 border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
           />
           <Label
             htmlFor="marketingConsent"
@@ -259,7 +259,7 @@ export default function UpgradeAccountPage() {
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-meso-gold-500 hover:bg-meso-gold-600 text-black font-semibold h-12 shadow-[0_0_20px_rgba(234,179,8,0.3)]"
+          className="w-full bg-accent hover:bg-accent/90 text-black font-semibold h-12 neon-glow-yellow"
         >
           {isSubmitting ? (
             <>
@@ -279,7 +279,7 @@ export default function UpgradeAccountPage() {
       <div className="text-center mt-6 pt-6 border-t border-white/10">
         <p className="text-white/50 text-sm">
           Masz już konto?{' '}
-          <Link href="/login" className="text-meso-red-500 hover:text-meso-red-400">
+          <Link href="/login" className="text-primary hover:text-primary">
             Zaloguj się
           </Link>
         </p>

@@ -37,7 +37,7 @@ const defaultConfig: Record<Exclude<EmptyStateType, 'custom'>, { icon: React.Rea
     description: 'Złóż swoje pierwsze zamówienie!',
   },
   error: {
-    icon: <AlertCircle className="w-16 h-16 text-meso-red-500/50" />,
+    icon: <AlertCircle className="w-16 h-16 text-primary/50" />,
     title: 'Coś poszło nie tak',
     description: 'Spróbuj odświeżyć stronę',
   },
@@ -69,11 +69,11 @@ export function EmptyState({
 
       {action && (
         action.href ? (
-          <Button asChild className="bg-meso-red-500 hover:bg-meso-red-600">
+          <Button asChild className="bg-primary hover:bg-primary/90">
             <Link href={action.href}>{action.label}</Link>
           </Button>
         ) : (
-          <Button onClick={action.onClick} className="bg-meso-red-500 hover:bg-meso-red-600">
+          <Button onClick={action.onClick} className="bg-primary hover:bg-primary/90">
             {action.label}
           </Button>
         )

@@ -57,7 +57,7 @@ export default async function MenuPage() {
   const { categories, products, location } = await getMenuData()
 
   return (
-    <div className="min-h-screen bg-meso-dark-900">
+    <div className="min-h-screen bg-background">
       {/* Menu content */}
       <MenuClient categories={categories} products={products} location={location} />
     </div>

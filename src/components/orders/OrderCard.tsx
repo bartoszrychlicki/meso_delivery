@@ -23,7 +23,7 @@ export function OrderCard({ order, className }: OrderCardProps) {
         <Link
             href={`/orders/${order.id}`}
             className={cn(
-                'block rounded-xl bg-meso-dark-800 p-4 transition-all hover:bg-meso-dark-800/80 hover:ring-1 hover:ring-meso-red-500/30',
+                'block rounded-xl bg-card p-4 transition-all hover:bg-card/80 hover:ring-1 hover:ring-ring/30',
                 className
             )}
         >
@@ -53,7 +53,7 @@ export function OrderCard({ order, className }: OrderCardProps) {
 
                 {/* Price and arrow */}
                 <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-meso-red-500">
+                    <span className="text-lg font-bold text-primary">
                         {formatPrice(order.total)}
                     </span>
                     <ChevronRight className="w-5 h-5 text-zinc-500" />

@@ -1,84 +1,91 @@
 'use client'
 
 import Link from 'next/link'
-import { User, Package, MapPin, Gift, Star, Settings, LogOut, ChevronRight, Loader2 } from 'lucide-react'
+import { User, MapPin, CreditCard, Heart, Settings, LogOut, ChevronRight, Loader2, Star, Package } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { useAuth, useUserDisplay, useMesoClub } from '@/hooks/useAuth'
+import { useAuth, useUserDisplay } from '@/hooks/useAuth'
 import { AnonymousBanner } from '@/components/auth'
 import { cn } from '@/lib/utils'
 
 const MENU_ITEMS = [
-  { icon: Package, label: 'Moje zamówienia', href: '/orders', requiresPermanent: false },
-  { icon: MapPin, label: 'Adresy dostawy', href: '/account/addresses', requiresPermanent: false },
-  { icon: Gift, label: 'MESO Club', href: '/account/club', requiresPermanent: true },
+  { icon: User, label: 'Dane osobowe', href: '/account/personal', requiresPermanent: true },
+  { icon: MapPin, label: 'Adresy', href: '/account/addresses', requiresPermanent: false },
+  { icon: CreditCard, label: 'Platnosci', href: '/account/payments', requiresPermanent: true },
+  { icon: Heart, label: 'Ulubione', href: '/account/favorites', requiresPermanent: true },
+  { icon: Package, label: 'Moje zamowienia', href: '/orders', requiresPermanent: false },
   { icon: Settings, label: 'Ustawienia', href: '/account/settings', requiresPermanent: true },
 ]
 
 export default function AccountPage() {
-  const { isLoading, isPermanent, signOut, user } = useAuth()
+  const { isLoading, isPermanent, signOut } = useAuth()
   const { displayName, avatarInitial, email } = useUserDisplay()
-  const { canUseRewards } = useMesoClub()
 
   if (isLoading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-meso-red-500" />
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )
   }
 
   return (
     <div className="px-4 py-6 space-y-6">
-      {/* Profile Card */}
-      <div className="bg-meso-dark-800/50 rounded-xl p-5 border border-white/5">
-        <div className="flex items-center gap-4">
-          <div className={cn(
-            'w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold',
-            isPermanent ? 'bg-meso-red-500 text-white' : 'bg-white/10 text-white/60'
-          )}>
-            {avatarInitial}
-          </div>
-          <div className="flex-1">
-            <h2 className="text-lg font-semibold text-white">{displayName}</h2>
-            {email ? (
-              <p className="text-sm text-white/50">{email}</p>
-            ) : (
-              <p className="text-sm text-meso-gold-400">Konto gościa</p>
-            )}
-          </div>
-          {isPermanent && (
-            <Link href="/account/profile">
-              <Button variant="ghost" size="icon" className="text-white/50 hover:text-white">
-                <Settings className="w-5 h-5" />
-              </Button>
-            </Link>
+      {/* User Avatar + Info */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center gap-4"
+      >
+        <div className={cn(
+          'flex h-16 w-16 items-center justify-center rounded-full text-xl font-bold',
+          isPermanent ? 'bg-primary text-primary-foreground neon-glow-sm' : 'bg-secondary text-muted-foreground'
+        )}>
+          {avatarInitial}
+        </div>
+        <div className="flex-1">
+          <h2 className="font-display text-lg font-bold">{displayName}</h2>
+          {email ? (
+            <p className="text-sm text-muted-foreground">{email}</p>
+          ) : (
+            <p className="text-sm text-accent">Konto goscia</p>
           )}
         </div>
-
-        {/* Loyalty Points for permanent users */}
-        {isPermanent && (
-          <div className="mt-4 pt-4 border-t border-white/10">
-            <Link href="/account/club" className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-meso-gold-500/20 flex items-center justify-center">
-                  <Star className="w-5 h-5 text-meso-gold-400" />
-                </div>
-                <div>
-                  <p className="text-sm text-white/60">MESO Club</p>
-                  <p className="text-lg font-bold text-meso-gold-400">0 punktów</p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-white/30" />
-            </Link>
-          </div>
-        )}
-      </div>
+      </motion.div>
 
       {/* Anonymous Banner */}
       {!isPermanent && <AnonymousBanner variant="default" />}
 
-      {/* Menu Items */}
-      <div className="bg-meso-dark-800/50 rounded-xl border border-white/5 divide-y divide-white/5">
+      {/* MESO Club Mini Card */}
+      {isPermanent && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Link
+            href="/loyalty"
+            className="flex items-center gap-4 rounded-xl border border-accent/30 bg-gradient-to-r from-primary/20 via-card to-accent/20 p-4 transition-colors hover:border-accent/50"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/20">
+              <Star className="h-5 w-5 text-accent" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold">MESO Club</p>
+              <p className="text-xs text-muted-foreground">Zbieraj punkty, odbieraj nagrody</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+          </Link>
+        </motion.div>
+      )}
+
+      {/* Profile Menu Items */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card"
+      >
         {MENU_ITEMS.map((item) => {
           const isDisabled = item.requiresPermanent && !isPermanent
           const Icon = item.icon
@@ -87,13 +94,13 @@ export default function AccountPage() {
             return (
               <div
                 key={item.href}
-                className="flex items-center gap-4 p-4 opacity-50 cursor-not-allowed"
+                className="flex items-center gap-4 px-4 py-3.5 opacity-40"
               >
-                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">
-                  <Icon className="w-5 h-5 text-white/40" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary">
+                  <Icon className="h-4 w-4 text-muted-foreground" />
                 </div>
-                <span className="flex-1 text-white/40">{item.label}</span>
-                <span className="text-xs text-white/30 bg-white/5 px-2 py-1 rounded">
+                <span className="flex-1 text-sm text-muted-foreground">{item.label}</span>
+                <span className="rounded bg-secondary px-2 py-0.5 text-[10px] text-muted-foreground">
                   Wymaga konta
                 </span>
               </div>
@@ -104,51 +111,56 @@ export default function AccountPage() {
             <Link
               key={item.href}
               href={item.href}
-              className="flex items-center gap-4 p-4 hover:bg-white/5 transition-colors"
+              className="flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-secondary/50"
             >
-              <div className="w-10 h-10 rounded-full bg-meso-red-500/10 flex items-center justify-center">
-                <Icon className="w-5 h-5 text-meso-red-500" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+                <Icon className="h-4 w-4 text-primary" />
               </div>
-              <span className="flex-1 text-white">{item.label}</span>
-              <ChevronRight className="w-5 h-5 text-white/30" />
+              <span className="flex-1 text-sm font-medium">{item.label}</span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </Link>
           )
         })}
-      </div>
+      </motion.div>
 
-      {/* Sign Out / Login buttons */}
-      <div className="space-y-3">
+      {/* Sign Out / Login */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="space-y-3"
+      >
         {isPermanent ? (
           <Button
             onClick={() => signOut()}
             variant="ghost"
-            className="w-full h-12 text-meso-red-500 hover:text-meso-red-400 hover:bg-meso-red-500/10 border border-meso-red-500/20"
+            className="w-full h-12 text-destructive hover:text-destructive hover:bg-destructive/10 border border-border"
           >
-            <LogOut className="w-5 h-5 mr-2" />
-            Wyloguj się
+            <LogOut className="h-5 w-5 mr-2" />
+            Wyloguj sie
           </Button>
         ) : (
           <div className="flex gap-3">
             <Link href="/register" className="flex-1">
-              <Button className="w-full h-12 bg-meso-gold-500 hover:bg-meso-gold-600 text-black font-semibold">
-                Załóż konto
+              <Button className="w-full h-12 bg-accent text-accent-foreground font-semibold neon-glow-yellow">
+                Zaloz konto
               </Button>
             </Link>
             <Link href="/login" className="flex-1">
               <Button
                 variant="outline"
-                className="w-full h-12 border-white/10 text-white/70 hover:text-white hover:bg-white/5"
+                className="w-full h-12"
               >
-                Zaloguj się
+                Zaloguj sie
               </Button>
             </Link>
           </div>
         )}
-      </div>
+      </motion.div>
 
-      {/* Version info */}
-      <p className="text-center text-white/20 text-xs">
-        MESO App v1.0.0 • Faza 9 (Profil i MESO Club)
+      {/* Version */}
+      <p className="text-center text-xs text-muted-foreground/40">
+        MESO App v1.0.0
       </p>
     </div>
   )

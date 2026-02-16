@@ -85,7 +85,7 @@ function LoginForm() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-meso-red-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     )
   }
@@ -118,7 +118,7 @@ function LoginForm() {
               type="email"
               placeholder="twoj@email.pl"
               {...register('email')}
-              className="pl-10 bg-meso-dark-800 border-white/10 text-white placeholder:text-white/40 focus:border-meso-red-500"
+              className="pl-10 bg-card border-white/10 text-white placeholder:text-white/40 focus:border-primary"
             />
           </div>
           {errors.email && (
@@ -133,7 +133,7 @@ function LoginForm() {
             </Label>
             <Link
               href="/forgot-password"
-              className="text-sm text-meso-red-500 hover:text-meso-red-400"
+              className="text-sm text-primary hover:text-primary"
             >
               Zapomniałeś hasła?
             </Link>
@@ -145,7 +145,7 @@ function LoginForm() {
               type="password"
               placeholder="••••••••"
               {...register('password')}
-              className="pl-10 bg-meso-dark-800 border-white/10 text-white placeholder:text-white/40 focus:border-meso-red-500"
+              className="pl-10 bg-card border-white/10 text-white placeholder:text-white/40 focus:border-primary"
             />
           </div>
           {errors.password && (
@@ -156,7 +156,7 @@ function LoginForm() {
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-meso-red-500 hover:bg-meso-red-600 text-white font-semibold h-11 shadow-[0_0_20px_rgba(239,68,68,0.3)]"
+          className="w-full bg-primary hover:bg-primary/90 text-white font-semibold h-11 neon-glow"
         >
           {isSubmitting ? (
             <>
@@ -175,7 +175,7 @@ function LoginForm() {
       {/* Divider */}
       <div className="relative">
         <Separator className="bg-white/10" />
-        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-meso-dark-950 px-3 text-sm text-white/40">
+        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-3 text-sm text-white/40">
           lub
         </span>
       </div>
@@ -186,7 +186,7 @@ function LoginForm() {
           type="button"
           variant="outline"
           disabled
-          className="w-full h-11 bg-meso-dark-800/50 border-white/10 text-white/40 cursor-not-allowed"
+          className="w-full h-11 bg-card/50 border-white/10 text-white/40 cursor-not-allowed"
           title="Wkrótce dostępne"
         >
           <Smartphone className="w-5 h-5 mr-3" />
@@ -197,7 +197,7 @@ function LoginForm() {
           type="button"
           variant="outline"
           disabled
-          className="w-full h-11 bg-meso-dark-800/50 border-white/10 text-white/40 cursor-not-allowed"
+          className="w-full h-11 bg-card/50 border-white/10 text-white/40 cursor-not-allowed"
           title="Wkrótce dostępne"
         >
           <Chrome className="w-5 h-5 mr-3" />
@@ -210,7 +210,7 @@ function LoginForm() {
       <div className="text-center pt-4 border-t border-white/10">
         <p className="text-white/50">
           Nie masz jeszcze konta?{' '}
-          <Link href="/register" className="text-meso-gold-400 hover:text-meso-gold-300 font-medium">
+          <Link href="/register" className="text-accent hover:text-accent font-medium">
             Załóż za darmo
           </Link>
         </p>
@@ -224,7 +224,7 @@ export default function LoginPage() {
     <Suspense
       fallback={
         <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="w-8 h-8 animate-spin text-meso-red-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       }
     >

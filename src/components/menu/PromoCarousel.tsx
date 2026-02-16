@@ -40,7 +40,7 @@ interface PromoCarouselProps {
 
 export function PromoCarousel({ className }: PromoCarouselProps) {
   return (
-    <div className={cn('w-full', className)}>
+    <div className={cn('w-full mb-6', className)}>
       <Carousel
         opts={{
           align: 'start',
@@ -59,10 +59,10 @@ export function PromoCarousel({ className }: PromoCarouselProps) {
             <CarouselItem key={banner.id}>
               <Link
                 href={banner.href || '#'}
-                className="block overflow-hidden rounded-xl border border-meso-red-500/20 transition-all hover:border-meso-red-500/50"
+                className="block overflow-hidden rounded-xl border border-border transition-all hover:border-primary/50"
               >
                 <div
-                  className="relative w-full bg-meso-dark-800"
+                  className="relative w-full bg-card neon-border rounded-xl overflow-hidden"
                   style={{ aspectRatio: '2.5 / 1' }}
                 >
                   <Image
@@ -78,8 +78,8 @@ export function PromoCarousel({ className }: PromoCarouselProps) {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="hidden md:flex -left-3 bg-meso-dark-800/80 border-meso-red-500/30 text-white hover:bg-meso-dark-700 hover:border-meso-red-500" />
-        <CarouselNext className="hidden md:flex -right-3 bg-meso-dark-800/80 border-meso-red-500/30 text-white hover:bg-meso-dark-700 hover:border-meso-red-500" />
+        <CarouselPrevious className="hidden md:flex -left-3 bg-card/80 border-primary/30 text-white hover:bg-muted hover:border-primary" />
+        <CarouselNext className="hidden md:flex -right-3 bg-card/80 border-primary/30 text-white hover:bg-muted hover:border-primary" />
       </Carousel>
     </div>
   )

@@ -34,7 +34,11 @@ export function CategoryTabs({
       const containerRect = container.getBoundingClientRect()
       const buttonRect = activeButton.getBoundingClientRect()
 
-      const scrollLeft = buttonRect.left - containerRect.left - containerRect.width / 2 + buttonRect.width / 2
+      const scrollLeft =
+        buttonRect.left -
+        containerRect.left -
+        containerRect.width / 2 +
+        buttonRect.width / 2
       container.scrollBy({ left: scrollLeft, behavior: 'smooth' })
     }
   }, [activeCategory])
@@ -44,7 +48,7 @@ export function CategoryTabs({
       {/* Mobile: Horizontal scroll */}
       <div
         ref={scrollRef}
-        className="lg:hidden flex gap-3 overflow-x-auto scrollbar-hide px-4 py-3 -mx-4"
+        className="lg:hidden flex gap-2 overflow-x-auto scrollbar-hide px-4 py-3 -mx-4"
       >
         {categories.map((category) => (
           <button
@@ -52,13 +56,13 @@ export function CategoryTabs({
             ref={activeCategory === category.slug ? activeRef : null}
             onClick={() => onCategoryChange(category.slug)}
             className={cn(
-              'flex-shrink-0 px-5 py-2.5 rounded-full text-base font-medium transition-all whitespace-nowrap',
+              'flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap',
               activeCategory === category.slug
-                ? 'bg-meso-red-500 text-white shadow-[0_0_12px_rgba(244,37,175,0.5)]'
-                : 'bg-white/5 text-white/70 border border-meso-red-500/20 hover:border-meso-red-500/50 hover:text-white'
+                ? 'bg-primary text-primary-foreground neon-glow-sm'
+                : 'bg-secondary/60 text-muted-foreground hover:text-foreground'
             )}
           >
-            {category.name}
+            {category.icon} {category.name}
           </button>
         ))}
       </div>
@@ -72,15 +76,19 @@ export function CategoryTabs({
             className={cn(
               'flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all',
               activeCategory === category.slug
-                ? 'bg-meso-red-500 text-white shadow-[0_0_15px_rgba(244,37,175,0.4)]'
-                : 'text-white/70 hover:bg-white/5 hover:text-white border border-transparent hover:border-meso-red-500/20'
+                ? 'bg-primary text-primary-foreground neon-glow-sm'
+                : 'text-muted-foreground hover:bg-secondary hover:text-foreground border border-transparent hover:border-border'
             )}
           >
-            {category.icon && <span className="text-xl">{category.icon}</span>}
+            {category.icon && (
+              <span className="text-xl">{category.icon}</span>
+            )}
             <div>
               <p className="font-medium">{category.name}</p>
               {category.name_jp && (
-                <p className="text-xs opacity-60 font-japanese">{category.name_jp}</p>
+                <p className="text-xs opacity-60 font-japanese">
+                  {category.name_jp}
+                </p>
               )}
             </div>
           </button>

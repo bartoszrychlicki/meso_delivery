@@ -79,7 +79,7 @@ export default function ResetPasswordPage() {
   if (isValidSession === null) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-meso-red-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     )
   }
@@ -100,7 +100,7 @@ export default function ResetPasswordPage() {
           </p>
         </div>
         <Link href="/forgot-password">
-          <Button className="bg-meso-red-500 hover:bg-meso-red-600">
+          <Button className="bg-primary hover:bg-primary/90">
             Wyślij nowy link
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
@@ -126,7 +126,7 @@ export default function ResetPasswordPage() {
           </p>
         </div>
         <Link href="/login">
-          <Button className="bg-meso-red-500 hover:bg-meso-red-600">
+          <Button className="bg-primary hover:bg-primary/90">
             Zaloguj się teraz
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
@@ -139,8 +139,8 @@ export default function ResetPasswordPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center">
-        <div className="w-14 h-14 rounded-full bg-meso-red-500/20 flex items-center justify-center mx-auto mb-4">
-          <Lock className="w-7 h-7 text-meso-red-500" />
+        <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
+          <Lock className="w-7 h-7 text-primary" />
         </div>
         <h1 className="text-2xl font-bold text-white mb-2">
           Ustaw nowe hasło
@@ -161,7 +161,7 @@ export default function ResetPasswordPage() {
             type="password"
             placeholder="Minimum 8 znaków"
             {...register('password')}
-            className="bg-meso-dark-800 border-white/10 text-white placeholder:text-white/40 focus:border-meso-red-500"
+            className="bg-card border-white/10 text-white placeholder:text-white/40 focus:border-primary"
           />
           {errors.password && (
             <p className="text-red-400 text-sm">{errors.password.message}</p>
@@ -177,7 +177,7 @@ export default function ResetPasswordPage() {
             type="password"
             placeholder="Powtórz nowe hasło"
             {...register('confirmPassword')}
-            className="bg-meso-dark-800 border-white/10 text-white placeholder:text-white/40 focus:border-meso-red-500"
+            className="bg-card border-white/10 text-white placeholder:text-white/40 focus:border-primary"
           />
           {errors.confirmPassword && (
             <p className="text-red-400 text-sm">{errors.confirmPassword.message}</p>
@@ -187,7 +187,7 @@ export default function ResetPasswordPage() {
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-meso-red-500 hover:bg-meso-red-600 text-white font-semibold h-11"
+          className="w-full bg-primary hover:bg-primary/90 text-white font-semibold h-11"
         >
           {isSubmitting ? (
             <>

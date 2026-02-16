@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import Link from 'next/link'
 import Image from 'next/image'
 import { Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/formatters'
-import { ProductDrawer } from './ProductDrawer'
+import { useCartStore } from '@/stores/cartStore'
+import { toast } from 'sonner'
 
 interface Product {
   id: string
@@ -28,113 +29,192 @@ interface Product {
   has_spice_level?: boolean
 }
 
+const badgeStyles: Record<string, string> = {
+  bestseller: 'bg-primary/20 text-primary border-primary/30',
+  premium: 'bg-accent/20 text-accent border-accent/30',
+  nowosc: 'bg-neon-cyan/20 text-neon-cyan border-neon-cyan/30',
+  ostre: 'bg-destructive/20 text-destructive border-destructive/30',
+}
+
+const badgeLabels: Record<string, string> = {
+  bestseller: 'Bestseller',
+  premium: 'Premium',
+  nowosc: 'Nowość',
+  ostre: 'Ostre 🌶️',
+}
+
+function mapProductToBadges(product: Product): string[] {
+  const badges: string[] = []
+  if (product.is_bestseller) badges.push('bestseller')
+  if (product.is_signature) badges.push('premium')
+  if (product.is_new) badges.push('nowosc')
+  if (product.is_spicy) badges.push('ostre')
+  return badges
+}
+
 interface ProductCardProps {
   product: Product
+  compact?: boolean
+  quickAdd?: boolean
   className?: string
 }
 
-export function ProductCard({ product, className }: ProductCardProps) {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
-
-  const hasDiscount = product.original_price && product.original_price > product.price
-  const discountPercent = hasDiscount
-    ? Math.round((1 - product.price / product.original_price!) * 100)
-    : 0
+export function ProductCard({
+  product,
+  compact = false,
+  quickAdd = false,
+  className,
+}: ProductCardProps) {
+  const addItem = useCartStore((s) => s.addItem)
+  const badges = mapProductToBadges(product)
 
   const handleQuickAdd = (e: React.MouseEvent) => {
+    e.preventDefault()
     e.stopPropagation()
-    setIsDrawerOpen(true)
+    addItem({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+      image: product.image_url,
+      addons: [],
+    })
+    toast.success(`${product.name} dodano do koszyka`)
   }
 
-  const handleCardClick = () => {
-    setIsDrawerOpen(true)
-  }
-
-
-
-  return (
-    <>
-      <div
-        onClick={handleCardClick}
+  if (compact) {
+    return (
+      <Link
+        href={`/product/${product.id}`}
         className={cn(
-          'group flex flex-col rounded-xl overflow-hidden cursor-pointer',
-          'bg-white/5 border border-meso-red-500/20',
-          'shadow-lg hover:border-meso-red-500',
-          'transition-all duration-200',
+          'group flex-shrink-0 w-36 sm:w-auto block rounded-xl border border-border bg-card p-2 transition-all hover:border-primary/30 hover:neon-glow-sm',
           className
         )}
       >
-        {/* Image */}
-        <div className="relative h-60 w-full bg-meso-dark-800 overflow-hidden">
+        <div className="relative mb-2 aspect-square overflow-hidden rounded-lg bg-secondary">
           {product.image_url ? (
             <Image
               src={product.image_url}
               alt={product.name}
               fill
-              className="object-cover transition-transform group-hover:scale-105"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              sizes="144px"
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-meso-dark-800 to-meso-dark-900">
-              <span className="text-6xl">🍜</span>
+            <div className="flex items-center justify-center h-full text-3xl">
+              🍜
             </div>
           )}
-          {hasDiscount && (
-            <span className="absolute top-3 left-3 rounded-lg bg-meso-red-500 px-2 py-1 text-sm font-bold text-white shadow-lg">
-              -{discountPercent}%
+          {badges.length > 0 && (
+            <div className="absolute top-1.5 left-1.5 flex flex-wrap gap-1">
+              {badges.slice(0, 1).map((b) => (
+                <span
+                  key={b}
+                  className={cn(
+                    'rounded-md border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide',
+                    badgeStyles[b]
+                  )}
+                >
+                  {badgeLabels[b]}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+        <h3 className="mb-0.5 font-display text-xs font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+          {product.name}
+        </h3>
+        <div className="flex items-center justify-between">
+          <div className="flex items-baseline gap-1">
+            <span className="font-display text-sm font-bold text-foreground">
+              {formatPrice(product.price)}
+            </span>
+            {product.original_price && product.original_price > product.price && (
+              <span className="text-[10px] font-medium text-muted-foreground line-through">
+                {formatPrice(product.original_price)}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={quickAdd ? handleQuickAdd : undefined}
+            className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground transition-transform group-hover:scale-110"
+          >
+            <Plus className="h-3 w-3" />
+          </button>
+        </div>
+      </Link>
+    )
+  }
+
+  return (
+    <Link
+      href={`/product/${product.id}`}
+      className={cn(
+        'group block rounded-xl border border-border bg-card p-3 transition-all hover:border-primary/30 hover:neon-glow-sm',
+        className
+      )}
+    >
+      {/* Image */}
+      <div className="relative mb-3 aspect-[4/3] overflow-hidden rounded-lg bg-secondary">
+        {product.image_url ? (
+          <Image
+            src={product.image_url}
+            alt={product.name}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full text-5xl">
+            🍜
+          </div>
+        )}
+        {/* Badges */}
+        {badges.length > 0 && (
+          <div className="absolute top-2 left-2 flex flex-wrap gap-1">
+            {badges.map((b) => (
+              <span
+                key={b}
+                className={cn(
+                  'rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+                  badgeStyles[b]
+                )}
+              >
+                {badgeLabels[b]}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Info */}
+      <h3 className="mb-1 font-display text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+        {product.name}
+      </h3>
+      {product.description && (
+        <p className="mb-3 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+          {product.description}
+        </p>
+      )}
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-baseline gap-1.5">
+          <span className="font-display text-lg font-bold text-foreground">
+            {formatPrice(product.price)}
+          </span>
+          {product.original_price && product.original_price > product.price && (
+            <span className="text-sm font-medium text-muted-foreground line-through">
+              {formatPrice(product.original_price)}
             </span>
           )}
         </div>
-
-        {/* Content */}
-        <div className="flex flex-col p-4 gap-2">
-          <p className="text-white text-xl font-bold leading-tight">
-            {product.name}
-          </p>
-
-          {product.description && (
-            <p className="text-zinc-400 text-base font-normal leading-tight line-clamp-2">
-              {product.description}
-            </p>
-          )}
-
-          {/* Price and Add Button */}
-          <div className="flex items-center justify-between mt-2">
-            <div className="flex flex-col">
-              {hasDiscount && (
-                <p className="text-white/40 text-base font-medium leading-tight line-through">
-                  {formatPrice(product.original_price!)}
-                </p>
-              )}
-              <p className="text-meso-red-500 text-2xl font-bold leading-tight">
-                {formatPrice(product.price)}
-              </p>
-            </div>
-            <button
-              onClick={handleQuickAdd}
-              className={cn(
-                'flex min-w-[120px] cursor-pointer items-center justify-center',
-                'overflow-hidden rounded-full h-12 px-6',
-                'bg-meso-red-500 text-white text-xl font-bold',
-                'hover:bg-meso-red-600 active:scale-95',
-                'transition-all duration-150',
-                'shadow-[0_0_15px_rgba(244,37,175,0.4)]',
-                'hover:shadow-[0_0_20px_rgba(244,37,175,0.6)]'
-              )}
-            >
-              <Plus className="w-5 h-5 mr-1" />
-              <span className="truncate">DODAJ</span>
-            </button>
-          </div>
-        </div>
+        <button
+          onClick={quickAdd ? handleQuickAdd : undefined}
+          className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-transform group-hover:scale-110"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
       </div>
-
-      <ProductDrawer
-        productSlug={product.slug}
-        isOpen={isDrawerOpen}
-        onOpenChange={setIsDrawerOpen}
-        initialData={product}
-      />
-    </>
+    </Link>
   )
 }

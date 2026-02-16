@@ -20,7 +20,7 @@ export function DeliveryForm({ value, onChange }: DeliveryFormProps) {
                     <button
                         type="button"
                         disabled
-                        className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all bg-meso-dark-800 border-white/5 text-white/30 cursor-not-allowed opacity-50"
+                        className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all bg-card border-white/5 text-white/30 cursor-not-allowed opacity-50"
                     >
                         <Truck className="w-6 h-6 text-white/20" />
                         <span className="font-medium">Dostawa</span>
@@ -33,11 +33,11 @@ export function DeliveryForm({ value, onChange }: DeliveryFormProps) {
                         className={cn(
                             "flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all",
                             value.type === 'pickup'
-                                ? "bg-meso-red-500/10 border-meso-red-500 text-white"
-                                : "bg-meso-dark-800 border-white/5 text-white/60 hover:bg-meso-dark-700"
+                                ? "bg-primary/10 border-primary text-white"
+                                : "bg-card border-white/5 text-white/60 hover:bg-muted"
                         )}
                     >
-                        <Store className={cn("w-6 h-6", value.type === 'pickup' ? "text-meso-red-500" : "text-white/40")} />
+                        <Store className={cn("w-6 h-6", value.type === 'pickup' ? "text-primary" : "text-white/40")} />
                         <span className="font-medium">Odbiór osobisty</span>
                         <span className="text-xs opacity-60">0.00 zł</span>
                     </button>
@@ -53,11 +53,11 @@ export function DeliveryForm({ value, onChange }: DeliveryFormProps) {
                         className={cn(
                             "flex items-center gap-4 p-4 rounded-xl border transition-all text-left",
                             value.time === 'asap'
-                                ? "bg-meso-red-500/10 border-meso-red-500 text-white"
-                                : "bg-meso-dark-800 border-white/5 text-white/60 hover:bg-meso-dark-700"
+                                ? "bg-primary/10 border-primary text-white"
+                                : "bg-card border-white/5 text-white/60 hover:bg-muted"
                         )}
                     >
-                        <div className={cn("p-2 rounded-full", value.time === 'asap' ? "bg-meso-red-500/20 text-meso-red-500" : "bg-white/5 text-white/40")}>
+                        <div className={cn("p-2 rounded-full", value.time === 'asap' ? "bg-primary/20 text-primary" : "bg-white/5 text-white/40")}>
                             <Clock className="w-5 h-5" />
                         </div>
                         <div>

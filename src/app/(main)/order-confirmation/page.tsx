@@ -138,8 +138,8 @@ function OrderConfirmationContent() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-meso-dark-950">
-                <Loader2 className="w-8 h-8 text-meso-red-500 animate-spin" />
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
                 <p className="ml-3 text-white/60">Ładowanie zamówienia...</p>
             </div>
         )
@@ -147,13 +147,13 @@ function OrderConfirmationContent() {
 
     if (error) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-meso-dark-950 p-4 text-center">
+            <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 text-center">
                 <XCircle className="w-12 h-12 text-red-500 mb-4" />
                 <h1 className="text-xl font-bold text-white mb-2">Wystąpił błąd</h1>
                 <p className="text-white/60 mb-6">{error}</p>
                 <Link
                     href="/"
-                    className="bg-meso-red-500 text-white px-6 py-3 rounded-xl font-medium"
+                    className="bg-primary text-white px-6 py-3 rounded-xl font-medium"
                 >
                     Wróć do menu
                 </Link>
@@ -171,7 +171,7 @@ function OrderConfirmationContent() {
 
     if (isFailed) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-meso-dark-950 p-4 text-center">
+            <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 text-center">
                 <XCircle className="w-16 h-16 text-red-500 mb-6" />
                 <h1 className="text-2xl font-bold text-white mb-2">Płatność nie powiodła się</h1>
                 <p className="text-white/60 mb-8 max-w-md">
@@ -187,7 +187,7 @@ function OrderConfirmationContent() {
                     </Link>
                     <Link
                         href="/checkout"
-                        className="bg-meso-red-500 hover:bg-meso-red-600 text-white px-6 py-3 rounded-xl font-medium transition-colors"
+                        className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-xl font-medium transition-colors"
                     >
                         Spróbuj ponownie
                     </Link>
@@ -222,14 +222,14 @@ function OrderConfirmationContent() {
                     {isPending ? 'Trwa weryfikacja płatności' : 'Numer zamówienia'}
                 </p>
 
-                <p className="text-meso-gold-500 font-mono text-lg font-bold mt-1">
+                <p className="text-accent font-mono text-lg font-bold mt-1">
                     #{confirmation.orderNumber}
                 </p>
             </div>
 
             <div className="px-4 space-y-4">
                 {/* Estimated Time */}
-                <div className="bg-meso-dark-800 rounded-xl p-4 border border-white/5">
+                <div className="bg-card rounded-xl p-4 border border-white/5">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-orange-500/10 rounded-lg">
                             <Clock className="w-5 h-5 text-orange-500" />
@@ -242,13 +242,13 @@ function OrderConfirmationContent() {
                 </div>
 
                 {/* Delivery Info */}
-                <div className="bg-meso-dark-800 rounded-xl p-4 border border-white/5">
+                <div className="bg-card rounded-xl p-4 border border-white/5">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-meso-red-500/10 rounded-lg">
+                        <div className="p-2 bg-primary/10 rounded-lg">
                             {confirmation.deliveryType === 'delivery' ? (
-                                <MapPin className="w-5 h-5 text-meso-red-500" />
+                                <MapPin className="w-5 h-5 text-primary" />
                             ) : (
-                                <Store className="w-5 h-5 text-meso-red-500" />
+                                <Store className="w-5 h-5 text-primary" />
                             )}
                         </div>
                         <div>
@@ -269,7 +269,7 @@ function OrderConfirmationContent() {
                 </div>
 
                 {/* Order Items */}
-                <div className="bg-meso-dark-800 rounded-xl p-4 border border-white/5">
+                <div className="bg-card rounded-xl p-4 border border-white/5">
                     <h3 className="text-white font-medium mb-3">Twoje zamówienie</h3>
                     <div className="space-y-3">
                         {confirmation.items.map((item, idx) => {
@@ -308,7 +308,7 @@ function OrderConfirmationContent() {
                 </div>
 
                 {/* Price Summary */}
-                <div className="bg-meso-dark-800 rounded-xl p-4 border border-white/5 space-y-2 text-sm">
+                <div className="bg-card rounded-xl p-4 border border-white/5 space-y-2 text-sm">
                     <div className="flex justify-between">
                         <span className="text-white/60">Produkty</span>
                         <span className="text-white">{formatPriceExact(confirmation.subtotal)}</span>
@@ -331,22 +331,22 @@ function OrderConfirmationContent() {
                             <span className="text-white">{formatPriceExact(confirmation.tip)}</span>
                         </div>
                     )}
-                    <div className="flex justify-between font-bold pt-2 border-t border-white/5">
-                        <span className="text-white">Razem</span>
-                        <span className="text-meso-red-500 text-lg">{formatPriceExact(confirmation.total)}</span>
+                    <div className="flex justify-between font-bold pt-2 border-t border-border">
+                        <span className="text-foreground">Razem</span>
+                        <span className="text-accent text-lg">{formatPriceExact(confirmation.total)}</span>
                     </div>
                 </div>
             </div>
 
             {/* Back to Menu Button */}
-            <div className="fixed bottom-[85px] left-0 right-0 z-20 mx-4">
-                <div className="bg-meso-dark-900 border border-white/10 p-4 rounded-2xl shadow-xl">
+            <div className="fixed bottom-[85px] left-0 right-0 z-50 mx-4 lg:relative lg:bottom-auto lg:mx-0 lg:mt-6">
+                <div className="bg-background border border-border p-4 rounded-2xl shadow-xl lg:p-0 lg:border-0 lg:shadow-none lg:bg-transparent">
                     <button
                         onClick={handleBackToMenu}
-                        className="w-full bg-meso-red-500 hover:bg-meso-red-600 text-white font-bold h-14 rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.3)] flex items-center justify-center gap-2"
+                        className="w-full rounded-xl py-4 font-display text-sm font-semibold tracking-wider bg-accent text-accent-foreground neon-glow-yellow hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
                     >
                         <ArrowLeft className="w-5 h-5" />
-                        Wróć do menu
+                        WRÓĆ DO MENU
                     </button>
                 </div>
             </div>
@@ -357,8 +357,8 @@ function OrderConfirmationContent() {
 export default function OrderConfirmationPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen flex items-center justify-center bg-meso-dark-950">
-                <Loader2 className="w-8 h-8 text-meso-red-500 animate-spin" />
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
             </div>
         }>
             <OrderConfirmationContent />

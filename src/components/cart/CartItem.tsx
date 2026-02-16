@@ -30,10 +30,10 @@ export function CartItem({ item }: CartItemProps) {
   return (
     <div className={cn(
       'flex gap-4 p-4 rounded-xl',
-      'bg-white/5 border border-meso-red-500/20'
+      'bg-white/5 border border-border'
     )}>
       {/* Product Image */}
-      <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-meso-dark-800 flex-shrink-0">
+      <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-card flex-shrink-0">
         {item.image ? (
           <Image
             src={item.image}
@@ -71,7 +71,7 @@ export function CartItem({ item }: CartItemProps) {
 
         {/* Price and quantity */}
         <div className="flex items-center justify-between mt-3">
-          <p className="text-meso-red-500 font-bold">{formatPrice(itemTotal())}</p>
+          <p className="text-primary font-bold">{formatPrice(itemTotal())}</p>
 
           {/* Quantity controls */}
           <div className="flex items-center gap-2">
@@ -79,7 +79,7 @@ export function CartItem({ item }: CartItemProps) {
               onClick={() => item.quantity === 1 ? removeItem(item.id) : updateQuantity(item.id, item.quantity - 1)}
               className={cn(
                 'w-8 h-8 rounded-full flex items-center justify-center',
-                'bg-white/10 text-white hover:bg-meso-red-500/20 hover:text-meso-red-500',
+                'bg-white/10 text-white hover:bg-primary/20 hover:text-primary',
                 'transition-colors'
               )}
             >
@@ -94,8 +94,8 @@ export function CartItem({ item }: CartItemProps) {
               onClick={() => updateQuantity(item.id, item.quantity + 1)}
               className={cn(
                 'w-8 h-8 rounded-full flex items-center justify-center',
-                'bg-meso-red-500 text-white hover:bg-meso-red-600',
-                'shadow-[0_0_10px_rgba(244,37,175,0.3)]',
+                'bg-primary text-white hover:bg-primary/90',
+                'neon-glow-sm',
                 'transition-colors'
               )}
             >

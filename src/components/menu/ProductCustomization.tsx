@@ -184,17 +184,17 @@ export function ProductCustomization({
 
     // Layout
     return (
-        <div className="flex flex-col h-full overflow-hidden w-full bg-meso-dark-900">
+        <div className="flex flex-col h-full overflow-hidden w-full bg-background">
             {loading && !product ? (
                 // Added min-h-[50vh] to prevent layout jump on mobile open
                 <div className="flex items-center justify-center p-12 min-h-[50vh]">
-                    <Loader2 className="w-8 h-8 animate-spin text-meso-red-500" />
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </div>
             ) : (
                 <>
                     <div className="flex-1 overflow-y-auto scrollbar-hide">
                         {/* Header Image & Info */}
-                        <div className="relative h-48 w-full bg-meso-dark-800">
+                        <div className="relative h-48 w-full bg-card">
                             {displayProduct?.image_url ? (
                                 <Image
                                     src={displayProduct.image_url}
@@ -203,7 +203,7 @@ export function ProductCustomization({
                                     className="object-cover"
                                 />
                             ) : (
-                                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-meso-dark-800 to-meso-dark-900">
+                                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-card to-background">
                                     <span className="text-6xl">🍜</span>
                                 </div>
                             )}
@@ -237,9 +237,9 @@ export function ProductCustomization({
                                             {displayProduct.allergens.map((allergen) => (
                                                 <div
                                                     key={allergen}
-                                                    className="flex h-6 items-center justify-center gap-x-1 rounded-full bg-meso-red-500/10 px-3 border border-meso-red-500/20"
+                                                    className="flex h-6 items-center justify-center gap-x-1 rounded-full bg-primary/10 px-3 border border-border"
                                                 >
-                                                    <p className="text-meso-red-500 text-xs font-medium">
+                                                    <p className="text-primary text-xs font-medium">
                                                         {ALLERGENS[allergen as AllergenKey] || allergen}
                                                     </p>
                                                 </div>
@@ -263,7 +263,7 @@ export function ProductCustomization({
                                                     className={cn(
                                                         'flex flex-col items-center justify-center gap-1 rounded-lg border p-2 transition-all',
                                                         selectedSpice === option.level
-                                                            ? 'border-meso-red-500 bg-meso-red-500/20 text-meso-red-500'
+                                                            ? 'border-primary bg-primary/20 text-primary'
                                                             : 'border-zinc-700 text-zinc-400 hover:border-zinc-600'
                                                     )}
                                                 >
@@ -289,13 +289,13 @@ export function ProductCustomization({
                                                     className={cn(
                                                         'flex items-center justify-between p-3 rounded-lg border transition-all',
                                                         selectedVariant?.id === variant.id
-                                                            ? 'border-meso-red-500 bg-meso-red-500/10 text-white'
+                                                            ? 'border-primary bg-primary/10 text-white'
                                                             : 'border-zinc-700 text-zinc-400 hover:border-zinc-600'
                                                     )}
                                                 >
                                                     <span className="font-medium text-white">{variant.name}</span>
                                                     {variant.price_modifier > 0 && (
-                                                        <span className="text-sm text-meso-red-500">
+                                                        <span className="text-sm text-primary">
                                                             +{formatPrice(variant.price_modifier)}
                                                         </span>
                                                     )}
@@ -316,7 +316,7 @@ export function ProductCustomization({
                                                     className={cn(
                                                         'flex items-center justify-between rounded-lg p-3 cursor-pointer transition-all border',
                                                         selectedAddons.some((a) => a.id === addon.id)
-                                                            ? 'bg-meso-red-500/10 border-meso-red-500/50'
+                                                            ? 'bg-primary/10 border-primary/50'
                                                             : 'bg-transparent border-zinc-800 hover:border-zinc-600'
                                                     )}
                                                     onClick={() => handleAddonToggle(addon)}
@@ -330,7 +330,7 @@ export function ProductCustomization({
                                                     <Checkbox
                                                         checked={selectedAddons.some((a) => a.id === addon.id)}
                                                         onCheckedChange={() => handleAddonToggle(addon)}
-                                                        className="h-5 w-5 rounded border-zinc-600 bg-zinc-700 data-[state=checked]:bg-meso-red-500"
+                                                        className="h-5 w-5 rounded border-zinc-600 bg-zinc-700 data-[state=checked]:bg-primary"
                                                     />
                                                 </div>
                                             ))}
@@ -342,9 +342,9 @@ export function ProductCustomization({
                     </div>
 
                     {/* Sticky Footer */}
-                    <div className="p-4 border-t border-meso-dark-800 bg-meso-dark-900 mt-auto z-10">
+                    <div className="p-4 border-t border-card bg-background mt-auto z-10">
                         <div className="flex items-center gap-4 mb-3">
-                            <div className="flex items-center gap-3 bg-meso-dark-800 rounded-full px-4 py-2">
+                            <div className="flex items-center gap-3 bg-card rounded-full px-4 py-2">
                                 <button
                                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                                     className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-white transition-colors"
@@ -361,14 +361,14 @@ export function ProductCustomization({
                             </div>
                             <div className="flex-1 text-right">
                                 <span className="text-sm text-zinc-400 mr-2">Razem:</span>
-                                <span className="text-xl font-bold text-meso-red-500">
+                                <span className="text-xl font-bold text-primary">
                                     {formatPrice(calculateTotal())}
                                 </span>
                             </div>
                         </div>
                         <Button
                             onClick={handleAddToCart}
-                            className="w-full h-12 text-lg font-bold bg-meso-red-500 hover:bg-meso-red-600 text-white rounded-xl shadow-[0_0_15px_rgba(244,37,175,0.4)]"
+                            className="w-full h-12 text-lg font-bold bg-primary hover:bg-primary/90 text-white rounded-xl neon-glow"
                         >
                             Dodaj do koszyka
                         </Button>
