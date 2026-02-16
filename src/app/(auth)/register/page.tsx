@@ -144,7 +144,7 @@ export default function UpgradeAccountPage() {
     )
   }
 
-  const inputCls = 'w-full rounded-xl border border-border bg-secondary/50 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none'
+  const inputCls = 'w-full rounded-xl border border-border bg-secondary/50 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:bg-secondary/50 focus:outline-none'
 
   return (
     <motion.div
@@ -284,7 +284,7 @@ export default function UpgradeAccountPage() {
       <button
         type="button"
         disabled
-        className="w-full rounded-xl border border-border py-3 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-50"
+        className="w-full rounded-xl border border-border bg-transparent py-3 text-sm font-medium text-foreground transition-colors hover:bg-card/50 disabled:opacity-50"
       >
         Kontynuuj z Google
       </button>

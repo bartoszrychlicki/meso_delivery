@@ -24,8 +24,8 @@ export default function OrdersPage() {
     if (!isPermanent) {
         return (
             <div className="max-w-2xl mx-auto flex flex-col items-center justify-center px-4 py-20 text-center min-h-[60vh]">
-                <div className="w-24 h-24 mx-auto mb-4 rounded-2xl bg-card/50 border border-primary/30 flex items-center justify-center text-5xl shadow-[0_0_30px_rgba(236,72,153,0.3)]">
-                    📋
+                <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-card/50 border border-primary/30 flex items-center justify-center shadow-[0_0_30px_rgba(236,72,153,0.3),0_0_60px_rgba(236,72,153,0.15)]">
+                    <Receipt className="w-12 h-12 text-primary" />
                 </div>
                 <h1 className="font-display text-2xl font-bold tracking-wider uppercase mb-3">
                     TWOJE ZAMÓWIENIA
@@ -34,8 +34,8 @@ export default function OrdersPage() {
                     Zaloguj się, aby zobaczyć historię zamówień i szybko zamawiać ponownie.
                 </p>
                 <Link href="/login">
-                    <button className="bg-accent text-accent-foreground font-bold uppercase tracking-wider px-8 py-3 rounded-xl">
-                        →) ZALOGUJ SIĘ
+                    <button className="bg-accent text-accent-foreground font-bold uppercase tracking-wider px-8 py-3 rounded-xl neon-glow-yellow transition-all hover:scale-[1.02]">
+                        ZALOGUJ SIĘ
                     </button>
                 </Link>
             </div>

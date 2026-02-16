@@ -23,8 +23,8 @@ interface EmptyStateProps {
 const defaultConfig: Record<Exclude<EmptyStateType, 'custom'>, { icon: React.ReactNode; title: string; description: string }> = {
   cart: {
     icon: <ShoppingCart className="w-16 h-16 text-white/20" />,
-    title: 'Twój koszyk jest pusty',
-    description: 'Dodaj coś pysznego z naszego menu!',
+    title: 'Koszyk jest pusty',
+    description: 'Dodaj coś pysznego z menu!',
   },
   search: {
     icon: <Search className="w-16 h-16 text-white/20" />,
@@ -69,11 +69,11 @@ export function EmptyState({
 
       {action && (
         action.href ? (
-          <Button asChild className="bg-primary hover:bg-primary/90">
+          <Button asChild className="bg-primary hover:bg-primary/90 uppercase font-bold tracking-wider text-base px-8 py-3 rounded-xl h-auto">
             <Link href={action.href}>{action.label}</Link>
           </Button>
         ) : (
-          <Button onClick={action.onClick} className="bg-primary hover:bg-primary/90">
+          <Button onClick={action.onClick} className="bg-primary hover:bg-primary/90 uppercase font-bold tracking-wider text-base px-8 py-3 rounded-xl h-auto">
             {action.label}
           </Button>
         )

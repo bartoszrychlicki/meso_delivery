@@ -26,7 +26,7 @@ export default function CartPage() {
     return (
       <EmptyState
         type="cart"
-        action={{ label: 'Przejdź do menu', href: '/' }}
+        action={{ label: 'PRZEGLĄDAJ MENU', href: '/' }}
       />
     )
   }
