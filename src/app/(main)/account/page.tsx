@@ -29,6 +29,27 @@ export default function AccountPage() {
     )
   }
 
+  if (!isPermanent) {
+    return (
+      <div className="max-w-2xl mx-auto flex flex-col items-center justify-center px-4 py-20 text-center min-h-[60vh]">
+        <div className="w-24 h-24 mx-auto mb-4 rounded-2xl bg-card/50 border border-primary/30 flex items-center justify-center text-5xl shadow-[0_0_30px_rgba(236,72,153,0.3)]">
+          👤
+        </div>
+        <h1 className="font-display text-2xl font-bold tracking-wider uppercase mb-3">
+          TWÓJ PROFIL
+        </h1>
+        <p className="text-sm text-muted-foreground mb-8 max-w-sm">
+          Zaloguj się, aby zarządzać profilem, adresami i metodami płatności.
+        </p>
+        <Link href="/login">
+          <button className="bg-accent text-accent-foreground font-bold uppercase tracking-wider px-8 py-3 rounded-xl">
+            →) ZALOGUJ SIĘ
+          </button>
+        </Link>
+      </div>
+    )
+  }
+
   return (
     <div className="px-4 py-6 space-y-6">
       {/* User Avatar + Info */}

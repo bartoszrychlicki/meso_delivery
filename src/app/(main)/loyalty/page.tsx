@@ -42,22 +42,21 @@ export default function LoyaltyPage() {
 
   if (!isPermanent) {
     return (
-      <div className="flex flex-col items-center justify-center px-4 py-20 text-center">
-        <Trophy className="mb-4 h-16 w-16 text-muted-foreground/30" />
-        <h2 className="mb-2 font-display text-lg font-semibold">MESO Club</h2>
-        <p className="mb-6 text-sm text-muted-foreground">
-          Zaloguj sie, aby zbierac punkty i odbierac nagrody
-        </p>
-        <div className="flex gap-3">
-          <Link href="/register">
-            <Button className="bg-accent text-accent-foreground neon-glow-yellow">
-              Zaloz konto
-            </Button>
-          </Link>
-          <Link href="/login">
-            <Button variant="outline">Zaloguj sie</Button>
-          </Link>
+      <div className="max-w-2xl mx-auto flex flex-col items-center justify-center px-4 py-20 text-center min-h-[60vh]">
+        <div className="w-24 h-24 mx-auto mb-4 rounded-2xl bg-card/50 border border-primary/30 flex items-center justify-center text-5xl shadow-[0_0_30px_rgba(236,72,153,0.3)]">
+          🏆
         </div>
+        <h1 className="font-display text-2xl font-bold tracking-wider uppercase mb-3">
+          MESO POINTS
+        </h1>
+        <p className="text-sm text-muted-foreground mb-8 max-w-sm">
+          Zaloguj się, aby zbierać punkty i odbierać nagrody za każde zamówienie.
+        </p>
+        <Link href="/login">
+          <button className="bg-accent text-accent-foreground font-bold uppercase tracking-wider px-8 py-3 rounded-xl">
+            →) ZALOGUJ SIĘ
+          </button>
+        </Link>
       </div>
     )
   }

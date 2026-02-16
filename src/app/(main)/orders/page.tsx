@@ -1,14 +1,46 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Receipt } from 'lucide-react'
 import { useOrders } from '@/hooks/useOrders'
+import { useAuth } from '@/hooks/useAuth'
 import { OrderCard } from '@/components/orders'
 import { Button } from '@/components/ui/button'
 
 export default function OrdersPage() {
     const router = useRouter()
+    const { isPermanent, isLoading: authLoading } = useAuth()
     const { orders, loading, error } = useOrders()
+
+    if (authLoading) {
+        return (
+            <div className="flex min-h-[60vh] items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            </div>
+        )
+    }
+
+    if (!isPermanent) {
+        return (
+            <div className="max-w-2xl mx-auto flex flex-col items-center justify-center px-4 py-20 text-center min-h-[60vh]">
+                <div className="w-24 h-24 mx-auto mb-4 rounded-2xl bg-card/50 border border-primary/30 flex items-center justify-center text-5xl shadow-[0_0_30px_rgba(236,72,153,0.3)]">
+                    📋
+                </div>
+                <h1 className="font-display text-2xl font-bold tracking-wider uppercase mb-3">
+                    TWOJE ZAMÓWIENIA
+                </h1>
+                <p className="text-sm text-muted-foreground mb-8 max-w-sm">
+                    Zaloguj się, aby zobaczyć historię zamówień i szybko zamawiać ponownie.
+                </p>
+                <Link href="/login">
+                    <button className="bg-accent text-accent-foreground font-bold uppercase tracking-wider px-8 py-3 rounded-xl">
+                        →) ZALOGUJ SIĘ
+                    </button>
+                </Link>
+            </div>
+        )
+    }
 
     return (
         <div className="min-h-screen bg-background pb-24">
