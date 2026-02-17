@@ -22,10 +22,10 @@ export function OrderItemsList({ items, className }: OrderItemsListProps) {
             {items.map((item) => (
                 <div
                     key={item.id}
-                    className="flex gap-3 rounded-lg bg-meso-dark-800 p-3"
+                    className="flex gap-3 rounded-lg bg-card p-3"
                 >
                     {/* Product image */}
-                    <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-meso-dark-900">
+                    <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-background">
                         {item.product?.image_url ? (
                             <Image
                                 src={item.product.image_url}
@@ -72,7 +72,7 @@ export function OrderItemsList({ items, className }: OrderItemsListProps) {
 
                             {/* Quantity and price */}
                             <div className="text-right flex-shrink-0">
-                                <p className="text-sm font-bold text-meso-red-500">
+                                <p className="text-sm font-bold text-primary">
                                     {formatPrice(item.total_price)}
                                 </p>
                                 <p className="text-xs text-zinc-500">

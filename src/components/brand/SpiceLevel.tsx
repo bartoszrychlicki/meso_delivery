@@ -30,7 +30,7 @@ export function SpiceLevel({ level, size = 'md', showLabel = false, className }:
           key={i}
           className={cn(
             sizeClasses[size],
-            'text-meso-red-500 fill-meso-red-500'
+            'text-primary fill-primary'
           )}
         />
       ))}
@@ -64,8 +64,8 @@ export function SpiceLevelSelector({ value, onChange, className }: SpiceLevelSel
           className={cn(
             'p-3 rounded-lg border-2 text-center transition-colors',
             value === option.level
-              ? 'border-meso-red-500 bg-meso-red-500/20'
-              : 'border-meso-dark-700 hover:border-meso-red-500/50'
+              ? 'border-primary bg-primary/20'
+              : 'border-muted hover:border-primary/50'
           )}
         >
           <p className="text-2xl mb-1">{option.emoji}</p>

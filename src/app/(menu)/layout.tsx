@@ -6,7 +6,7 @@ export default function MenuLayout({
   children: React.ReactNode
 }) {
   return (
-    <AppLayout hideHeaderOnMobile>
+    <AppLayout>
       {children}
     </AppLayout>
   )

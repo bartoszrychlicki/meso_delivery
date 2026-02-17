@@ -1,36 +1,40 @@
 'use client'
 
+import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import useEmblaCarousel from 'embla-carousel-react'
 import { cn } from '@/lib/utils'
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
-} from '@/components/ui/carousel'
-import Autoplay from 'embla-carousel-autoplay'
 
 interface PromoBanner {
   id: string
   imageUrl: string
-  alt: string
+  title: string
+  subtitle: string
   href?: string
 }
 
 const PROMO_BANNERS: PromoBanner[] = [
   {
-    id: 'promo-1',
-    imageUrl: '/images/promos/promo-1.png',
-    alt: 'MESO IS BACK - Wracamy do Trójmiasta po 3 latach!',
+    id: 'promo-ramen',
+    imageUrl: '/images/promos/promo-ramen.jpg',
+    title: 'Nowy Spicy Miso 🔥',
+    subtitle: 'Sprawdź nasz najostrzejszy ramen w historii!',
     href: '/',
   },
   {
-    id: 'promo-2',
-    imageUrl: '/images/promos/promo-2.png',
-    alt: 'Autorskie Gyoza - mrożone pierożki z dostawą do paczkomatu',
-    href: '/menu',
+    id: 'promo-delivery',
+    imageUrl: '/images/promos/promo-delivery.jpg',
+    title: 'Darmowa dostawa',
+    subtitle: 'Przy zamówieniu powyżej 60 zł – tylko dziś!',
+    href: '/',
+  },
+  {
+    id: 'promo-gyoza',
+    imageUrl: '/images/promos/promo-gyoza.jpg',
+    title: 'Gyoza Festival 🥟',
+    subtitle: 'Zestaw 12 szt. w cenie 8 – weekendowa oferta',
+    href: '/',
   },
 ]
 
@@ -39,48 +43,74 @@ interface PromoCarouselProps {
 }
 
 export function PromoCarousel({ className }: PromoCarouselProps) {
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true })
+  const [activeIndex, setActiveIndex] = useState(0)
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return
+    setActiveIndex(emblaApi.selectedScrollSnap())
+  }, [emblaApi])
+
+  useEffect(() => {
+    if (!emblaApi) return
+    onSelect()
+    emblaApi.on('select', onSelect)
+
+    // Autoplay
+    const interval = setInterval(() => emblaApi.scrollNext(), 5000)
+    return () => {
+      clearInterval(interval)
+      emblaApi.off('select', onSelect)
+    }
+  }, [emblaApi, onSelect])
+
   return (
-    <div className={cn('w-full', className)}>
-      <Carousel
-        opts={{
-          align: 'start',
-          loop: true,
-        }}
-        plugins={[
-          Autoplay({
-            delay: 5000,
-            stopOnInteraction: true,
-          }),
-        ]}
-        className="w-full"
-      >
-        <CarouselContent>
+    <div className={cn('mb-6', className)}>
+      <div ref={emblaRef} className="overflow-hidden rounded-2xl">
+        <div className="flex">
           {PROMO_BANNERS.map((banner) => (
-            <CarouselItem key={banner.id}>
-              <Link
-                href={banner.href || '#'}
-                className="block overflow-hidden rounded-xl border border-meso-red-500/20 transition-all hover:border-meso-red-500/50"
-              >
-                <div
-                  className="relative w-full bg-meso-dark-800"
-                  style={{ aspectRatio: '2.5 / 1' }}
-                >
+            <div key={banner.id} className="min-w-0 shrink-0 grow-0 basis-full">
+              <Link href={banner.href || '#'} className="block">
+                <div className="relative aspect-[2.2/1] lg:aspect-[3.5/1] overflow-hidden rounded-2xl neon-border">
                   <Image
                     src={banner.imageUrl}
-                    alt={banner.alt}
+                    alt={banner.title}
                     fill
-                    className="object-contain"
+                    className="object-cover"
                     sizes="(max-width: 1024px) 100vw, 800px"
                     priority
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/30 to-transparent" />
+                  <div className="absolute bottom-4 left-4 lg:bottom-6 lg:left-6">
+                    <h3 className="font-display text-lg lg:text-xl font-bold text-foreground neon-text">
+                      {banner.title}
+                    </h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {banner.subtitle}
+                    </p>
+                  </div>
                 </div>
               </Link>
-            </CarouselItem>
+            </div>
           ))}
-        </CarouselContent>
-        <CarouselPrevious className="hidden md:flex -left-3 bg-meso-dark-800/80 border-meso-red-500/30 text-white hover:bg-meso-dark-700 hover:border-meso-red-500" />
-        <CarouselNext className="hidden md:flex -right-3 bg-meso-dark-800/80 border-meso-red-500/30 text-white hover:bg-meso-dark-700 hover:border-meso-red-500" />
-      </Carousel>
+        </div>
+      </div>
+
+      {/* Dots */}
+      <div className="mt-3 flex justify-center gap-1.5">
+        {PROMO_BANNERS.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => emblaApi?.scrollTo(i)}
+            className={cn(
+              'h-1.5 rounded-full transition-all duration-300',
+              i === activeIndex
+                ? 'w-6 bg-primary neon-glow-sm'
+                : 'w-1.5 bg-muted-foreground/30'
+            )}
+          />
+        ))}
+      </div>
     </div>
   )
 }

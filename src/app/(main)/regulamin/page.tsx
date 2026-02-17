@@ -5,25 +5,25 @@ import { ArrowLeft, FileText } from 'lucide-react'
 
 export default function RegulaminPage() {
     return (
-        <div className="min-h-screen bg-meso-dark-900 text-white">
+        <div className="min-h-screen bg-background text-white">
             {/* Header */}
-            <header className="sticky top-0 z-10 flex items-center bg-meso-dark-900/80 backdrop-blur-sm p-4 pb-2 justify-between border-b border-meso-red-500/20">
+            <header className="sticky top-0 z-10 flex items-center bg-background/80 backdrop-blur-sm p-4 pb-2 justify-between border-b border-border">
                 <div className="flex w-12 items-center justify-start">
                     <Link
                         href="/"
-                        className="flex h-10 w-10 items-center justify-center rounded-full text-white hover:text-meso-red-500 transition-colors"
+                        className="flex h-10 w-10 items-center justify-center rounded-full text-white hover:text-primary transition-colors"
                     >
                         <ArrowLeft className="w-6 h-6" />
                     </Link>
                 </div>
                 <h1
                     className="text-white text-lg font-bold leading-tight tracking-widest flex-1 text-center uppercase"
-                    style={{ textShadow: '0 0 5px rgba(244, 37, 175, 0.5)' }}
+                    style={{ textShadow: '0 0 5px hsl(330 100% 50% / 0.5)' }}
                 >
                     Regulamin
                 </h1>
                 <div className="flex w-12 items-center justify-end">
-                    <FileText className="w-6 h-6 text-meso-red-500" />
+                    <FileText className="w-6 h-6 text-primary" />
                 </div>
             </header>
 
@@ -40,7 +40,7 @@ export default function RegulaminPage() {
                         <h2 className="text-xl font-semibold text-white mb-4">§1. Postanowienia ogólne</h2>
                         <ol className="list-decimal list-inside space-y-2 text-white/80">
                             <li>Sklep internetowy MESO Food dostępny pod adresem <strong>order.mesofood.pl</strong> prowadzony jest przez:
-                                <div className="mt-2 ml-4 p-4 bg-meso-dark-800 rounded-lg">
+                                <div className="mt-2 ml-4 p-4 bg-card rounded-lg">
                                     <p><strong>Rychlicki Holding Sp. z o.o.</strong></p>
                                     <p>ul. Leśna 8/8, 80-322 Gdańsk</p>
                                     <p>NIP: 9571130261</p>
@@ -89,7 +89,7 @@ export default function RegulaminPage() {
                                 </ul>
                             </li>
                             <li>Płatności elektroniczne obsługiwane są przez:
-                                <div className="mt-2 ml-4 p-4 bg-meso-dark-800 rounded-lg text-sm">
+                                <div className="mt-2 ml-4 p-4 bg-card rounded-lg text-sm">
                                     <p><strong>PayPro SA</strong> (Przelewy24)</p>
                                     <p>ul. Pastelowa 8, 60-198 Poznań</p>
                                     <p>KRS: 0000347935, NIP: 7792369887, REGON: 301345068</p>
@@ -155,7 +155,7 @@ export default function RegulaminPage() {
                     <section className="mb-8">
                         <h2 className="text-xl font-semibold text-white mb-4">§9. Dane osobowe</h2>
                         <p className="text-white/80">
-                            Administratorem danych osobowych jest Rychlicki Holding Sp. z o.o. Szczegóły dotyczące przetwarzania danych osobowych zawarte są w <Link href="/polityka-prywatnosci" className="text-meso-red-500 hover:underline">Polityce Prywatności</Link>.
+                            Administratorem danych osobowych jest Rychlicki Holding Sp. z o.o. Szczegóły dotyczące przetwarzania danych osobowych zawarte są w <Link href="/polityka-prywatnosci" className="text-primary hover:underline">Polityce Prywatności</Link>.
                         </p>
                     </section>
 
@@ -168,7 +168,7 @@ export default function RegulaminPage() {
                         </ol>
                     </section>
 
-                    <div className="mt-10 p-4 bg-meso-dark-800 rounded-lg">
+                    <div className="mt-10 p-4 bg-card rounded-lg">
                         <p className="text-white/60 text-sm">
                             <strong>Rychlicki Holding Sp. z o.o.</strong><br />
                             ul. Leśna 8/8, 80-322 Gdańsk<br />

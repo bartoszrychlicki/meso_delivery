@@ -76,16 +76,16 @@ export function PromoCodeInput() {
     return (
       <div className={cn(
         'flex items-center justify-between p-3 rounded-lg',
-        'bg-meso-red-500/10 border border-meso-red-500/30'
+        'bg-primary/10 border border-primary/30'
       )}>
         <div className="flex items-center gap-2">
-          <Tag className="w-4 h-4 text-meso-red-500" />
+          <Tag className="w-4 h-4 text-primary" />
           <span className="text-white font-medium">{promoCode}</span>
-          <span className="text-meso-red-500 text-sm">{getPromoDescription()}</span>
+          <span className="text-primary text-sm">{getPromoDescription()}</span>
         </div>
         <button
           onClick={clearPromoCode}
-          className="text-white/50 hover:text-meso-red-500 transition-colors"
+          className="text-white/50 hover:text-primary transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
@@ -96,7 +96,7 @@ export function PromoCodeInput() {
   return (
     <div className="flex gap-2">
       <div className="flex-1 relative">
-        <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-meso-red-500/50" />
+        <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/50" />
         <input
           type="text"
           value={code}
@@ -105,9 +105,9 @@ export function PromoCodeInput() {
           placeholder="Kod promocyjny"
           className={cn(
             'w-full h-12 pl-10 pr-4 rounded-lg',
-            'bg-white/5 border border-meso-red-500/20',
+            'bg-white/5 border border-border',
             'text-white placeholder:text-white/40',
-            'focus:outline-none focus:ring-2 focus:ring-meso-red-500/50'
+            'focus:outline-none focus:ring-2 focus:ring-ring/50'
           )}
         />
       </div>

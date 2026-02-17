@@ -26,9 +26,9 @@ export default function OrderDetailsPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-meso-dark-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="flex flex-col items-center">
-                    <div className="w-10 h-10 border-4 border-meso-red-500 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
                     <p className="mt-4 text-zinc-400">Ładowanie zamówienia...</p>
                 </div>
             </div>
@@ -37,12 +37,12 @@ export default function OrderDetailsPage() {
 
     if (error || !order) {
         return (
-            <div className="min-h-screen bg-meso-dark-900 flex items-center justify-center px-4">
+            <div className="min-h-screen bg-background flex items-center justify-center px-4">
                 <div className="text-center">
                     <p className="text-red-500 text-lg mb-4">{error || 'Nie znaleziono zamówienia'}</p>
                     <Button
                         onClick={() => router.push('/orders')}
-                        className="bg-meso-red-500 hover:bg-meso-red-600 text-white"
+                        className="bg-primary hover:bg-primary/90 text-white"
                     >
                         Wróć do listy zamówień
                     </Button>
@@ -54,9 +54,9 @@ export default function OrderDetailsPage() {
     const statusMessage = ORDER_STATUS_MESSAGES[order.status]
 
     return (
-        <div className="min-h-screen bg-meso-dark-900 pb-24">
+        <div className="min-h-screen bg-background pb-24">
             {/* Header */}
-            <header className="sticky top-0 z-40 bg-meso-dark-900/95 backdrop-blur-sm border-b border-meso-dark-800">
+            <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-card">
                 <div className="flex items-center gap-4 px-4 py-4">
                     <button
                         onClick={() => router.back()}
@@ -73,7 +73,7 @@ export default function OrderDetailsPage() {
 
             <main className="px-4 py-6 space-y-6">
                 {/* Status section */}
-                <section className="rounded-xl bg-meso-dark-800 p-6 text-center">
+                <section className="rounded-xl bg-card p-6 text-center">
                     <div className="text-4xl mb-3">{statusMessage.emoji}</div>
                     <h2 className="text-xl font-bold text-white mb-1">{statusMessage.title}</h2>
                     <p className="text-zinc-400 text-sm">{statusMessage.subtitle}</p>
@@ -83,13 +83,13 @@ export default function OrderDetailsPage() {
                 </section>
 
                 {/* Timeline */}
-                <section className="rounded-xl bg-meso-dark-800 p-4">
+                <section className="rounded-xl bg-card p-4">
                     <h3 className="text-sm font-medium text-zinc-400 mb-4">Status zamówienia</h3>
                     <OrderTimeline status={order.status} />
                 </section>
 
                 {/* Delivery info */}
-                <section className="rounded-xl bg-meso-dark-800 p-4">
+                <section className="rounded-xl bg-card p-4">
                     <h3 className="text-sm font-medium text-zinc-400 mb-3">
                         {order.delivery_type === 'delivery' ? 'Dostawa' : 'Odbiór osobisty'}
                     </h3>
@@ -97,7 +97,7 @@ export default function OrderDetailsPage() {
                     <div className="space-y-3">
                         {order.delivery_type === 'delivery' && order.delivery_address && (
                             <div className="flex items-start gap-3">
-                                <MapPin className="w-5 h-5 text-meso-red-500 mt-0.5" />
+                                <MapPin className="w-5 h-5 text-primary mt-0.5" />
                                 <div>
                                     <p className="text-white font-medium">
                                         {order.delivery_address.street} {order.delivery_address.building_number}
@@ -112,7 +112,7 @@ export default function OrderDetailsPage() {
 
                         {order.delivery_type === 'pickup' && order.location && (
                             <div className="flex items-start gap-3">
-                                <Store className="w-5 h-5 text-meso-red-500 mt-0.5" />
+                                <Store className="w-5 h-5 text-primary mt-0.5" />
                                 <div>
                                     <p className="text-white font-medium">{order.location.name}</p>
                                     <p className="text-zinc-400 text-sm">{order.location.address}</p>
@@ -122,7 +122,7 @@ export default function OrderDetailsPage() {
 
                         {order.scheduled_time && (
                             <div className="flex items-center gap-3">
-                                <Clock className="w-5 h-5 text-meso-red-500" />
+                                <Clock className="w-5 h-5 text-primary" />
                                 <p className="text-white">
                                     Zaplanowano na: {formatOrderDate(order.scheduled_time)}
                                 </p>
@@ -138,7 +138,7 @@ export default function OrderDetailsPage() {
                 </section>
 
                 {/* Payment summary */}
-                <section className="rounded-xl bg-meso-dark-800 p-4">
+                <section className="rounded-xl bg-card p-4">
                     <h3 className="text-sm font-medium text-zinc-400 mb-3">Podsumowanie</h3>
 
                     <div className="space-y-2">
@@ -171,7 +171,7 @@ export default function OrderDetailsPage() {
                         <div className="border-t border-zinc-700 pt-2 mt-2">
                             <div className="flex justify-between">
                                 <span className="font-bold text-white">Razem</span>
-                                <span className="font-bold text-xl text-meso-red-500">{formatPrice(order.total)}</span>
+                                <span className="font-bold text-xl text-primary">{formatPrice(order.total)}</span>
                             </div>
                         </div>
                     </div>
@@ -186,11 +186,11 @@ export default function OrderDetailsPage() {
 
                 {/* Restaurant contact */}
                 {order.location?.phone && (
-                    <section className="rounded-xl bg-meso-dark-800 p-4">
+                    <section className="rounded-xl bg-card p-4">
                         <h3 className="text-sm font-medium text-zinc-400 mb-3">Kontakt z restauracją</h3>
                         <a
                             href={`tel:${order.location.phone}`}
-                            className="flex items-center gap-3 text-meso-red-500 hover:text-meso-red-400 transition-colors"
+                            className="flex items-center gap-3 text-primary hover:text-primary transition-colors"
                         >
                             <Phone className="w-5 h-5" />
                             <span className="font-medium">{order.location.phone}</span>

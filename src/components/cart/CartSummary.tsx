@@ -24,7 +24,7 @@ export function CartSummary() {
   return (
     <div className={cn(
       'p-4 rounded-xl space-y-3',
-      'bg-white/5 border border-meso-red-500/20'
+      'bg-white/5 border border-border'
     )}>
       {/* Subtotal */}
       <div className="flex justify-between text-white/70">
@@ -38,9 +38,9 @@ export function CartSummary() {
           <Truck className="w-4 h-4" />
           <span>Dostawa</span>
         </div>
-        <span className={promoDiscountType === 'free_delivery' ? 'text-meso-red-500 line-through' : ''}>
+        <span className={promoDiscountType === 'free_delivery' ? 'text-primary line-through' : ''}>
           {deliveryFee === 0 && promoDiscountType === 'free_delivery' ? (
-            <span className="text-meso-red-500 no-underline">Gratis!</span>
+            <span className="text-primary no-underline">Gratis!</span>
           ) : deliveryFee === 0 ? (
             'Gratis'
           ) : (
@@ -51,7 +51,7 @@ export function CartSummary() {
 
       {/* Discount */}
       {discount > 0 && (
-        <div className="flex justify-between text-meso-red-500">
+        <div className="flex justify-between text-primary">
           <div className="flex items-center gap-2">
             <Tag className="w-4 h-4" />
             <span>Rabat ({promoCode})</span>
@@ -69,11 +69,11 @@ export function CartSummary() {
       )}
 
       {/* Divider */}
-      <div className="border-t border-meso-red-500/20 pt-3">
+      <div className="border-t border-border pt-3">
         {/* Total */}
         <div className="flex justify-between">
           <span className="text-white text-lg font-bold">Razem</span>
-          <span className="text-meso-red-500 text-xl font-bold">{formatPrice(total)}</span>
+          <span className="text-primary text-xl font-bold">{formatPrice(total)}</span>
         </div>
       </div>
     </div>

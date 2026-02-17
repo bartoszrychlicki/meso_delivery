@@ -84,7 +84,7 @@ export default function MesoClubPage() {
     if (authLoading || isLoading) {
         return (
             <div className="min-h-[60vh] flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-meso-red-500" />
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
         )
     }
@@ -97,14 +97,14 @@ export default function MesoClubPage() {
                     Wróć do konta
                 </Link>
 
-                <div className="bg-meso-dark-800/50 rounded-xl p-6 border border-white/5 text-center">
-                    <Star className="w-12 h-12 text-meso-gold-400 mx-auto mb-4" />
+                <div className="bg-card/50 rounded-xl p-6 border border-white/5 text-center">
+                    <Star className="w-12 h-12 text-accent mx-auto mb-4" />
                     <h2 className="text-xl font-bold text-white mb-2">MESO Club</h2>
                     <p className="text-white/60 mb-6">
                         Załóż konto, aby dołączyć do programu lojalnościowego i zdobywać punkty!
                     </p>
                     <Link href="/login">
-                        <Button className="bg-meso-gold-500 hover:bg-meso-gold-600 text-black font-semibold">
+                        <Button className="bg-accent hover:bg-accent/90 text-black font-semibold">
                             Załóż konto
                         </Button>
                     </Link>
@@ -169,14 +169,14 @@ export default function MesoClubPage() {
 
             {/* Quick Actions */}
             <div className="grid grid-cols-2 gap-3">
-                <button className="bg-meso-dark-800/50 rounded-xl p-4 border border-white/5 text-left hover:bg-white/5 transition-colors">
-                    <Users className="w-6 h-6 text-meso-gold-400 mb-2" />
+                <button className="bg-card/50 rounded-xl p-4 border border-white/5 text-left hover:bg-white/5 transition-colors">
+                    <Users className="w-6 h-6 text-accent mb-2" />
                     <p className="text-white font-medium text-sm">Poleć znajomemu</p>
                     <p className="text-white/50 text-xs">+100 punktów</p>
                 </button>
 
-                <button className="bg-meso-dark-800/50 rounded-xl p-4 border border-white/5 text-left hover:bg-white/5 transition-colors">
-                    <Cake className="w-6 h-6 text-meso-red-500 mb-2" />
+                <button className="bg-card/50 rounded-xl p-4 border border-white/5 text-left hover:bg-white/5 transition-colors">
+                    <Cake className="w-6 h-6 text-primary mb-2" />
                     <p className="text-white font-medium text-sm">Urodziny</p>
                     <p className="text-white/50 text-xs">x2 punkty cały dzień</p>
                 </button>
@@ -185,7 +185,7 @@ export default function MesoClubPage() {
             {/* Available Rewards */}
             <div>
                 <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <Gift className="w-5 h-5 text-meso-gold-400" />
+                    <Gift className="w-5 h-5 text-accent" />
                     Dostępne nagrody
                 </h2>
 
@@ -197,15 +197,15 @@ export default function MesoClubPage() {
                         return (
                             <div
                                 key={reward.id}
-                                className="bg-meso-dark-800/50 rounded-xl p-4 border border-white/5 flex items-center gap-4"
+                                className="bg-card/50 rounded-xl p-4 border border-white/5 flex items-center gap-4"
                             >
                                 <div className={cn(
                                     'w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0',
-                                    canRedeem ? 'bg-meso-gold-500/20' : 'bg-white/5'
+                                    canRedeem ? 'bg-accent/20' : 'bg-white/5'
                                 )}>
                                     <Gift className={cn(
                                         'w-6 h-6',
-                                        canRedeem ? 'text-meso-gold-400' : 'text-white/30'
+                                        canRedeem ? 'text-accent' : 'text-white/30'
                                     )} />
                                 </div>
 
@@ -227,7 +227,7 @@ export default function MesoClubPage() {
                                             size="sm"
                                             onClick={() => handleRedeemReward(reward)}
                                             disabled={isRedeeming}
-                                            className="bg-meso-gold-500 hover:bg-meso-gold-600 text-black font-semibold"
+                                            className="bg-accent hover:bg-accent/90 text-black font-semibold"
                                         >
                                             {isRedeeming ? (
                                                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -248,7 +248,7 @@ export default function MesoClubPage() {
             </div>
 
             {/* How to earn points */}
-            <div className="bg-meso-dark-800/50 rounded-xl p-5 border border-white/5">
+            <div className="bg-card/50 rounded-xl p-5 border border-white/5">
                 <h3 className="text-white font-semibold mb-4">Jak zdobywać punkty?</h3>
                 <ul className="space-y-3 text-sm">
                     <li className="flex items-center gap-3 text-white/70">

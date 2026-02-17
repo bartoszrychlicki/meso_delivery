@@ -129,12 +129,12 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   ]
 
   return (
-    <div className="min-h-screen pb-32 bg-meso-dark-900">
+    <div className="min-h-screen pb-32 bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-50 flex items-center justify-between bg-meso-dark-900/80 backdrop-blur-sm p-4 pb-2">
+      <div className="sticky top-0 z-50 flex items-center justify-between bg-background/80 backdrop-blur-sm p-4 pb-2">
         <Link
           href="/"
-          className="flex w-12 h-12 items-center justify-center rounded-full text-white hover:text-meso-red-500 transition-colors"
+          className="flex w-12 h-12 items-center justify-center rounded-full text-white hover:text-primary transition-colors"
         >
           <ArrowLeft className="w-6 h-6" />
         </Link>
@@ -143,7 +143,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
       {/* Product image */}
       <div className="px-4 py-3">
-        <div className="relative w-full min-h-80 rounded-xl overflow-hidden bg-meso-dark-800">
+        <div className="relative w-full min-h-80 rounded-xl overflow-hidden bg-card">
           {product.image_url ? (
             <Image
               src={product.image_url}
@@ -153,7 +153,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
               priority
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-meso-dark-800 to-meso-dark-900">
+            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-card to-background">
               <span className="text-8xl">🍜</span>
             </div>
           )}
@@ -169,7 +169,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
         {/* Price with original price strikethrough */}
         <div className="flex items-baseline gap-3 pb-2">
-          <span className="text-2xl font-bold text-meso-red-500">
+          <span className="text-2xl font-bold text-primary">
             {formatPrice(product.price)}
           </span>
           {product.original_price && product.original_price > product.price && (
@@ -195,11 +195,11 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
         {/* Story / Chef Quote */}
         {product.story && (
-          <div className="my-4 p-4 bg-meso-dark-800/50 border-l-4 border-meso-red-500 rounded-r-lg">
+          <div className="my-4 p-4 bg-card/50 border-l-4 border-primary rounded-r-lg">
             <p className="text-zinc-300 italic text-sm leading-relaxed mb-2">
               &ldquo;{product.story}&rdquo;
             </p>
-            <p className="text-meso-red-500 text-xs font-medium">
+            <p className="text-primary text-xs font-medium">
               — Maciej Krawczun, Szef Kuchni MESO
             </p>
           </div>
@@ -212,9 +212,9 @@ export function ProductDetails({ product }: ProductDetailsProps) {
               {product.allergens.map((allergen) => (
                 <div
                   key={allergen}
-                  className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-meso-red-500/20 px-4"
+                  className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-primary/20 px-4"
                 >
-                  <p className="text-meso-red-500 text-sm font-medium leading-normal">
+                  <p className="text-primary text-sm font-medium leading-normal">
                     {ALLERGENS[allergen as AllergenKey] || allergen}
                   </p>
                 </div>
@@ -237,7 +237,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                     className={cn(
                       'flex flex-col items-center justify-center gap-2 rounded-lg border-2 p-3 transition-all',
                       selectedSpice === option.level
-                        ? 'border-meso-red-500 bg-meso-red-500/20 text-meso-red-500'
+                        ? 'border-primary bg-primary/20 text-primary'
                         : 'border-zinc-700 text-zinc-400 hover:border-zinc-600'
                     )}
                   >
@@ -272,13 +272,13 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                     className={cn(
                       'p-4 rounded-lg border-2 text-left transition-all',
                       selectedVariant?.id === variant.id
-                        ? 'border-meso-red-500 bg-meso-red-500/10 text-white'
+                        ? 'border-primary bg-primary/10 text-white'
                         : 'border-zinc-700 text-zinc-400 hover:border-zinc-600'
                     )}
                   >
                     <p className="font-medium">{variant.name}</p>
                     {variant.price_modifier > 0 && (
-                      <p className="text-sm text-meso-red-500 mt-1">
+                      <p className="text-sm text-primary mt-1">
                         +{formatPrice(variant.price_modifier)}
                       </p>
                     )}
@@ -299,8 +299,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                     className={cn(
                       'flex items-center justify-between rounded-lg p-4 cursor-pointer transition-all',
                       selectedAddons.some((a) => a.id === addon.id)
-                        ? 'bg-meso-red-500/10 border border-meso-red-500/50'
-                        : 'bg-white/5 border border-transparent hover:border-meso-red-500/20'
+                        ? 'bg-primary/10 border border-primary/50'
+                        : 'bg-white/5 border border-transparent hover:border-border'
                     )}
                   >
                     <span className="text-white">
@@ -310,7 +310,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                     <Checkbox
                       checked={selectedAddons.some((a) => a.id === addon.id)}
                       onCheckedChange={() => handleAddonToggle(addon)}
-                      className="h-6 w-6 rounded border-zinc-600 bg-zinc-700 data-[state=checked]:bg-meso-red-500 data-[state=checked]:border-meso-red-500"
+                      className="h-6 w-6 rounded border-zinc-600 bg-zinc-700 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                     />
                   </label>
                 ))}
@@ -324,14 +324,14 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       <div className="h-32" />
 
       {/* Fixed CTA Button */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-meso-dark-900 to-transparent p-4 pb-6">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-background to-transparent p-4 pb-6">
         <button
           onClick={handleAddToCart}
           className={cn(
             'w-full h-14 flex items-center justify-center rounded-xl',
-            'bg-meso-red-500 text-white font-bold text-lg',
-            'shadow-[0_0_15px_rgba(244,37,175,0.8)]',
-            'hover:shadow-[0_0_25px_rgba(244,37,175,0.9)]',
+            'bg-primary text-white font-bold text-lg',
+            'neon-glow',
+            'hover:neon-glow',
             'transition-all active:scale-95'
           )}
         >

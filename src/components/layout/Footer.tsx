@@ -15,7 +15,7 @@ export function Footer() {
     const currentYear = new Date().getFullYear()
 
     return (
-        <footer className="bg-meso-dark-950 border-t border-white/10 py-6 px-4 mt-auto">
+        <footer className="bg-background border-t border-white/10 py-6 px-4 mt-auto">
             <div className="max-w-6xl mx-auto">
                 {/* Payment Methods */}
                 <div className="flex flex-wrap items-center justify-center gap-4 mb-6">
@@ -56,7 +56,7 @@ export function Footer() {
                         href="https://www.instagram.com/mesogdansk/"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:border-meso-purple hover:bg-meso-purple/10 transition-all"
+                        className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:border-primary hover:bg-primary/10 transition-all"
                         aria-label="Instagram"
                     >
                         <Instagram className="w-5 h-5" />
@@ -65,7 +65,7 @@ export function Footer() {
                         href="https://www.facebook.com/RamenGdansk/"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:border-meso-purple hover:bg-meso-purple/10 transition-all"
+                        className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:border-primary hover:bg-primary/10 transition-all"
                         aria-label="Facebook"
                     >
                         <Facebook className="w-5 h-5" />
@@ -74,7 +74,7 @@ export function Footer() {
                         href="https://www.tiktok.com/@meso.food"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:border-meso-purple hover:bg-meso-purple/10 transition-all"
+                        className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:border-primary hover:bg-primary/10 transition-all"
                         aria-label="TikTok"
                     >
                         <TikTok className="w-5 h-5" />

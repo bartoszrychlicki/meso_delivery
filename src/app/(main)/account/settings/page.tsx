@@ -157,7 +157,7 @@ export default function SettingsPage() {
     if (authLoading || isLoading) {
         return (
             <div className="min-h-[60vh] flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-meso-red-500" />
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
         )
     }
@@ -174,9 +174,9 @@ export default function SettingsPage() {
 
             {/* Profile Form */}
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div className="bg-meso-dark-800/50 rounded-xl p-5 border border-white/5 space-y-4">
+                <div className="bg-card/50 rounded-xl p-5 border border-white/5 space-y-4">
                     <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                        <User className="w-5 h-5 text-meso-red-500" />
+                        <User className="w-5 h-5 text-primary" />
                         Dane profilu
                     </h2>
 
@@ -187,7 +187,7 @@ export default function SettingsPage() {
                             <Input
                                 {...form.register('name')}
                                 placeholder="Jan Kowalski"
-                                className="pl-10 bg-meso-dark-900 border-white/10 text-white"
+                                className="pl-10 bg-background border-white/10 text-white"
                             />
                         </div>
                         {form.formState.errors.name && (
@@ -202,7 +202,7 @@ export default function SettingsPage() {
                             <Input
                                 value={user?.email || ''}
                                 disabled
-                                className="pl-10 bg-meso-dark-900 border-white/10 text-white/50"
+                                className="pl-10 bg-background border-white/10 text-white/50"
                             />
                         </div>
                         <p className="text-xs text-white/40 mt-1">Email nie może być zmieniony</p>
@@ -215,7 +215,7 @@ export default function SettingsPage() {
                             <Input
                                 {...form.register('phone')}
                                 placeholder="+48 123 456 789"
-                                className="pl-10 bg-meso-dark-900 border-white/10 text-white"
+                                className="pl-10 bg-background border-white/10 text-white"
                             />
                         </div>
                         {form.formState.errors.phone && (
@@ -230,7 +230,7 @@ export default function SettingsPage() {
                             <Input
                                 {...form.register('birthday')}
                                 type="date"
-                                className="pl-10 bg-meso-dark-900 border-white/10 text-white [&::-webkit-calendar-picker-indicator]:invert"
+                                className="pl-10 bg-background border-white/10 text-white [&::-webkit-calendar-picker-indicator]:invert"
                             />
                         </div>
                         <p className="text-xs text-white/40 mt-1">Zdobywaj x2 punkty w urodziny!</p>
@@ -239,7 +239,7 @@ export default function SettingsPage() {
                     <Button
                         type="submit"
                         disabled={isSaving}
-                        className="w-full bg-meso-red-500 hover:bg-meso-red-600"
+                        className="w-full bg-primary hover:bg-primary/90"
                     >
                         {isSaving ? (
                             <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -252,9 +252,9 @@ export default function SettingsPage() {
             </form>
 
             {/* Notifications */}
-            <div className="bg-meso-dark-800/50 rounded-xl p-5 border border-white/5 space-y-4">
+            <div className="bg-card/50 rounded-xl p-5 border border-white/5 space-y-4">
                 <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                    <Bell className="w-5 h-5 text-meso-red-500" />
+                    <Bell className="w-5 h-5 text-primary" />
                     Powiadomienia
                 </h2>
 
@@ -286,9 +286,9 @@ export default function SettingsPage() {
             </div>
 
             {/* Security */}
-            <div className="bg-meso-dark-800/50 rounded-xl p-5 border border-white/5 space-y-4">
+            <div className="bg-card/50 rounded-xl p-5 border border-white/5 space-y-4">
                 <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                    <Lock className="w-5 h-5 text-meso-red-500" />
+                    <Lock className="w-5 h-5 text-primary" />
                     Bezpieczeństwo
                 </h2>
 
@@ -319,7 +319,7 @@ export default function SettingsPage() {
                             Usuń konto
                         </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent className="bg-meso-dark-900 border-white/10">
+                    <AlertDialogContent className="bg-background border-white/10">
                         <AlertDialogHeader>
                             <AlertDialogTitle className="text-white">Czy na pewno chcesz usunąć konto?</AlertDialogTitle>
                             <AlertDialogDescription className="text-white/60">

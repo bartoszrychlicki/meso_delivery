@@ -34,7 +34,7 @@ export function TipSelector() {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 text-white/70">
-        <Heart className="w-4 h-4 text-meso-red-500" />
+        <Heart className="w-4 h-4 text-primary" />
         <span className="text-sm font-medium">Napiwek dla kucharzy w Meso</span>
       </div>
 
@@ -46,8 +46,8 @@ export function TipSelector() {
             className={cn(
               'h-10 rounded-lg text-sm font-medium transition-all',
               tip === amount && !showCustom
-                ? 'bg-meso-red-500 text-white shadow-[0_0_10px_rgba(244,37,175,0.3)]'
-                : 'bg-white/5 text-white/70 border border-meso-red-500/20 hover:border-meso-red-500/50'
+                ? 'bg-primary text-white neon-glow-sm'
+                : 'bg-white/5 text-white/70 border border-border hover:border-primary/50'
             )}
           >
             {formatTip(amount)}
@@ -60,8 +60,8 @@ export function TipSelector() {
         className={cn(
           'w-full h-10 rounded-lg text-sm font-medium transition-all',
           showCustom
-            ? 'bg-meso-red-500/20 text-meso-red-500 border border-meso-red-500'
-            : 'bg-white/5 text-white/70 border border-meso-red-500/20 hover:border-meso-red-500/50'
+            ? 'bg-primary/20 text-primary border border-primary'
+            : 'bg-white/5 text-white/70 border border-border hover:border-primary/50'
         )}
       >
         Inna kwota
@@ -79,9 +79,9 @@ export function TipSelector() {
               placeholder="Wpisz kwotę"
               className={cn(
                 'w-full h-10 pl-4 pr-10 rounded-lg',
-                'bg-white/5 border border-meso-red-500/20',
+                'bg-white/5 border border-border',
                 'text-white placeholder:text-white/40',
-                'focus:outline-none focus:ring-2 focus:ring-meso-red-500/50'
+                'focus:outline-none focus:ring-2 focus:ring-ring/50'
               )}
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40">zł</span>
@@ -90,8 +90,8 @@ export function TipSelector() {
             onClick={handleCustomTip}
             className={cn(
               'h-10 px-4 rounded-lg font-medium',
-              'bg-meso-red-500 text-white',
-              'hover:bg-meso-red-600 transition-colors'
+              'bg-primary text-white',
+              'hover:bg-primary/90 transition-colors'
             )}
           >
             OK

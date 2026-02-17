@@ -5,25 +5,25 @@ import { ArrowLeft, Shield } from 'lucide-react'
 
 export default function PolitykaPrywatnosciPage() {
     return (
-        <div className="min-h-screen bg-meso-dark-900 text-white">
+        <div className="min-h-screen bg-background text-white">
             {/* Header */}
-            <header className="sticky top-0 z-10 flex items-center bg-meso-dark-900/80 backdrop-blur-sm p-4 pb-2 justify-between border-b border-meso-red-500/20">
+            <header className="sticky top-0 z-10 flex items-center bg-background/80 backdrop-blur-sm p-4 pb-2 justify-between border-b border-border">
                 <div className="flex w-12 items-center justify-start">
                     <Link
                         href="/"
-                        className="flex h-10 w-10 items-center justify-center rounded-full text-white hover:text-meso-red-500 transition-colors"
+                        className="flex h-10 w-10 items-center justify-center rounded-full text-white hover:text-primary transition-colors"
                     >
                         <ArrowLeft className="w-6 h-6" />
                     </Link>
                 </div>
                 <h1
                     className="text-white text-lg font-bold leading-tight tracking-widest flex-1 text-center uppercase"
-                    style={{ textShadow: '0 0 5px rgba(244, 37, 175, 0.5)' }}
+                    style={{ textShadow: '0 0 5px hsl(330 100% 50% / 0.5)' }}
                 >
                     Prywatność
                 </h1>
                 <div className="flex w-12 items-center justify-end">
-                    <Shield className="w-6 h-6 text-meso-red-500" />
+                    <Shield className="w-6 h-6 text-primary" />
                 </div>
             </header>
 
@@ -40,7 +40,7 @@ export default function PolitykaPrywatnosciPage() {
                         <h2 className="text-xl font-semibold text-white mb-4">§1. Administrator danych osobowych</h2>
                         <div className="text-white/80">
                             <p className="mb-4">Administratorem Twoich danych osobowych jest:</p>
-                            <div className="p-4 bg-meso-dark-800 rounded-lg">
+                            <div className="p-4 bg-card rounded-lg">
                                 <p><strong>Rychlicki Holding Sp. z o.o.</strong></p>
                                 <p>ul. Leśna 8/8, 80-322 Gdańsk</p>
                                 <p>NIP: 9571130261</p>
@@ -65,29 +65,29 @@ export default function PolitykaPrywatnosciPage() {
                     <section className="mb-8">
                         <h2 className="text-xl font-semibold text-white mb-4">§3. Cele i podstawy prawne przetwarzania</h2>
                         <div className="space-y-4 text-white/80">
-                            <div className="p-4 bg-meso-dark-800 rounded-lg">
+                            <div className="p-4 bg-card rounded-lg">
                                 <h3 className="font-semibold text-white mb-2">Realizacja zamówień</h3>
                                 <p className="text-sm">Podstawa: wykonanie umowy (art. 6 ust. 1 lit. b RODO)</p>
                                 <p className="text-sm mt-1">Dane: imię, nazwisko, adres, telefon, email</p>
                             </div>
-                            <div className="p-4 bg-meso-dark-800 rounded-lg">
+                            <div className="p-4 bg-card rounded-lg">
                                 <h3 className="font-semibold text-white mb-2">Obsługa płatności</h3>
                                 <p className="text-sm">Podstawa: wykonanie umowy (art. 6 ust. 1 lit. b RODO)</p>
                                 <p className="text-sm mt-1">Dane przekazywane do operatora płatności PayPro SA (Przelewy24)</p>
                             </div>
-                            <div className="p-4 bg-meso-dark-800 rounded-lg">
+                            <div className="p-4 bg-card rounded-lg">
                                 <h3 className="font-semibold text-white mb-2">Prowadzenie konta użytkownika</h3>
                                 <p className="text-sm">Podstawa: wykonanie umowy (art. 6 ust. 1 lit. b RODO)</p>
                             </div>
-                            <div className="p-4 bg-meso-dark-800 rounded-lg">
+                            <div className="p-4 bg-card rounded-lg">
                                 <h3 className="font-semibold text-white mb-2">Program lojalnościowy MESO Club</h3>
                                 <p className="text-sm">Podstawa: zgoda (art. 6 ust. 1 lit. a RODO)</p>
                             </div>
-                            <div className="p-4 bg-meso-dark-800 rounded-lg">
+                            <div className="p-4 bg-card rounded-lg">
                                 <h3 className="font-semibold text-white mb-2">Marketing bezpośredni</h3>
                                 <p className="text-sm">Podstawa: zgoda (art. 6 ust. 1 lit. a RODO) lub uzasadniony interes (art. 6 ust. 1 lit. f RODO)</p>
                             </div>
-                            <div className="p-4 bg-meso-dark-800 rounded-lg">
+                            <div className="p-4 bg-card rounded-lg">
                                 <h3 className="font-semibold text-white mb-2">Rozpatrywanie reklamacji</h3>
                                 <p className="text-sm">Podstawa: obowiązek prawny (art. 6 ust. 1 lit. c RODO)</p>
                             </div>
@@ -128,14 +128,14 @@ export default function PolitykaPrywatnosciPage() {
                             <li><strong>Prawo do cofnięcia zgody</strong> – w każdej chwili, bez wpływu na zgodność z prawem wcześniejszego przetwarzania</li>
                         </ul>
                         <p className="text-white/80 mt-4">
-                            Aby skorzystać z tych praw, skontaktuj się z nami: <a href="mailto:kontakt@mesofood.pl" className="text-meso-red-500 hover:underline">kontakt@mesofood.pl</a>
+                            Aby skorzystać z tych praw, skontaktuj się z nami: <a href="mailto:kontakt@mesofood.pl" className="text-primary hover:underline">kontakt@mesofood.pl</a>
                         </p>
                     </section>
 
                     <section className="mb-8">
                         <h2 className="text-xl font-semibold text-white mb-4">§7. Prawo do skargi</h2>
                         <p className="text-white/80">
-                            Masz prawo wnieść skargę do organu nadzorczego – Prezesa Urzędu Ochrony Danych Osobowych (ul. Stawki 2, 00-193 Warszawa, <a href="https://uodo.gov.pl" target="_blank" rel="noopener noreferrer" className="text-meso-red-500 hover:underline">uodo.gov.pl</a>).
+                            Masz prawo wnieść skargę do organu nadzorczego – Prezesa Urzędu Ochrony Danych Osobowych (ul. Stawki 2, 00-193 Warszawa, <a href="https://uodo.gov.pl" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">uodo.gov.pl</a>).
                         </p>
                     </section>
 
@@ -168,7 +168,7 @@ export default function PolitykaPrywatnosciPage() {
                         </p>
                     </section>
 
-                    <div className="mt-10 p-4 bg-meso-dark-800 rounded-lg">
+                    <div className="mt-10 p-4 bg-card rounded-lg">
                         <p className="text-white/60 text-sm">
                             <strong>Rychlicki Holding Sp. z o.o.</strong><br />
                             ul. Leśna 8/8, 80-322 Gdańsk<br />

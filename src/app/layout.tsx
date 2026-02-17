@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Space_Grotesk, Noto_Sans_JP } from "next/font/google";
+import { Inter, Orbitron, Noto_Sans_JP } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/providers/AuthProvider";
 import "./globals.css";
@@ -9,9 +9,10 @@ const inter = Inter({
   subsets: ["latin", "latin-ext"],
 });
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
+const orbitron = Orbitron({
+  variable: "--font-orbitron",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
 });
 
 const notoSansJP = Noto_Sans_JP({
@@ -34,7 +35,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#020617",
+  themeColor: "#0a0118",
 };
 
 export default function RootLayout({
@@ -45,7 +46,7 @@ export default function RootLayout({
   return (
     <html lang="pl">
       <body
-        className={`${inter.variable} ${spaceGrotesk.variable} ${notoSansJP.variable} antialiased`}
+        className={`${inter.variable} ${orbitron.variable} ${notoSansJP.variable} antialiased`}
       >
         <AuthProvider>
           {children}
@@ -54,9 +55,9 @@ export default function RootLayout({
           position="top-center"
           toastOptions={{
             style: {
-              background: '#1e293b',
-              color: '#fff',
-              border: '1px solid rgba(255,255,255,0.1)',
+              background: 'hsl(264 80% 8%)',
+              color: 'hsl(220 20% 92%)',
+              border: '1px solid hsl(270 40% 20%)',
             },
           }}
         />

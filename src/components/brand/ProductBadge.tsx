@@ -16,12 +16,12 @@ const badgeConfig: Record<BadgeType, { label: string; icon: React.ReactNode; cla
   bestseller: {
     label: 'BESTSELLER',
     icon: <Award className="w-3 h-3" />,
-    className: 'bg-meso-gold-500 text-black hover:bg-meso-gold-400',
+    className: 'bg-accent text-black hover:bg-accent',
   },
   signature: {
     label: 'SIGNATURE',
     icon: <Star className="w-3 h-3" />,
-    className: 'bg-meso-red-500 text-white hover:bg-meso-red-600',
+    className: 'bg-primary text-white hover:bg-primary/90',
   },
   new: {
     label: 'NEW',

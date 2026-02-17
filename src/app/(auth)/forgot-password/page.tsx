@@ -78,7 +78,7 @@ export default function ForgotPasswordPage() {
                 setIsSubmitted(false)
                 setSubmittedEmail('')
               }}
-              className="text-meso-red-500 hover:underline"
+              className="text-primary hover:underline"
             >
               spróbuj ponownie
             </button>
@@ -98,8 +98,8 @@ export default function ForgotPasswordPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center">
-        <div className="w-14 h-14 rounded-full bg-meso-red-500/20 flex items-center justify-center mx-auto mb-4">
-          <Mail className="w-7 h-7 text-meso-red-500" />
+        <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
+          <Mail className="w-7 h-7 text-primary" />
         </div>
         <h1 className="text-2xl font-bold text-white mb-2">
           Zapomniałeś hasła?
@@ -120,7 +120,7 @@ export default function ForgotPasswordPage() {
             type="email"
             placeholder="twoj@email.pl"
             {...register('email')}
-            className="bg-meso-dark-800 border-white/10 text-white placeholder:text-white/40 focus:border-meso-red-500"
+            className="bg-card border-white/10 text-white placeholder:text-white/40 focus:border-primary"
           />
           {errors.email && (
             <p className="text-red-400 text-sm">{errors.email.message}</p>
@@ -130,7 +130,7 @@ export default function ForgotPasswordPage() {
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-meso-red-500 hover:bg-meso-red-600 text-white font-semibold h-11"
+          className="w-full bg-primary hover:bg-primary/90 text-white font-semibold h-11"
         >
           {isSubmitting ? (
             <>

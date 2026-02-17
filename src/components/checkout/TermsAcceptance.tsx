@@ -18,7 +18,7 @@ export function TermsAcceptance({ accepted, onChange, error }: TermsAcceptancePr
                     id="terms-acceptance"
                     checked={accepted}
                     onCheckedChange={(checked) => onChange(checked === true)}
-                    className="mt-0.5 border-white/30 data-[state=checked]:bg-meso-red-500 data-[state=checked]:border-meso-red-500"
+                    className="mt-0.5 border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                 />
                 <Label
                     htmlFor="terms-acceptance"
@@ -28,7 +28,7 @@ export function TermsAcceptance({ accepted, onChange, error }: TermsAcceptancePr
                     <Link
                         href="/regulamin"
                         target="_blank"
-                        className="text-meso-red-500 hover:underline"
+                        className="text-primary hover:underline"
                         onClick={(e) => e.stopPropagation()}
                     >
                         Regulamin
@@ -37,12 +37,12 @@ export function TermsAcceptance({ accepted, onChange, error }: TermsAcceptancePr
                     <Link
                         href="/polityka-prywatnosci"
                         target="_blank"
-                        className="text-meso-red-500 hover:underline"
+                        className="text-primary hover:underline"
                         onClick={(e) => e.stopPropagation()}
                     >
                         Politykę Prywatności
                     </Link>
-                    <span className="text-meso-red-500"> *</span>
+                    <span className="text-primary"> *</span>
                 </Label>
             </div>
             {error && (
