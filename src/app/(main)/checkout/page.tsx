@@ -296,6 +296,7 @@ export default function CheckoutPage() {
             <div className="fixed bottom-[85px] left-0 right-0 z-50 mx-4 lg:relative lg:bottom-auto lg:mx-0 lg:mt-6">
                 <div className="bg-background border border-border p-4 rounded-2xl shadow-xl lg:p-0 lg:border-0 lg:shadow-none lg:bg-transparent">
                     <button
+                        data-testid="checkout-submit-button"
                         onClick={handleFinalSubmit}
                         disabled={isSubmitting}
                         className={cn(

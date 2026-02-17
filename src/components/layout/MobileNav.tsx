@@ -58,7 +58,10 @@ export function MobileNav() {
       </AnimatePresence>
 
       {/* Bottom navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 glass border-t border-border lg:hidden pb-safe">
+      <nav
+        data-testid="mobile-nav"
+        className="fixed bottom-0 left-0 right-0 z-40 glass border-t border-border lg:hidden pb-safe"
+      >
         <div className="flex items-center justify-around py-2">
           {navItems.map((item) => {
             const Icon = item.icon

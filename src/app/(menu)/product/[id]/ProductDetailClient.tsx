@@ -421,6 +421,8 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           {/* Add to cart button */}
           <button
             type="button"
+            data-testid="product-detail-add-to-cart"
+            aria-label="Dodaj produkt do koszyka"
             onClick={handleAddToCart}
             className={cn(
               'flex-1 rounded-xl py-3.5 font-display text-sm font-semibold tracking-wider',

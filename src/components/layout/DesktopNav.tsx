@@ -21,7 +21,10 @@ export function DesktopNav() {
   const subtotal = useCartStore((s) => s.getSubtotal())
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 hidden lg:block glass border-b border-border">
+    <header
+      data-testid="desktop-nav"
+      className="fixed top-0 left-0 right-0 z-40 hidden lg:block glass border-b border-border"
+    >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         {/* Logo */}
         <Link
