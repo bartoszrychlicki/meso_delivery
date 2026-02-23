@@ -3,6 +3,7 @@
 import { DesktopNav } from './DesktopNav'
 import { MobileNav } from './MobileNav'
 import { Footer } from './Footer'
+import { TestBanner } from './TestBanner'
 import { cn } from '@/lib/utils'
 
 interface AppLayoutProps {
@@ -20,6 +21,7 @@ export function AppLayout({
 }: AppLayoutProps) {
   return (
     <div className={cn('min-h-screen bg-background text-foreground flex flex-col', className)}>
+      <TestBanner />
       <DesktopNav />
 
       <main className={cn(
