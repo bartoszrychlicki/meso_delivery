@@ -15,7 +15,7 @@ const navItems = [
   { path: '/account', label: 'Profil', icon: User },
 ]
 
-export function DesktopNav({ topOffset = false }: { topOffset?: boolean }) {
+export function DesktopNav() {
   const pathname = usePathname()
   const totalItems = useCartStore((s) => s.getItemCount())
   const subtotal = useCartStore((s) => s.getSubtotal())
@@ -23,10 +23,7 @@ export function DesktopNav({ topOffset = false }: { topOffset?: boolean }) {
   return (
     <header
       data-testid="desktop-nav"
-      className={cn(
-        "fixed left-0 right-0 z-40 hidden lg:block glass border-b border-border",
-        topOffset ? "top-10" : "top-0"
-      )}
+      className="fixed top-0 left-0 right-0 z-40 hidden lg:block glass border-b border-border"
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         {/* Logo */}
