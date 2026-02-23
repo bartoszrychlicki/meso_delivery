@@ -3,18 +3,14 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 
-export function TestBanner() {
-  const [dismissed, setDismissed] = useState(false)
-
-  if (dismissed) return null
-
+export function TestBanner({ onDismiss }: { onDismiss?: () => void }) {
   return (
-    <div className="relative bg-violet-600/90 text-white text-center text-sm py-2 px-8 z-50">
+    <div className="relative bg-violet-600/90 text-white text-center text-sm py-2 px-8">
       <span className="font-medium">🚧 Strona w trybie testowym</span>
       <span className="hidden sm:inline"> — zamówienia ruszają już niedługo!</span>
       <span className="sm:hidden"> — zamówienia wkrótce!</span>
       <button
-        onClick={() => setDismissed(true)}
+        onClick={onDismiss}
         className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-white/20 rounded transition-colors"
         aria-label="Zamknij"
       >

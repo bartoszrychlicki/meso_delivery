@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { DesktopNav } from './DesktopNav'
 import { MobileNav } from './MobileNav'
 import { Footer } from './Footer'
@@ -19,13 +20,20 @@ export function AppLayout({
   hideFooter = false,
   className,
 }: AppLayoutProps) {
+  const [bannerVisible, setBannerVisible] = useState(true)
+
   return (
     <div className={cn('min-h-screen bg-background text-foreground flex flex-col', className)}>
-      <TestBanner />
-      <DesktopNav />
+      {bannerVisible && (
+        <div className="fixed top-0 left-0 right-0 z-50">
+          <TestBanner onDismiss={() => setBannerVisible(false)} />
+        </div>
+      )}
+      <DesktopNav topOffset={bannerVisible} />
 
       <main className={cn(
-        'flex-1 lg:pt-16',
+        'flex-1',
+        bannerVisible ? 'pt-10 lg:pt-[calc(2.5rem+4rem)]' : 'lg:pt-16',
         !hideBottomNav && 'pb-20 lg:pb-0'
       )}>
         {children}
