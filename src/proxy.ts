@@ -1,7 +1,31 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const ACCESS_PASSWORD = 'TuJestMeso2026'
+
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // Password gate: skip for gate page, API routes, and static assets
+  const isPublicPath =
+    pathname === '/gate' ||
+    pathname.startsWith('/api/gate') ||
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/favicon') ||
+    pathname.endsWith('.svg') ||
+    pathname.endsWith('.png') ||
+    pathname.endsWith('.jpg') ||
+    pathname.endsWith('.ico')
+
+  if (!isPublicPath) {
+    const accessCookie = request.cookies.get('meso_access')
+    if (accessCookie?.value !== ACCESS_PASSWORD) {
+      const gateUrl = new URL('/gate', request.url)
+      return NextResponse.redirect(gateUrl)
+    }
+  }
+
+  // Original Supabase session refresh logic
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -33,12 +57,7 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  // IMPORTANT: Do NOT add any route protection here!
-  // Anonymous users can access ALL routes.
-  // Session refresh is the only purpose of this middleware.
-
   // Refresh session if expired - required for Server Components
-  // IMPORTANT: Use getUser() not getSession() - getSession() doesn't revalidate the Auth token
   await supabase.auth.getUser()
 
   return supabaseResponse
@@ -46,14 +65,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder files
-     * Feel free to modify this pattern to include more paths.
-     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
