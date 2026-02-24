@@ -9,18 +9,18 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 const REWARDS = [
-  { id: 1, name: 'Darmowa dostawa', points: 150, icon: Truck, description: 'Przy nastepnym zamowieniu' },
-  { id: 2, name: 'Gyoza gratis', points: 300, icon: UtensilsCrossed, description: '6 sztuk do zamowienia' },
-  { id: 3, name: '20% znizka', points: 500, icon: Percent, description: 'Na cale zamowienie' },
+  { id: 1, name: 'Darmowa dostawa', points: 150, icon: Truck, description: 'Przy następnym zamówieniu' },
+  { id: 2, name: 'Gyoza gratis', points: 300, icon: UtensilsCrossed, description: '6 sztuk do zamówienia' },
+  { id: 3, name: '20% zniżka', points: 500, icon: Percent, description: 'Na całe zamówienie' },
   { id: 4, name: 'Darmowy ramen', points: 800, icon: Gift, description: 'Dowolny ramen z menu' },
 ]
 
 const HISTORY = [
-  { id: 1, label: 'Zamowienie #1042', points: 45, date: '12.02.2026', type: 'earned' as const },
+  { id: 1, label: 'Zamówienie #1042', points: 45, date: '12.02.2026', type: 'earned' as const },
   { id: 2, label: 'Darmowa dostawa', points: -150, date: '10.02.2026', type: 'spent' as const },
-  { id: 3, label: 'Zamowienie #1038', points: 62, date: '08.02.2026', type: 'earned' as const },
+  { id: 3, label: 'Zamówienie #1038', points: 62, date: '08.02.2026', type: 'earned' as const },
   { id: 4, label: 'Bonus rejestracyjny', points: 50, date: '01.02.2026', type: 'earned' as const },
-  { id: 5, label: 'Zamowienie #1035', points: 38, date: '28.01.2026', type: 'earned' as const },
+  { id: 5, label: 'Zamówienie #1035', points: 38, date: '28.01.2026', type: 'earned' as const },
   { id: 6, label: 'Polecenie znajomego', points: 100, date: '25.01.2026', type: 'earned' as const },
 ]
 
@@ -85,14 +85,14 @@ export default function LoyaltyPage() {
               <p className="font-display text-3xl font-bold text-white">{MOCK_POINTS}</p>
             </div>
             <span className="ml-auto rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white">
-              punktow
+              punktów
             </span>
           </div>
 
           {/* Progress bar */}
           <div className="space-y-2">
             <div className="flex justify-between text-xs text-white/60">
-              <span>Nastepna nagroda: {NEXT_REWARD.name}</span>
+              <span>Następna nagroda: {NEXT_REWARD.name}</span>
               <span>{NEXT_REWARD.points - MOCK_POINTS} pkt</span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-white/20">

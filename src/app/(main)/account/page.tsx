@@ -11,9 +11,9 @@ import { cn } from '@/lib/utils'
 const MENU_ITEMS = [
   { icon: User, label: 'Dane osobowe', href: '/account/personal', requiresPermanent: true },
   { icon: MapPin, label: 'Adresy', href: '/account/addresses', requiresPermanent: false },
-  { icon: CreditCard, label: 'Platnosci', href: '/account/payments', requiresPermanent: true },
+  { icon: CreditCard, label: 'Płatności', href: '/account/payments', requiresPermanent: true },
   { icon: Heart, label: 'Ulubione', href: '/account/favorites', requiresPermanent: true },
-  { icon: Package, label: 'Moje zamowienia', href: '/orders', requiresPermanent: false },
+  { icon: Package, label: 'Moje zamówienia', href: '/orders', requiresPermanent: false },
   { icon: Settings, label: 'Ustawienia', href: '/account/settings', requiresPermanent: true },
 ]
 
@@ -69,7 +69,7 @@ export default function AccountPage() {
           {email ? (
             <p className="text-sm text-muted-foreground">{email}</p>
           ) : (
-            <p className="text-sm text-accent">Konto goscia</p>
+            <p className="text-sm text-accent">Konto gościa</p>
           )}
         </div>
       </motion.div>
@@ -158,13 +158,13 @@ export default function AccountPage() {
             className="w-full h-12 text-destructive hover:text-destructive hover:bg-destructive/10 border border-border"
           >
             <LogOut className="h-5 w-5 mr-2" />
-            Wyloguj sie
+            Wyloguj się
           </Button>
         ) : (
           <div className="flex gap-3">
             <Link href="/register" className="flex-1">
               <Button className="w-full h-12 bg-accent text-accent-foreground font-semibold neon-glow-yellow">
-                Zaloz konto
+                Załóż konto
               </Button>
             </Link>
             <Link href="/login" className="flex-1">
@@ -172,7 +172,7 @@ export default function AccountPage() {
                 variant="outline"
                 className="w-full h-12"
               >
-                Zaloguj sie
+                Zaloguj się
               </Button>
             </Link>
           </div>

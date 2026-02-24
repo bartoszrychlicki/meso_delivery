@@ -74,8 +74,8 @@ const badgeStyles: Record<string, string> = {
 }
 
 const spiceLevels = [
-  { level: 1 as const, label: 'Lagodny', emoji: '\u{1F525}' },
-  { level: 2 as const, label: 'Sredni', emoji: '\u{1F525}\u{1F525}' },
+  { level: 1 as const, label: 'Łagodny', emoji: '\u{1F525}' },
+  { level: 2 as const, label: 'Średni', emoji: '\u{1F525}\u{1F525}' },
   { level: 3 as const, label: 'Piekielny', emoji: '\u{1F525}\u{1F525}\u{1F525}' },
 ]
 
@@ -143,7 +143,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
     })
 
     toast.success(`${product.name} dodano do koszyka`, {
-      description: `Ilosc: ${quantity}`,
+      description: `Ilość: ${quantity}`,
       duration: 3000,
     })
 
@@ -153,7 +153,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const badges: { key: string; label: string }[] = []
   if (product.is_bestseller) badges.push({ key: 'bestseller', label: 'Bestseller' })
   if (product.is_signature) badges.push({ key: 'premium', label: 'Premium' })
-  if (product.is_new) badges.push({ key: 'nowosc', label: 'Nowosc' })
+  if (product.is_new) badges.push({ key: 'nowosc', label: 'Nowość' })
 
   const fallbackEmoji = product.category?.slug
     ? categoryEmojiMap[product.category.slug] || '\u{1F35C}'
@@ -173,7 +173,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
-          <span>Wroc</span>
+          <span>Wróć</span>
         </button>
       </div>
 
@@ -283,7 +283,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         {product.has_spice_level && (
           <div>
             <h2 className="font-display text-lg font-bold text-foreground mb-3">
-              Poziom Ostrosci
+              Poziom Ostrości
             </h2>
             <div className="grid grid-cols-3 gap-3">
               {spiceLevels.map((option) => (
@@ -307,7 +307,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               <div className="mt-3 p-3 bg-destructive/10 border border-destructive/30 rounded-lg flex items-start gap-2">
                 <span className="text-lg">&#9888;&#65039;</span>
                 <p className="text-destructive text-sm">
-                  <strong>Poziom Piekielny to nie zart!</strong> Bardzo ostra wersja dla doswiadczonych fanow chilli.
+                  <strong>Poziom Piekielny to nie żart!</strong> Bardzo ostra wersja dla doświadczonych fanów chilli.
                 </p>
               </div>
             )}
@@ -382,7 +382,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         {/* Notes textarea */}
         <div>
           <h2 className="font-display text-lg font-bold text-foreground mb-3">
-            Uwagi do zamowienia
+            Uwagi do zamówienia
           </h2>
           <Textarea
             value={notes}

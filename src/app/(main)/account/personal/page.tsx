@@ -93,9 +93,9 @@ export default function PersonalPage() {
   if (!isPermanent) {
     return (
       <div className="flex flex-col items-center justify-center px-4 py-20 text-center">
-        <p className="mb-4 text-sm text-muted-foreground">Zaloguj sie, aby edytowac dane</p>
+        <p className="mb-4 text-sm text-muted-foreground">Zaloguj się, aby edytować dane</p>
         <Link href="/login">
-          <Button className="bg-accent text-accent-foreground">Zaloguj sie</Button>
+          <Button className="bg-accent text-accent-foreground">Zaloguj się</Button>
         </Link>
       </div>
     )
@@ -118,7 +118,7 @@ export default function PersonalPage() {
       >
         {/* First Name */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-muted-foreground">Imie</label>
+          <label className="text-xs font-medium text-muted-foreground">Imię</label>
           <input
             type="text"
             value={form.first_name}

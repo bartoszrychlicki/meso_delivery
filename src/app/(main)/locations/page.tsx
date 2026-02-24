@@ -84,7 +84,7 @@ export default function LocationsPage() {
       <div>
         <h1 className="font-display text-xl font-bold">Nasze lokalizacje</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Znajdz najblizszy punkt MESO
+          Znajdź najbliższy punkt MESO
         </p>
       </div>
 
@@ -92,7 +92,7 @@ export default function LocationsPage() {
       <div className="relative h-48 overflow-hidden rounded-xl border border-border bg-secondary">
         <div className="flex h-full flex-col items-center justify-center text-muted-foreground">
           <MapPin className="mb-2 h-8 w-8 text-muted-foreground/30" />
-          <p className="text-sm">Mapa wkrotce</p>
+          <p className="text-sm">Mapa wkrótce</p>
         </div>
       </div>
 
@@ -144,7 +144,7 @@ export default function LocationsPage() {
                   ? 'bg-green-500/20 text-green-400'
                   : 'bg-red-500/20 text-red-400'
               )}>
-                {location.isOpen ? 'Otwarte' : 'Zamkniete'}
+                {location.isOpen ? 'Otwarte' : 'Zamknięte'}
               </span>
             </div>
           </motion.div>

@@ -101,7 +101,7 @@ export default function SearchPage() {
       {!query && !hasSearched && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <Search className="mb-4 h-12 w-12 text-muted-foreground/20" />
-          <p className="text-sm text-muted-foreground">Wpisz nazwe dania, aby wyszukac</p>
+          <p className="text-sm text-muted-foreground">Wpisz nazwę dania, aby wyszukać</p>
         </div>
       )}
 
@@ -109,9 +109,9 @@ export default function SearchPage() {
       {!isSearching && hasSearched && results.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <Search className="mb-4 h-12 w-12 text-muted-foreground/20" />
-          <p className="text-sm font-medium">Brak wynikow</p>
+          <p className="text-sm font-medium">Brak wyników</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Sprobuj innej frazy wyszukiwania
+            Spróbuj innej frazy wyszukiwania
           </p>
         </div>
       )}
@@ -152,7 +152,7 @@ export default function SearchPage() {
                       <p className="mt-0.5 text-xs text-muted-foreground font-japanese">{product.name_jp}</p>
                     )}
                     <p className="mt-2 text-sm font-bold text-accent">
-                      {product.price.toFixed(2)} zl
+                      {product.price.toFixed(2)} zł
                     </p>
                   </div>
                 </Link>
