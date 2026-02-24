@@ -26,42 +26,41 @@ export function TipSelector() {
     }
   }
 
-  const formatTip = (amount: number) => {
-    if (amount === 0) return 'Bez napiwku'
-    return `${amount} zł`
-  }
+  const isSelected = (amount: number) => tip === amount && !showCustom
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 text-white/70">
-        <Heart className="w-4 h-4 text-primary" />
-        <span className="text-sm font-medium">Napiwek dla kucharzy w Meso</span>
+      <div className="flex items-center gap-2">
+        <Heart className="h-4 w-4 text-primary" />
+        <h3 className="font-display text-xs font-semibold uppercase tracking-wider">Napiwek dla kucharzy</h3>
       </div>
 
-      <div className="grid grid-cols-4 gap-2">
+      <div className="flex gap-2">
         {TIP_OPTIONS.map((amount) => (
           <button
             key={amount}
+            type="button"
             onClick={() => handleTipSelect(amount)}
             className={cn(
-              'h-10 rounded-lg text-sm font-medium transition-all',
-              tip === amount && !showCustom
-                ? 'bg-primary text-white neon-glow-sm'
-                : 'bg-white/5 text-white/70 border border-border hover:border-primary/50'
+              'flex-1 rounded-lg py-2 text-sm font-medium transition-all',
+              isSelected(amount)
+                ? 'bg-primary text-primary-foreground neon-glow-sm'
+                : 'bg-secondary text-foreground hover:bg-secondary/80'
             )}
           >
-            {formatTip(amount)}
+            {amount === 0 ? 'Bez' : `${amount} zł`}
           </button>
         ))}
       </div>
 
       <button
+        type="button"
         onClick={() => setShowCustom(!showCustom)}
         className={cn(
-          'w-full h-10 rounded-lg text-sm font-medium transition-all',
+          'w-full rounded-lg py-2 text-sm font-medium transition-all',
           showCustom
             ? 'bg-primary/20 text-primary border border-primary'
-            : 'bg-white/5 text-white/70 border border-border hover:border-primary/50'
+            : 'bg-secondary text-foreground hover:bg-secondary/80'
         )}
       >
         Inna kwota
@@ -77,22 +76,14 @@ export function TipSelector() {
               value={customTip}
               onChange={(e) => setCustomTip(e.target.value)}
               placeholder="Wpisz kwotę"
-              className={cn(
-                'w-full h-10 pl-4 pr-10 rounded-lg',
-                'bg-white/5 border border-border',
-                'text-white placeholder:text-white/40',
-                'focus:outline-none focus:ring-2 focus:ring-ring/50'
-              )}
+              className="w-full rounded-lg border border-border bg-secondary/50 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none pr-10"
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40">zł</span>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">zł</span>
           </div>
           <button
+            type="button"
             onClick={handleCustomTip}
-            className={cn(
-              'h-10 px-4 rounded-lg font-medium',
-              'bg-primary text-white',
-              'hover:bg-primary/90 transition-colors'
-            )}
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             OK
           </button>

@@ -1,13 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { contactSchema, type ContactFormData } from '@/lib/validators/checkout'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
-import { MapPin, MessageSquare } from 'lucide-react'
+import { MessageSquare } from 'lucide-react'
 
 interface ContactFormProps {
     defaultValues?: Partial<ContactFormData>
@@ -53,73 +51,78 @@ export function ContactForm({ defaultValues, savedPhone, onSubmit }: ContactForm
     const showError = (field: keyof ContactFormData) =>
         errors[field] && (touchedFields[field] || isSubmitted)
 
-    const fieldProps = (field: keyof ContactFormData) => ({
-        ...register(field),
-        'aria-invalid': showError(field) ? true : undefined,
-    })
+    const inputClassName = 'w-full rounded-lg border border-border bg-secondary/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none'
 
     return (
-        <form id="address-form" onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-            {/* Pickup location info */}
-            <div className="bg-card border border-border rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                        <MapPin className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                        <h4 className="text-white font-medium">Punkt odbioru</h4>
-                        <p className="text-white/60 text-sm mt-1">
-                            MESO Food, ul. Przykładowa 12, Gdańsk
-                        </p>
-                    </div>
+        <form id="address-form" onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                    <label htmlFor="firstName" className="text-xs font-medium text-muted-foreground">Imię</label>
+                    <input
+                        id="firstName"
+                        {...register('firstName')}
+                        placeholder="Jan"
+                        aria-invalid={showError('firstName') ? true : undefined}
+                        className={inputClassName}
+                    />
+                    {showError('firstName') && <p className="text-red-400 text-xs">{errors.firstName?.message}</p>}
+                </div>
+                <div className="space-y-1.5">
+                    <label htmlFor="lastName" className="text-xs font-medium text-muted-foreground">Nazwisko</label>
+                    <input
+                        id="lastName"
+                        {...register('lastName')}
+                        placeholder="Kowalski"
+                        aria-invalid={showError('lastName') ? true : undefined}
+                        className={inputClassName}
+                    />
+                    {showError('lastName') && <p className="text-red-400 text-xs">{errors.lastName?.message}</p>}
                 </div>
             </div>
 
-            <div className="space-y-4">
-                <h3 className="text-white font-medium">Dane kontaktowe</h3>
-
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="firstName">Imię</Label>
-                        <Input id="firstName" {...fieldProps('firstName')} placeholder="Jan" className="bg-card border-white/10" />
-                        {showError('firstName') && <p className="text-red-400 text-sm">{errors.firstName?.message}</p>}
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="lastName">Nazwisko</Label>
-                        <Input id="lastName" {...fieldProps('lastName')} placeholder="Kowalski" className="bg-card border-white/10" />
-                        {showError('lastName') && <p className="text-red-400 text-sm">{errors.lastName?.message}</p>}
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" {...fieldProps('email')} placeholder="jan@example.com" className="bg-card border-white/10" />
-                    {showError('email') && <p className="text-red-400 text-sm">{errors.email?.message}</p>}
-                </div>
-
-                <div className="space-y-2">
-                    <Label htmlFor="phone" className="flex items-center gap-1.5">
-                        <MessageSquare className="w-4 h-4 text-accent" />
-                        Numer telefonu
-                    </Label>
-                    <Input id="phone" type="tel" {...fieldProps('phone')} placeholder="123456789" maxLength={9} className="bg-card border-white/10" />
-                    <p className="text-white/40 text-xs">Na ten numer wyślemy SMS o statusie Twojego zamówienia</p>
-                    {showError('phone') && <p className="text-red-400 text-sm">{errors.phone?.message}</p>}
-                </div>
-
-                {showSaveCheckbox && (
-                    <div className="flex items-center gap-2">
-                        <Checkbox
-                            id="savePhone"
-                            checked={savePhoneChecked}
-                            onCheckedChange={(checked) => setSavePhoneChecked(checked === true)}
-                        />
-                        <label htmlFor="savePhone" className="text-white/60 text-sm cursor-pointer">
-                            Zapisz jako domyślny numer telefonu
-                        </label>
-                    </div>
-                )}
+            <div className="space-y-1.5">
+                <label htmlFor="email" className="text-xs font-medium text-muted-foreground">Email</label>
+                <input
+                    id="email"
+                    type="email"
+                    {...register('email')}
+                    placeholder="jan@example.com"
+                    aria-invalid={showError('email') ? true : undefined}
+                    className={inputClassName}
+                />
+                {showError('email') && <p className="text-red-400 text-xs">{errors.email?.message}</p>}
             </div>
+
+            <div className="space-y-1.5">
+                <label htmlFor="phone" className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <MessageSquare className="w-3.5 h-3.5 text-accent" />
+                    Numer telefonu
+                </label>
+                <input
+                    id="phone"
+                    type="tel"
+                    {...register('phone')}
+                    placeholder="123456789"
+                    maxLength={9}
+                    aria-invalid={showError('phone') ? true : undefined}
+                    className={inputClassName}
+                />
+                <p className="text-muted-foreground text-xs">Na ten numer wyślemy SMS o statusie Twojego zamówienia</p>
+                {showError('phone') && <p className="text-red-400 text-xs">{errors.phone?.message}</p>}
+            </div>
+
+            {showSaveCheckbox && (
+                <div className="flex items-center gap-2">
+                    <Checkbox
+                        id="savePhone"
+                        checked={savePhoneChecked}
+                        onCheckedChange={(checked) => setSavePhoneChecked(checked === true)}
+                    />
+                    <label htmlFor="savePhone" className="text-muted-foreground text-sm cursor-pointer">
+                        Zapisz jako domyślny numer telefonu
+                    </label>
+                </div>
+            )}
         </form>
     )
 }

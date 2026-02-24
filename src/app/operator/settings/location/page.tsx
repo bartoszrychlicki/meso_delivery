@@ -30,6 +30,8 @@ export default function LocationSettingsPage() {
     close_time: '',
     delivery_radius_km: 0,
   })
+  const [pickupBufferAfterOpen, setPickupBufferAfterOpen] = useState(30)
+  const [pickupBufferBeforeClose, setPickupBufferBeforeClose] = useState(30)
 
   useEffect(() => {
     fetchLocation()
@@ -39,18 +41,26 @@ export default function LocationSettingsPage() {
   const fetchLocation = async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/operator/settings/location', {
-        headers: {
-          'x-operator-pin': pin,
-          'Content-Type': 'application/json',
-        },
-      })
+      const [locationRes, configRes] = await Promise.all([
+        fetch('/api/operator/settings/location', {
+          headers: {
+            'x-operator-pin': pin,
+            'Content-Type': 'application/json',
+          },
+        }),
+        fetch('/api/operator/settings/config', {
+          headers: {
+            'x-operator-pin': pin,
+            'Content-Type': 'application/json',
+          },
+        }),
+      ])
 
-      if (!res.ok) {
+      if (!locationRes.ok) {
         throw new Error('Nie udało się pobrać ustawień lokalizacji')
       }
 
-      const data = await res.json()
+      const data = await locationRes.json()
       const loc: LocationSettings = data.location
 
       setForm({
@@ -62,6 +72,15 @@ export default function LocationSettingsPage() {
         close_time: loc.close_time ?? '',
         delivery_radius_km: loc.delivery_radius_km ?? 0,
       })
+
+      if (configRes.ok) {
+        const configData = await configRes.json()
+        const configArr: { key: string; value: string }[] = configData.config ?? []
+        const afterOpen = configArr.find((c) => c.key === 'pickup_buffer_after_open')
+        const beforeClose = configArr.find((c) => c.key === 'pickup_buffer_before_close')
+        if (afterOpen) setPickupBufferAfterOpen(parseInt(afterOpen.value) || 30)
+        if (beforeClose) setPickupBufferBeforeClose(parseInt(beforeClose.value) || 30)
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Błąd pobierania danych')
     } finally {
@@ -74,18 +93,36 @@ export default function LocationSettingsPage() {
     setSaving(true)
 
     try {
-      const res = await fetch('/api/operator/settings/location', {
-        method: 'PATCH',
-        headers: {
-          'x-operator-pin': pin,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(form),
-      })
+      const [locationRes, configRes] = await Promise.all([
+        fetch('/api/operator/settings/location', {
+          method: 'PATCH',
+          headers: {
+            'x-operator-pin': pin,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(form),
+        }),
+        fetch('/api/operator/settings/config', {
+          method: 'PATCH',
+          headers: {
+            'x-operator-pin': pin,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify([
+            { key: 'pickup_buffer_after_open', value: String(pickupBufferAfterOpen) },
+            { key: 'pickup_buffer_before_close', value: String(pickupBufferBeforeClose) },
+          ]),
+        }),
+      ])
 
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || 'Nie udało się zapisać ustawień')
+      if (!locationRes.ok) {
+        const data = await locationRes.json()
+        throw new Error(data.error || 'Nie udało się zapisać ustawień lokalizacji')
+      }
+
+      if (!configRes.ok) {
+        const data = await configRes.json()
+        throw new Error(data.error || 'Nie udało się zapisać buforów odbioru')
       }
 
       toast.success('Ustawienia lokalizacji zostały zapisane')
@@ -204,6 +241,41 @@ export default function LocationSettingsPage() {
                   onChange={(e) => handleChange('close_time', e.target.value)}
                   className="w-full h-12 px-4 text-white bg-meso-dark-900 border border-white/10 rounded-xl focus:border-meso-red-500 focus:outline-none [color-scheme:dark]"
                 />
+              </div>
+            </div>
+
+            {/* Pickup buffers */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm text-white/60">
+                  Bufor po otwarciu (minuty)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={pickupBufferAfterOpen}
+                  onChange={(e) => setPickupBufferAfterOpen(parseInt(e.target.value) || 0)}
+                  className="w-full h-12 px-4 text-white bg-meso-dark-900 border border-white/10 rounded-xl focus:border-meso-red-500 focus:outline-none"
+                />
+                <p className="text-xs text-white/40 mt-1">
+                  Czas po otwarciu, w którym odbiór osobisty nie jest jeszcze dostępny
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm text-white/60">
+                  Bufor przed zamknięciem (minuty)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={pickupBufferBeforeClose}
+                  onChange={(e) => setPickupBufferBeforeClose(parseInt(e.target.value) || 0)}
+                  className="w-full h-12 px-4 text-white bg-meso-dark-900 border border-white/10 rounded-xl focus:border-meso-red-500 focus:outline-none"
+                />
+                <p className="text-xs text-white/40 mt-1">
+                  Czas przed zamknięciem, od którego odbiór osobisty nie jest już dostępny
+                </p>
               </div>
             </div>
 

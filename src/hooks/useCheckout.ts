@@ -56,6 +56,15 @@ export function useCheckout() {
             const subtotal = getSubtotal()
 
             // 2. Create Order
+            // Build scheduled_time as a proper TIMESTAMPTZ if provided
+            let scheduledTimestamp: string | null = null
+            if (deliveryData.time === 'scheduled' && deliveryData.scheduledTime) {
+                const today = new Date()
+                const [hours, minutes] = deliveryData.scheduledTime.split(':').map(Number)
+                today.setHours(hours, minutes, 0, 0)
+                scheduledTimestamp = today.toISOString()
+            }
+
             const { data: order, error: orderError } = await supabase
                 .from('orders')
                 .insert({
@@ -63,15 +72,14 @@ export function useCheckout() {
                     location_id: locations.id,
                     status: 'pending_payment',
                     delivery_type: deliveryData.type,
-                    delivery_address: addressData, // JSONB
-                    contact_phone: addressData.phone,
-                    scheduled_time: deliveryData.time === 'scheduled' ? deliveryData.scheduledTime : null,
+                    delivery_address: addressData, // JSONB (includes phone)
+                    scheduled_time: scheduledTimestamp,
                     payment_method: paymentData.method,
-                    payment_status: 'pending', // Mock payment will update this later
+                    payment_status: 'pending',
                     subtotal,
                     delivery_fee: getDeliveryFee(),
                     tip,
-                    promo_discount: promoDiscount,
+                    promo_discount: getDiscount(),
                     total,
                     loyalty_points_earned: Math.floor(total), // 1 pkt = 1 PLN
                     notes: addressData.notes

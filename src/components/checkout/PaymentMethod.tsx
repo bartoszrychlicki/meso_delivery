@@ -1,84 +1,42 @@
 'use client'
 
-import { CreditCard, Smartphone, Banknote, Landmark } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { CreditCard, Smartphone, Landmark, Ban } from 'lucide-react'
 
-interface PaymentMethodProps {
-    value: string
-    onChange: (value: 'blik' | 'card' | 'google_pay' | 'apple_pay' | 'cash') => void
-}
-
-export function PaymentMethod({ value, onChange }: PaymentMethodProps) {
-    const methods = [
-        {
-            id: 'blik',
-            name: 'BLIK',
-            icon: <span className="font-bold text-lg">BLIK</span>,
-            description: 'Szybka płatność kodem',
-        },
-        {
-            id: 'card',
-            name: 'Karta płatnicza',
-            icon: <CreditCard className="w-6 h-6" />,
-            description: 'Visa, Mastercard',
-        },
-        {
-            id: 'google_pay',
-            name: 'Google Pay',
-            icon: <Smartphone className="w-6 h-6" />,
-            description: 'Szybka płatność mobilna',
-        },
-        {
-            id: 'cash',
-            name: 'Gotówka',
-            icon: <Banknote className="w-6 h-6" />,
-            description: 'Płatność przy odbiorze',
-        },
-    ] as const
-
+export function PaymentMethod() {
     return (
-        <div className="space-y-4">
-            <h3 className="text-white font-medium">Metoda płatności</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {methods.map((method) => (
-                    <button
-                        key={method.id}
-                        type="button"
-                        onClick={() => onChange(method.id)}
-                        className={cn(
-                            "flex items-center gap-4 p-4 rounded-xl border transition-all text-left",
-                            value === method.id
-                                ? "bg-primary/10 border-primary text-white"
-                                : "bg-card border-white/5 text-white/60 hover:bg-muted"
-                        )}
-                    >
-                        <div className={cn(
-                            "p-2 rounded-lg flex items-center justify-center w-12 h-12",
-                            value === method.id ? "bg-primary/20 text-primary" : "bg-white/5 text-white/40"
-                        )}>
-                            {method.icon}
-                        </div>
-                        <div>
-                            <div className="font-medium">{method.name}</div>
-                            <div className="text-sm opacity-60">{method.description}</div>
-                        </div>
-                    </button>
-                ))}
+        <div className="space-y-3">
+            <div className="flex items-center gap-2 mb-3">
+                <CreditCard className="h-4 w-4 text-primary" />
+                <h3 className="font-display text-xs font-semibold uppercase tracking-wider">Płatność</h3>
             </div>
 
-            <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm space-y-2">
-                <p className="flex items-center gap-2">
+            <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-4 space-y-3">
+                <p className="flex items-center gap-2 text-sm text-blue-400 font-medium">
                     <Landmark className="w-4 h-4 flex-shrink-0" />
-                    <span>Bezpieczne płatności obsługiwane przez Przelewy24</span>
+                    Płatności obsługuje Przelewy24
                 </p>
-                {value === 'card' && (
-                    <p className="text-xs text-blue-400/70 leading-relaxed">
-                        Operatorem kart płatniczych jest PayPro SA Agent Rozliczeniowy, ul. Pastelowa 8, 60-198 Poznań,
-                        KRS 0000347935, NIP 7792369887, REGON 301345068.
-                    </p>
-                )}
+                <div className="flex flex-wrap gap-2">
+                    {[
+                        { label: 'BLIK', icon: <span className="font-bold text-xs">BLIK</span> },
+                        { label: 'Karta (Visa, Mastercard)', icon: <CreditCard className="w-3.5 h-3.5" /> },
+                        { label: 'Apple Pay', icon: <Smartphone className="w-3.5 h-3.5" /> },
+                        { label: 'Google Pay', icon: <Smartphone className="w-3.5 h-3.5" /> },
+                    ].map((method) => (
+                        <span
+                            key={method.label}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3 py-1 text-xs text-blue-300"
+                        >
+                            {method.icon}
+                            {method.label}
+                        </span>
+                    ))}
+                </div>
             </div>
+
+            <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Ban className="w-3.5 h-3.5 flex-shrink-0" />
+                Na tą chwilę gotówki nie przyjmujemy
+            </p>
         </div>
     )
 }
-

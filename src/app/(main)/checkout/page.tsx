@@ -1,19 +1,19 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { toast } from 'sonner'
-import { ArrowLeft, Loader2, ShieldCheck, Lock } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { ArrowLeft, Loader2, Store, User, Check, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useCartStore } from '@/stores/cartStore'
 import { useAuth } from '@/hooks/useAuth'
 import { useCheckout } from '@/hooks/useCheckout'
-import { cn } from '@/lib/utils'
-import { formatPrice } from '@/lib/formatters'
+import { formatPriceExact } from '@/lib/formatters'
 
 // Components
 import { DeliveryForm } from '@/components/checkout/DeliveryForm'
-import { AddressForm } from '@/components/checkout/AddressForm'
 import { ContactForm } from '@/components/checkout/ContactForm'
 import { PaymentMethod } from '@/components/checkout/PaymentMethod'
 import { TermsAcceptance } from '@/components/checkout/TermsAcceptance'
@@ -21,11 +21,11 @@ import { TipSelector } from '@/components/cart/TipSelector'
 import { EmptyState } from '@/components/common/EmptyState'
 
 // Types
-import type { AddressFormData, ContactFormData, DeliveryFormData, PaymentFormData } from '@/lib/validators/checkout'
+import type { ContactFormData, DeliveryFormData, PaymentFormData } from '@/lib/validators/checkout'
 
 export default function CheckoutPage() {
     const router = useRouter()
-    const { items, getTotal, getSubtotal, getDeliveryFee, tip, promoDiscount } = useCartStore()
+    const { items, getTotal, getSubtotal, getDeliveryFee, getDiscount, tip, setDeliveryType } = useCartStore()
     const { user, isLoading: authLoading } = useAuth()
     const { submitOrder, isLoading: isSubmitting } = useCheckout()
 
@@ -35,13 +35,56 @@ export default function CheckoutPage() {
         time: 'asap'
     })
 
-    const [addressData, setAddressData] = useState<AddressFormData | null>(null)
     const [contactData, setContactData] = useState<ContactFormData | null>(null)
     const [addressSubmitted, setAddressSubmitted] = useState(false)
 
-    const [paymentData, setPaymentData] = useState<PaymentFormData>({
-        method: 'blik'
+    // Location hours & pickup config
+    const [locationHours, setLocationHours] = useState<{
+        open_time: string
+        close_time: string
+    } | null>(null)
+
+    const [pickupBuffers, setPickupBuffers] = useState({
+        after_open: 30,
+        before_close: 30,
     })
+
+    const [pickupEstimate, setPickupEstimate] = useState('~20')
+
+    // Pickup time
+    const [pickupTime, setPickupTime] = useState<'asap' | string>('asap')
+
+    const timeSlots = useMemo(() => {
+        if (!locationHours) return []
+
+        const now = new Date()
+
+        // Parse open/close times (format from Supabase TIME column: "HH:MM:SS" or "HH:MM")
+        const [openH, openM] = locationHours.open_time.split(':').map(Number)
+        const [closeH, closeM] = locationHours.close_time.split(':').map(Number)
+
+        // Earliest pickup = open + buffer_after_open
+        const earliest = new Date(now)
+        earliest.setHours(openH, openM, 0, 0)
+        earliest.setMinutes(earliest.getMinutes() + pickupBuffers.after_open)
+
+        // Latest pickup = close - buffer_before_close
+        const latest = new Date(now)
+        latest.setHours(closeH, closeM, 0, 0)
+        latest.setMinutes(latest.getMinutes() - pickupBuffers.before_close)
+
+        // Start from max(earliest, now + 30 min), rounded up to next 15-min slot
+        const minTime = new Date(Math.max(earliest.getTime(), now.getTime() + 30 * 60 * 1000))
+        minTime.setMinutes(Math.ceil(minTime.getMinutes() / 15) * 15, 0, 0)
+
+        const slots: string[] = []
+        let cursor = new Date(minTime)
+        while (cursor <= latest) {
+            slots.push(cursor.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }))
+            cursor = new Date(cursor.getTime() + 15 * 60 * 1000)
+        }
+        return slots
+    }, [locationHours, pickupBuffers])
 
     // Terms acceptance state
     const [termsAccepted, setTermsAccepted] = useState(false)
@@ -52,6 +95,72 @@ export default function CheckoutPage() {
     const [savePhoneToProfile, setSavePhoneToProfile] = useState(false)
     const [profileLoaded, setProfileLoaded] = useState(false)
 
+    // Pickup location
+    const pickupLocations = [
+        { id: 'bosmanska', name: 'MESO Dąbrowa', address: 'Bosmańska 1C/2, Dąbrowa' },
+    ]
+    const [selectedLocationId, setSelectedLocationId] = useState(pickupLocations[0].id)
+
+    // Sync delivery type to cart store on mount and changes
+    useEffect(() => {
+        setDeliveryType(deliveryData.type)
+    }, [deliveryData.type, setDeliveryType])
+
+    // Fetch location hours and pickup config from Supabase
+    useEffect(() => {
+        const fetchLocationConfig = async () => {
+            const supabase = createClient()
+
+            const [locationRes, configRes] = await Promise.all([
+                supabase
+                    .from('locations')
+                    .select('open_time, close_time')
+                    .eq('is_default', true)
+                    .single(),
+                supabase
+                    .from('app_config')
+                    .select('key, value')
+                    .in('key', [
+                        'pickup_buffer_after_open',
+                        'pickup_buffer_before_close',
+                        'pickup_time_min',
+                        'pickup_time_max',
+                    ]),
+            ])
+
+            if (locationRes.data) {
+                setLocationHours({
+                    open_time: locationRes.data.open_time,
+                    close_time: locationRes.data.close_time,
+                })
+            }
+
+            if (configRes.data) {
+                const configMap: Record<string, string> = {}
+                for (const row of configRes.data) {
+                    configMap[row.key] = typeof row.value === 'string' ? row.value : String(row.value)
+                }
+
+                setPickupBuffers({
+                    after_open: configMap.pickup_buffer_after_open
+                        ? Number(configMap.pickup_buffer_after_open)
+                        : 30,
+                    before_close: configMap.pickup_buffer_before_close
+                        ? Number(configMap.pickup_buffer_before_close)
+                        : 30,
+                })
+
+                const min = configMap.pickup_time_min
+                const max = configMap.pickup_time_max
+                if (min && max) {
+                    setPickupEstimate(`~${min}-${max}`)
+                }
+            }
+        }
+
+        fetchLocationConfig()
+    }, [])
+
     // Redirect if not logged in
     useEffect(() => {
         if (!authLoading && !user) {
@@ -59,7 +168,7 @@ export default function CheckoutPage() {
         }
     }, [authLoading, user, router])
 
-    // Pre-fill address and contact data from customer profile
+    // Pre-fill contact data from customer profile
     useEffect(() => {
         const loadCustomerData = async () => {
             if (!user || profileLoaded) return
@@ -69,46 +178,25 @@ export default function CheckoutPage() {
 
                 const { data: customer } = await supabase
                     .from('customers')
-                    .select('id, first_name, last_name, email, phone')
-                    .eq('auth_id', user.id)
+                    .select('name, email, phone')
+                    .eq('id', user.id)
                     .single()
-
-                let address = null
-                if (customer?.id) {
-                    const { data: addr } = await supabase
-                        .from('customer_addresses')
-                        .select('*')
-                        .eq('customer_id', customer.id)
-                        .eq('is_default', true)
-                        .single()
-                    address = addr
-                }
 
                 if (customer?.phone) {
                     setSavedPhone(customer.phone)
                 }
 
-                const firstName = customer?.first_name || ''
-                const lastName = customer?.last_name || ''
+                // Parse name into firstName/lastName
+                const fullName = customer?.name || ''
+                const spaceIndex = fullName.indexOf(' ')
+                const firstName = spaceIndex > -1 ? fullName.slice(0, spaceIndex) : fullName
+                const lastName = spaceIndex > -1 ? fullName.slice(spaceIndex + 1) : ''
 
                 setContactData({
                     firstName,
                     lastName,
                     email: customer?.email || user.email || '',
                     phone: customer?.phone || '',
-                })
-
-                setAddressData({
-                    firstName,
-                    lastName,
-                    email: customer?.email || user.email || '',
-                    phone: customer?.phone || '',
-                    street: address?.street || '',
-                    houseNumber: address?.building_number || '',
-                    apartmentNumber: address?.apartment_number || '',
-                    postalCode: address?.postal_code || '',
-                    city: address?.city || 'Gdańsk',
-                    notes: address?.notes || ''
                 })
             } catch (error) {
                 console.error('Error loading customer data:', error)
@@ -132,12 +220,6 @@ export default function CheckoutPage() {
         return <EmptyState type="cart" action={{ label: 'Wróć do menu', href: '/' }} />
     }
 
-    const handleAddressSubmit = (data: AddressFormData, savePhone: boolean) => {
-        setAddressData(data)
-        setSavePhoneToProfile(savePhone)
-        setAddressSubmitted(true)
-    }
-
     const handleContactSubmit = (data: ContactFormData, savePhone: boolean) => {
         setContactData(data)
         setSavePhoneToProfile(savePhone)
@@ -152,7 +234,7 @@ export default function CheckoutPage() {
             return
         }
 
-        // Validate address/contact - trigger form submit
+        // Validate contact - trigger form submit
         if (!addressSubmitted) {
             const form = document.getElementById('address-form') as HTMLFormElement | null
             if (form) {
@@ -161,35 +243,52 @@ export default function CheckoutPage() {
             }
         }
 
-        const customerData = deliveryData.type === 'pickup' ? contactData : addressData
-        if (!customerData) {
+        if (!contactData) {
             toast.error('Uzupełnij dane kontaktowe')
             return
         }
 
-        await submitOrder(deliveryData, customerData as AddressFormData, paymentData, savePhoneToProfile)
+        // Build address data for submitOrder (it expects AddressFormData shape)
+        const addressData = {
+            ...contactData,
+            street: '',
+            houseNumber: '',
+            postalCode: '',
+            city: '',
+        }
+
+        // Build delivery data with scheduled time if selected
+        const finalDeliveryData: DeliveryFormData = {
+            ...deliveryData,
+            time: pickupTime === 'asap' ? 'asap' : 'scheduled',
+            scheduledTime: pickupTime !== 'asap' ? pickupTime : undefined,
+        }
+
+        const paymentData: PaymentFormData = { method: 'blik' }
+
+        await submitOrder(finalDeliveryData, addressData, paymentData, savePhoneToProfile)
     }
 
-    const total = getTotal()
     const subtotal = getSubtotal()
     const deliveryFee = getDeliveryFee()
+    const discount = getDiscount()
+    const total = getTotal()
 
     return (
-        <div className="mx-auto max-w-2xl px-4 py-4 pb-48">
-            {/* Header */}
-            <button
-                onClick={() => router.back()}
-                className="mb-4 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        <div className="mx-auto max-w-2xl px-4 py-4 pb-8">
+            {/* Back link */}
+            <Link
+                href="/cart"
+                className="mb-4 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-                <ArrowLeft className="h-4 w-4" /> Wróć
-            </button>
+                <ArrowLeft className="h-4 w-4" />
+                Koszyk
+            </Link>
 
-            <h1 className="mb-6 font-display text-xl font-bold tracking-wider">
-                CHECKOUT
-            </h1>
+            <h1 className="mb-6 font-display text-xl font-bold tracking-wider">PODSUMOWANIE</h1>
 
-            {/* Section 1: Delivery type */}
-            <section className="mb-6">
+            {/* Section 1: Delivery mode toggle */}
+            <section className="mb-4">
                 <DeliveryForm
                     value={deliveryData}
                     onChange={(val) => {
@@ -199,95 +298,139 @@ export default function CheckoutPage() {
                 />
             </section>
 
-            {/* Section 2: Address / Contact */}
-            <section className="mb-6 p-4 bg-card rounded-xl border border-border">
-                <h2 className="text-foreground font-semibold mb-4">
-                    {deliveryData.type === 'pickup' ? 'Dane kontaktowe' : 'Adres dostawy'}
-                </h2>
-                {deliveryData.type === 'pickup' ? (
-                    <ContactForm
-                        key={profileLoaded ? 'loaded' : 'init'}
-                        defaultValues={contactData || {
-                            firstName: addressData?.firstName || '',
-                            lastName: addressData?.lastName || '',
-                            email: addressData?.email || '',
-                            phone: addressData?.phone || '',
-                        }}
-                        savedPhone={savedPhone}
-                        onSubmit={handleContactSubmit}
-                    />
-                ) : (
-                    <AddressForm
-                        key={profileLoaded ? 'loaded' : 'init'}
-                        defaultValues={addressData || undefined}
-                        savedPhone={savedPhone}
-                        onSubmit={handleAddressSubmit}
-                    />
+            {/* Section 2: Pickup location */}
+            <section className="mb-4 rounded-xl border border-border bg-card p-4">
+                <div className="flex items-center gap-2 mb-3">
+                    <Store className="h-4 w-4 text-primary" />
+                    <h3 className="font-display text-xs font-semibold uppercase tracking-wider">Punkt odbioru</h3>
+                </div>
+                <div className="space-y-2">
+                    {pickupLocations.map((loc) => (
+                        <button
+                            key={loc.id}
+                            type="button"
+                            onClick={() => setSelectedLocationId(loc.id)}
+                            className={`w-full flex items-center gap-3 rounded-lg px-3 py-3 text-left transition-all ${
+                                selectedLocationId === loc.id
+                                    ? 'bg-primary/10 border border-primary/40 neon-border'
+                                    : 'bg-secondary/50 border border-transparent hover:border-border'
+                            }`}
+                        >
+                            <span className="text-lg">📍</span>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-foreground">{loc.name}</p>
+                                <p className="text-xs text-muted-foreground">{loc.address}</p>
+                            </div>
+                            {selectedLocationId === loc.id && (
+                                <Check className="h-4 w-4 text-primary shrink-0" />
+                            )}
+                        </button>
+                    ))}
+                </div>
+            </section>
+
+            {/* Section 3: Pickup time */}
+            <section className="mb-4 rounded-xl border border-border bg-card p-4">
+                <div className="flex items-center gap-2 mb-3">
+                    <Clock className="h-4 w-4 text-primary" />
+                    <h3 className="font-display text-xs font-semibold uppercase tracking-wider">Czas odbioru</h3>
+                </div>
+                <button
+                    type="button"
+                    onClick={() => setPickupTime('asap')}
+                    className={`w-full mb-2 flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium transition-all ${
+                        pickupTime === 'asap'
+                            ? 'bg-primary text-primary-foreground neon-glow-sm'
+                            : 'bg-secondary text-foreground hover:bg-secondary/80'
+                    }`}
+                >
+                    <span>Najszybciej jak to możliwe</span>
+                    <span className="text-xs opacity-80">{pickupEstimate} min</span>
+                </button>
+                <div className="max-h-40 overflow-y-auto space-y-1 scrollbar-thin">
+                    {timeSlots.map((slot) => (
+                        <button
+                            key={slot}
+                            type="button"
+                            onClick={() => setPickupTime(slot)}
+                            className={`w-full rounded-lg px-4 py-2.5 text-sm text-left transition-all ${
+                                pickupTime === slot
+                                    ? 'bg-primary text-primary-foreground neon-glow-sm'
+                                    : 'bg-secondary/50 text-foreground hover:bg-secondary'
+                            }`}
+                        >
+                            {slot}
+                        </button>
+                    ))}
+                </div>
+                {timeSlots.length === 0 && locationHours && (
+                    <p className="text-xs text-muted-foreground text-center py-2">
+                        Brak dostępnych terminów na dziś
+                    </p>
                 )}
             </section>
 
-            {/* Section 3: Payment Method */}
-            <section className="mb-6 p-4 bg-card rounded-xl border border-border">
-                <PaymentMethod
-                    value={paymentData.method}
-                    onChange={(val) => setPaymentData({ ...paymentData, method: val })}
+            {/* Section 4: Contact data */}
+            <section className="mb-4 rounded-xl border border-border bg-card p-4">
+                <div className="flex items-center gap-2 mb-3">
+                    <User className="h-4 w-4 text-primary" />
+                    <h3 className="font-display text-xs font-semibold uppercase tracking-wider">Dane kontaktowe</h3>
+                </div>
+                <ContactForm
+                    key={profileLoaded ? 'loaded' : 'init'}
+                    defaultValues={contactData || {
+                        firstName: '',
+                        lastName: '',
+                        email: '',
+                        phone: '',
+                    }}
+                    savedPhone={savedPhone}
+                    onSubmit={handleContactSubmit}
                 />
             </section>
 
-            {/* Section 4: Tip */}
-            <section className="mb-6 p-4 bg-card rounded-xl border border-border">
+            {/* Section 5: Payment info */}
+            <section className="mb-4 rounded-xl border border-border bg-card p-4">
+                <PaymentMethod />
+            </section>
+
+            {/* Section 6: Tip */}
+            <section className="mb-4 rounded-xl border border-border bg-card p-4">
                 <TipSelector />
             </section>
 
-            {/* Section 5: Order Summary */}
-            <section className="mb-6 p-4 bg-card rounded-xl border border-border">
-                <h2 className="text-foreground font-semibold mb-3">Podsumowanie</h2>
-                <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Produkty:</span>
-                        <span className="text-foreground">{formatPrice(subtotal)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Dostawa:</span>
-                        <span className="text-foreground">
-                            {deliveryFee === 0 ? 'Gratis' : formatPrice(deliveryFee)}
-                        </span>
-                    </div>
-                    {tip > 0 && (
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Napiwek:</span>
-                            <span className="text-foreground">{formatPrice(tip)}</span>
-                        </div>
-                    )}
-                    {promoDiscount > 0 && (
-                        <div className="flex justify-between text-green-400">
-                            <span>Rabat:</span>
-                            <span>-{formatPrice(promoDiscount)}</span>
-                        </div>
-                    )}
-                    <div className="flex justify-between font-bold pt-2 border-t border-border">
-                        <span className="text-foreground">Razem:</span>
-                        <span className="text-accent text-lg">
-                            {formatPrice(total)}
-                        </span>
-                    </div>
+            {/* Section 7: Cost summary */}
+            <section className="mb-4 rounded-xl border border-border bg-card p-4 space-y-2 text-sm">
+                <div className="flex justify-between text-muted-foreground">
+                    <span>Produkty</span>
+                    <span>{formatPriceExact(subtotal)}</span>
                 </div>
-
-                {deliveryData.type === 'delivery' && addressData?.street && (
-                    <div className="mt-3 pt-3 border-t border-border text-sm text-muted-foreground">
-                        Adres: {addressData.street} {addressData.houseNumber}
-                        {addressData.apartmentNumber ? `/${addressData.apartmentNumber}` : ''}, {addressData.city}
+                {deliveryFee > 0 && (
+                    <div className="flex justify-between text-muted-foreground">
+                        <span>Dostawa</span>
+                        <span>{formatPriceExact(deliveryFee)}</span>
                     </div>
                 )}
-                {deliveryData.type === 'pickup' && (
-                    <div className="mt-3 pt-3 border-t border-border text-sm text-muted-foreground">
-                        Odbiór osobisty: MESO Food, Gdańsk
+                {tip > 0 && (
+                    <div className="flex justify-between text-muted-foreground">
+                        <span>Napiwek</span>
+                        <span>{formatPriceExact(tip)}</span>
                     </div>
                 )}
+                {discount > 0 && (
+                    <div className="flex justify-between text-green-400">
+                        <span>Rabat</span>
+                        <span>-{formatPriceExact(discount)}</span>
+                    </div>
+                )}
+                <div className="border-t border-border pt-2 flex justify-between font-display text-base font-bold">
+                    <span>Razem</span>
+                    <span>{formatPriceExact(total)}</span>
+                </div>
             </section>
 
-            {/* Section 6: Terms */}
-            <section className="mb-6">
+            {/* Section 8: Terms */}
+            <section className="mb-4">
                 <TermsAcceptance
                     accepted={termsAccepted}
                     onChange={(accepted) => {
@@ -298,37 +441,26 @@ export default function CheckoutPage() {
                 />
             </section>
 
-            {/* Fixed CTA Button */}
-            <div className="fixed bottom-[85px] left-0 right-0 z-50 mx-4 lg:relative lg:bottom-auto lg:mx-0 lg:mt-6">
-                <div className="bg-background border border-border p-4 rounded-2xl shadow-xl lg:p-0 lg:border-0 lg:shadow-none lg:bg-transparent">
-                    <button
-                        data-testid="checkout-submit-button"
-                        onClick={handleFinalSubmit}
-                        disabled={isSubmitting}
-                        className={cn(
-                            'w-full rounded-xl py-4 font-display text-sm font-semibold tracking-wider transition-all flex items-center justify-center gap-2',
-                            'bg-accent text-accent-foreground neon-glow-yellow hover:scale-[1.02]',
-                            isSubmitting && 'opacity-70 cursor-not-allowed'
-                        )}
-                    >
-                        {isSubmitting ? (
-                            <>
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                                PRZETWARZANIE...
-                            </>
-                        ) : (
-                            <>
-                                <ShieldCheck className="w-5 h-5" />
-                                ZAMAWIAM I PŁACĘ &bull; {formatPrice(total)}
-                            </>
-                        )}
-                    </button>
-                    <div className="text-center mt-3 text-xs text-muted-foreground flex items-center justify-center gap-1">
-                        <Lock className="w-3 h-3" />
-                        Połączenie szyfrowane SSL
-                    </div>
-                </div>
-            </div>
+            {/* Section 9: Submit button */}
+            <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={handleFinalSubmit}
+                disabled={!termsAccepted || isSubmitting}
+                className={`w-full rounded-xl py-4 font-display text-sm font-semibold tracking-wider transition-all flex items-center justify-center gap-2 ${
+                    termsAccepted && !isSubmitting
+                        ? 'bg-accent text-accent-foreground neon-glow-yellow hover:scale-[1.02]'
+                        : 'bg-secondary text-muted-foreground cursor-not-allowed'
+                }`}
+            >
+                {isSubmitting ? (
+                    <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        PRZETWARZANIE...
+                    </>
+                ) : (
+                    'POTWIERDŹ ZAMÓWIENIE'
+                )}
+            </motion.button>
         </div>
     )
 }

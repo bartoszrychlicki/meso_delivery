@@ -6,7 +6,7 @@ export default function CheckoutLayout({
     children: ReactNode
 }) {
     return (
-        <div className="min-h-screen bg-background font-display">
+        <div className="min-h-screen bg-background">
             {children}
         </div>
     )

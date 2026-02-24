@@ -134,3 +134,10 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Pickup buffers (minutes) — configurable by operator
+INSERT INTO app_config (key, value, description)
+VALUES
+  ('pickup_buffer_after_open', '30', 'Minuty po otwarciu — najwcześniejszy możliwy odbiór'),
+  ('pickup_buffer_before_close', '30', 'Minuty przed zamknięciem — najpóźniejszy możliwy odbiór')
+ON CONFLICT (key) DO NOTHING;
