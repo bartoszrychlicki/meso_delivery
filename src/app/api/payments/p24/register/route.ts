@@ -94,7 +94,7 @@ export async function POST(request: Request) {
 
         // Extract email from delivery_address or user auth
         // order.delivery_address is JSONB, let's cast it safely
-        const deliveryAddress = order.delivery_address as any
+        const deliveryAddress = order.delivery_address as Record<string, string | undefined>
         const email = deliveryAddress?.email || user.email || 'klient@meso.pl'
 
         // Register transaction

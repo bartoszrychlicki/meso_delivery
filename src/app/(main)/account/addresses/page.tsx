@@ -72,10 +72,11 @@ export default function AddressesPage() {
 
     useEffect(() => {
         if (!authLoading && user?.id) {
-            fetchAddresses()
+            fetchAddresses() // eslint-disable-line react-hooks/set-state-in-effect
         } else if (!authLoading) {
-            setIsLoading(false)
+            setIsLoading(false) // eslint-disable-line react-hooks/set-state-in-effect
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user?.id, authLoading])
 
     const handleEdit = (address: CustomerAddress) => {

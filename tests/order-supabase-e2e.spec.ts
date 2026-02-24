@@ -227,6 +227,7 @@ test.describe('Order → Supabase', () => {
     expect(firstItem.total_price).toBeGreaterThan(0)
 
     // 12. ✅ Spójność cen
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const itemsTotalSum = items!.reduce((sum: number, i: any) => sum + Number(i.total_price), 0)
     // subtotal powinien być bliski sumie pozycji (różnica max 0.01 ze względu na float)
     expect(Math.abs(Number(order!.subtotal) - itemsTotalSum)).toBeLessThan(1)

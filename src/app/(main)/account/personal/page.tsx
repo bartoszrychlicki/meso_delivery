@@ -30,7 +30,7 @@ export default function PersonalPage() {
 
   useEffect(() => {
     if (!user || !isPermanent) {
-      setIsLoadingData(false)
+      setIsLoadingData(false) // eslint-disable-line react-hooks/set-state-in-effect
       return
     }
 

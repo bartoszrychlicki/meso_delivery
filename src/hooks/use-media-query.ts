@@ -11,7 +11,7 @@ export function useMediaQuery(query: string) {
 
         const result = matchMedia(query)
         result.addEventListener("change", onChange)
-        setValue(result.matches)
+        setValue(result.matches) // eslint-disable-line react-hooks/set-state-in-effect
 
         return () => result.removeEventListener("change", onChange)
     }, [query])

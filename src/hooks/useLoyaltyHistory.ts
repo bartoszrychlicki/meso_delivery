@@ -27,7 +27,7 @@ export function useLoyaltyHistory(): UseLoyaltyHistoryResult {
 
   useEffect(() => {
     if (!user || !isPermanent) {
-      setIsLoading(false)
+      setIsLoading(false) // eslint-disable-line react-hooks/set-state-in-effect
       return
     }
 

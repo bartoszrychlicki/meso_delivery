@@ -123,7 +123,8 @@ export async function POST(request: Request) {
                 deliveryHouseNumber: addr.houseNumber,
                 deliveryCity: addr.city,
                 deliveryPostalCode: addr.postalCode,
-                items: (fullOrder.order_items ?? []).map((item: any) => ({
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            items: (fullOrder.order_items ?? []).map((item: any) => ({
                     productName: item.product?.name ?? 'Produkt',
                     quantity: item.quantity,
                     unitPrice: item.unit_price,

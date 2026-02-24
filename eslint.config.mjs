@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Node utility scripts using CommonJS require()
+    "scripts/**",
+    // Git worktree build artifacts
+    ".worktrees/**",
   ]),
 ]);
 

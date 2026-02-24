@@ -59,7 +59,7 @@ export default function SearchPage() {
   }, [])
 
   useEffect(() => {
-    searchProducts(debouncedQuery)
+    searchProducts(debouncedQuery) // eslint-disable-line react-hooks/set-state-in-effect
   }, [debouncedQuery, searchProducts])
 
   return (

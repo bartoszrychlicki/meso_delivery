@@ -21,13 +21,16 @@ const pickupSteps = [
     { key: 'ready', label: 'Gotowe do odbioru', icon: Package },
 ]
 
-function buildConfirmation(order: any): OrderConfirmation {
-    const deliveryAddress = order.delivery_address as any
-    const location = order.location as any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function buildConfirmation(order: Record<string, any>): OrderConfirmation {
+    const deliveryAddress = order.delivery_address as Record<string, string | undefined>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const location = order.location as Record<string, any>
 
     return {
         orderId: order.id.toString(),
         orderNumber: order.id.toString().slice(-6).toUpperCase(),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         items: order.items.map((item: any) => ({
             id: item.id,
             productId: item.product_id,
@@ -141,7 +144,7 @@ function OrderConfirmationContent() {
                     filter: `id=eq.${orderId}`,
                 },
                 (payload) => {
-                    const updated = payload.new as any
+                    const updated = payload.new as Record<string, string | undefined>
                     console.log('[Realtime] Order updated:', updated.status, updated.payment_status)
 
                     setConfirmation((prev) => {

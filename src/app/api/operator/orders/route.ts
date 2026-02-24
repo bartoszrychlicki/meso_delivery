@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
 
     const order = data ? {
       ...data,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       items: data.items?.map((item: any) => ({
         ...item,
         product: item.product,
@@ -81,8 +82,10 @@ export async function GET(request: NextRequest) {
   }
 
   // Transform variant data
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const orders = (data || []).map((order: any) => ({
     ...order,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     items: order.items?.map((item: any) => ({
       ...item,
       product: item.product,
@@ -115,7 +118,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
     }
 
-    const updateData: Record<string, any> = { status }
+    const updateData: Record<string, unknown> = { status }
     if (timestampField) {
       updateData[timestampField] = new Date().toISOString()
     }

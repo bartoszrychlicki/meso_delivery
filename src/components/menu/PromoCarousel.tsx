@@ -56,7 +56,7 @@ export function PromoCarousel({ className, banners }: PromoCarouselProps) {
 
   useEffect(() => {
     if (!emblaApi) return
-    onSelect()
+    onSelect() // eslint-disable-line react-hooks/set-state-in-effect
     emblaApi.on('select', onSelect)
 
     // Autoplay

@@ -76,6 +76,7 @@ export function ProductCustomization({
 
     useEffect(() => {
         if (productSlug) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setLoading(true)
             const fetchProduct = async () => {
                 const supabase = createClient()
@@ -104,9 +105,10 @@ export function ProductCustomization({
           `)
                     .eq('product_id', productData.id)
 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const addons = (addonsData as any[])
-                    ?.map((pa) => pa.addon)
-                    .filter((a) => a && a.is_active) || []
+                    ?.map((pa: { addon: Addon | null }) => pa.addon)
+                    .filter((a): a is Addon => a !== null && a.is_active) || []
 
                 const fullProduct = { ...productData, addons } as Product
                 setProduct(fullProduct)

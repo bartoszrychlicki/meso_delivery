@@ -61,9 +61,9 @@ export function useOperatorOrders(options: UseOperatorOrdersOptions = {}) {
             const data = await res.json()
             setOrders(data.orders)
             setError(null)
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Error fetching orders:', err)
-            setError(err.message || 'Nie udało się pobrać zamówień')
+            setError(err instanceof Error ? err.message : 'Nie udało się pobrać zamówień')
         } finally {
             setIsLoading(false)
         }

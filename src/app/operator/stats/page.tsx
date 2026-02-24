@@ -30,6 +30,7 @@ export default function OperatorStatsPage() {
 
     const { pin } = useOperatorAuthStore()
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const calculateStats = (orders: any[]): Stats => {
         const paidOrders = orders.filter(o => o.payment_status === 'paid')
         const pendingPaymentOrders = orders.filter(o => o.payment_status === 'pending')
@@ -41,6 +42,7 @@ export default function OperatorStatsPage() {
         const ordersWithPrepTime = orders.filter(o => o.confirmed_at && o.ready_at)
         let avgPrepTime = 0
         if (ordersWithPrepTime.length > 0) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const totalPrepTime = ordersWithPrepTime.reduce((sum: number, o: any) => {
                 const confirmed = new Date(o.confirmed_at).getTime()
                 const ready = new Date(o.ready_at).getTime()
@@ -49,6 +51,7 @@ export default function OperatorStatsPage() {
             avgPrepTime = Math.round(totalPrepTime / ordersWithPrepTime.length / 60000)
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const totalRevenue = paidOrders.reduce((sum: number, o: any) => sum + (o.total || 0), 0)
 
         return {
