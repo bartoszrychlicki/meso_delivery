@@ -119,7 +119,7 @@ export function AnonymousBanner({ variant = 'default', className }: AnonymousBan
           </div>
 
           <Link href="/register">
-            <Button className="bg-accent hover:bg-accent/90 text-black font-semibold">
+            <Button className="bg-accent hover:bg-accent/90 text-black font-display font-semibold">
               Załóż konto i odbierz 50 pkt
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>

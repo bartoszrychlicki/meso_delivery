@@ -368,7 +368,7 @@ export function ProductCustomization({
                         </div>
                         <Button
                             onClick={handleAddToCart}
-                            className="w-full h-12 text-lg font-bold bg-primary hover:bg-primary/90 text-white rounded-xl neon-glow"
+                            className="w-full h-12 text-lg font-display font-bold bg-primary hover:bg-primary/90 text-white rounded-xl neon-glow"
                         >
                             Dodaj do koszyka
                         </Button>

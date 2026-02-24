@@ -64,7 +64,7 @@ export default function GatePage() {
           <button
             type="submit"
             disabled={loading || !password}
-            className="w-full rounded-xl bg-primary py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full rounded-xl bg-primary py-3 font-display font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Sprawdzam...' : 'Wejdź'}
           </button>

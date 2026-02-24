@@ -69,11 +69,11 @@ export function EmptyState({
 
       {action && (
         action.href ? (
-          <Button asChild className="bg-primary hover:bg-primary/90 uppercase font-bold tracking-wider text-base px-8 py-3 rounded-xl h-auto">
+          <Button asChild className="bg-primary hover:bg-primary/90 uppercase font-display font-bold tracking-wider text-base px-8 py-3 rounded-xl h-auto">
             <Link href={action.href}>{action.label}</Link>
           </Button>
         ) : (
-          <Button onClick={action.onClick} className="bg-primary hover:bg-primary/90 uppercase font-bold tracking-wider text-base px-8 py-3 rounded-xl h-auto">
+          <Button onClick={action.onClick} className="bg-primary hover:bg-primary/90 uppercase font-display font-bold tracking-wider text-base px-8 py-3 rounded-xl h-auto">
             {action.label}
           </Button>
         )

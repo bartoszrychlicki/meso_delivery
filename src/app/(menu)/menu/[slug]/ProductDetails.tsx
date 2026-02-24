@@ -329,7 +329,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           onClick={handleAddToCart}
           className={cn(
             'w-full h-14 flex items-center justify-center rounded-xl',
-            'bg-primary text-white font-bold text-lg',
+            'bg-primary text-white font-display font-bold text-lg',
             'neon-glow',
             'hover:neon-glow',
             'transition-all active:scale-95'
