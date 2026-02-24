@@ -11,8 +11,7 @@ import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import type { OrderConfirmation } from '@/stores/orderConfirmationStore'
 import { useCartStore } from '@/stores/cartStore'
-
-const PAYMENT_TIMEOUT_MS = 3 * 60 * 1000 // 3 minutes
+import { PAYMENT_TIMEOUT_MS, getPickupStepIndex, isPaymentPending } from '@/lib/order-confirmation-utils'
 
 // Step definitions for pickup orders
 const pickupSteps = [
@@ -21,19 +20,6 @@ const pickupSteps = [
     { key: 'preparing', label: 'W przygotowaniu', icon: ChefHat },
     { key: 'ready', label: 'Gotowe do odbioru', icon: Package },
 ]
-
-function getPickupStepIndex(orderStatus: string, paymentStatus: string): number {
-    // Step 0: Accepted (order placed, payment not confirmed yet)
-    // Step 1: Payment confirmed
-    // Step 2: Preparing
-    // Step 3: Ready for pickup
-
-    if (orderStatus === 'ready' || orderStatus === 'delivered') return 3
-    if (orderStatus === 'preparing') return 2
-    if (paymentStatus === 'paid' && (orderStatus === 'confirmed' || orderStatus === 'pending_payment')) return 1
-    // Default: accepted (order placed)
-    return 0
-}
 
 function buildConfirmation(order: any): OrderConfirmation {
     const deliveryAddress = order.delivery_address as any
@@ -203,11 +189,7 @@ function OrderConfirmationContent() {
     useEffect(() => {
         if (!confirmation) return
 
-        const isPending = confirmation.paymentStatus !== 'paid'
-            && confirmation.paymentStatus !== 'failed'
-            && confirmation.paymentStatus !== 'cancelled'
-
-        if (isPending) {
+        if (isPaymentPending(confirmation.paymentStatus)) {
             timeoutRef.current = setTimeout(() => {
                 setPaymentTimedOut(true)
             }, PAYMENT_TIMEOUT_MS)
@@ -225,10 +207,7 @@ function OrderConfirmationContent() {
         return getPickupStepIndex(confirmation.orderStatus, confirmation.paymentStatus)
     }, [confirmation])
 
-    const isPendingPayment = confirmation
-        && confirmation.paymentStatus !== 'paid'
-        && confirmation.paymentStatus !== 'failed'
-        && confirmation.paymentStatus !== 'cancelled'
+    const isPendingPayment = confirmation && isPaymentPending(confirmation.paymentStatus)
 
     if (isLoading) {
         return (

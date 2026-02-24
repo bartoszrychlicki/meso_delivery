@@ -8,8 +8,7 @@ import { OrderTimeline, OrderStatusBadge, OrderItemsList } from '@/components/or
 import { ORDER_STATUS_MESSAGES, formatOrderDate } from '@/types/order'
 import { formatPrice } from '@/lib/formatters'
 import { Button } from '@/components/ui/button'
-
-const ACTIVE_STATUSES = new Set(['pending_payment', 'confirmed', 'preparing', 'ready', 'awaiting_courier', 'in_delivery'])
+import { isOrderActive } from '@/lib/order-confirmation-utils'
 
 export default function OrderDetailsPage() {
     const params = useParams()
@@ -83,7 +82,7 @@ export default function OrderDetailsPage() {
                     <div className="mt-4">
                         <OrderStatusBadge status={order.status} size="lg" />
                     </div>
-                    {ACTIVE_STATUSES.has(order.status) && (
+                    {isOrderActive(order.status) && (
                         <Link
                             href={`/order-confirmation?orderId=${order.id}`}
                             className="mt-4 inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors"
