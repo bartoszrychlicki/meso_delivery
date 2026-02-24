@@ -452,9 +452,9 @@ export default function CheckoutPage() {
                 data-testid="checkout-submit-button"
                 whileTap={{ scale: 0.98 }}
                 onClick={handleFinalSubmit}
-                disabled={!termsAccepted || isSubmitting}
+                disabled={isSubmitting}
                 className={`w-full rounded-xl py-4 font-display text-sm font-semibold tracking-wider transition-all flex items-center justify-center gap-2 ${
-                    termsAccepted && !isSubmitting
+                    !isSubmitting
                         ? 'bg-accent text-accent-foreground neon-glow-yellow hover:scale-[1.02]'
                         : 'bg-secondary text-muted-foreground cursor-not-allowed'
                 }`}

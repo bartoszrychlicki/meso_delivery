@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { LoginPrompt } from '@/components/auth'
+import { toast } from 'sonner'
 
 interface PersonalData {
   name: string
@@ -60,6 +61,11 @@ export default function PersonalPage() {
 
   const handleSave = async () => {
     if (!user) return
+
+    if (form.birthday && form.birthday > new Date().toISOString().split('T')[0]) {
+      toast.error('Data urodzenia nie może być w przyszłości')
+      return
+    }
 
     setIsSaving(true)
     setSaved(false)
@@ -154,6 +160,8 @@ export default function PersonalPage() {
             type="date"
             value={form.birthday}
             onChange={(e) => setForm({ ...form, birthday: e.target.value })}
+            max={new Date().toISOString().split('T')[0]}
+            min="1900-01-01"
             className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
           <p className="text-xs text-muted-foreground/60">Zdobywaj x2 punkty w urodziny!</p>

@@ -10,7 +10,6 @@ import { formatPriceExact } from '@/lib/formatters'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import type { OrderConfirmation } from '@/stores/orderConfirmationStore'
-import { useCartStore } from '@/stores/cartStore'
 import { PAYMENT_TIMEOUT_MS, getPickupStepIndex, isPaymentPending } from '@/lib/order-confirmation-utils'
 
 // Step definitions for pickup orders
@@ -178,15 +177,9 @@ function OrderConfirmationContent() {
         }
     }, [orderId, setConfirmation])
 
-    const { clearCart } = useCartStore()
     const [paymentTimedOut, setPaymentTimedOut] = useState(false)
+    const [isRetryingPayment, setIsRetryingPayment] = useState(false)
     const timeoutRef = useRef<NodeJS.Timeout | null>(null)
-
-    useEffect(() => {
-        if (confirmation?.paymentStatus === 'paid') {
-            clearCart()
-        }
-    }, [confirmation?.paymentStatus, clearCart])
 
     // Payment timeout — if payment stays pending for 3 minutes, show warning
     useEffect(() => {
@@ -211,6 +204,28 @@ function OrderConfirmationContent() {
     }, [confirmation])
 
     const isPendingPayment = confirmation && isPaymentPending(confirmation.paymentStatus)
+
+    const handleRetryPayment = async () => {
+        if (!confirmation?.orderId || isRetryingPayment) return
+        setIsRetryingPayment(true)
+        try {
+            const response = await fetch('/api/payments/p24/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId: confirmation.orderId }),
+            })
+            const data = await response.json()
+            if (data.url) {
+                window.location.href = data.url
+            } else {
+                toast.error(data.error || 'Nie udało się wygenerować linku do płatności')
+                setIsRetryingPayment(false)
+            }
+        } catch {
+            toast.error('Błąd połączenia. Spróbuj ponownie.')
+            setIsRetryingPayment(false)
+        }
+    }
 
     if (isLoading) {
         return (
@@ -292,7 +307,7 @@ function OrderConfirmationContent() {
         <div className="mx-auto max-w-2xl px-4 py-8 pb-32">
             {/* Title */}
             <h1 className="mb-2 font-display text-xl font-bold tracking-wider text-center">
-                ZAMÓWIENIE ZŁOŻONE
+                {isPendingPayment ? 'OCZEKIWANIE NA PŁATNOŚĆ' : 'ZAMÓWIENIE ZŁOŻONE'}
             </h1>
             <p className="mb-8 text-center text-sm text-muted-foreground">
                 Zamówienie #{confirmation.orderNumber}
@@ -302,37 +317,40 @@ function OrderConfirmationContent() {
             <div className="relative mb-10 mx-2">
                 {/* Background track */}
                 <div className="absolute top-5 left-0 right-0 h-1 rounded-full bg-secondary" />
-                {/* Active track */}
+                {/* Active track — no progress when payment is pending */}
                 <motion.div
                     className="absolute top-5 left-0 h-1 rounded-full bg-primary neon-glow-sm"
-                    animate={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
+                    animate={{ width: isPendingPayment ? '0%' : `${(currentStep / (steps.length - 1)) * 100}%` }}
                     transition={{ duration: 1, ease: 'easeOut' }}
                 />
                 {/* Step indicators */}
                 <div className="relative flex justify-between">
-                    {steps.map((step, i) => (
-                        <div key={step.key} className="flex flex-col items-center" style={{ width: `${100 / steps.length}%` }}>
-                            <motion.div
-                                animate={{
-                                    scale: i === currentStep ? 1.2 : 1,
-                                }}
-                                className={`relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 transition-colors ${
-                                    i <= currentStep
-                                        ? 'border-primary bg-primary'
-                                        : 'border-border bg-card'
-                                }`}
-                            >
-                                <step.icon className={`h-4 w-4 ${
-                                    i <= currentStep ? 'text-primary-foreground' : 'text-muted-foreground'
-                                }`} />
-                            </motion.div>
-                            <span className={`mt-2 text-[10px] font-medium text-center leading-tight ${
-                                i <= currentStep ? 'text-primary' : 'text-muted-foreground'
-                            }`}>
-                                {step.label}
-                            </span>
-                        </div>
-                    ))}
+                    {steps.map((step, i) => {
+                        const isActive = isPendingPayment ? false : i <= currentStep
+                        return (
+                            <div key={step.key} className="flex flex-col items-center" style={{ width: `${100 / steps.length}%` }}>
+                                <motion.div
+                                    animate={{
+                                        scale: !isPendingPayment && i === currentStep ? 1.2 : 1,
+                                    }}
+                                    className={`relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 transition-colors ${
+                                        isActive
+                                            ? 'border-primary bg-primary'
+                                            : 'border-border bg-card'
+                                    }`}
+                                >
+                                    <step.icon className={`h-4 w-4 ${
+                                        isActive ? 'text-primary-foreground' : 'text-muted-foreground'
+                                    }`} />
+                                </motion.div>
+                                <span className={`mt-2 text-[10px] font-medium text-center leading-tight ${
+                                    isActive ? 'text-primary' : 'text-muted-foreground'
+                                }`}>
+                                    {step.label}
+                                </span>
+                            </div>
+                        )
+                    })}
                 </div>
             </div>
 
@@ -351,9 +369,21 @@ function OrderConfirmationContent() {
                         </div>
                         <p className="text-sm font-semibold text-yellow-500">Oczekujemy na potwierdzenie platnosci...</p>
                     </div>
-                    <p className="text-xs text-muted-foreground ml-8">
+                    <p className="text-xs text-muted-foreground ml-8 mb-3">
                         Trwa to zazwyczaj do 30 sekund. Nie zamykaj tej strony.
                     </p>
+                    <button
+                        onClick={handleRetryPayment}
+                        disabled={isRetryingPayment}
+                        className="ml-8 flex items-center gap-2 rounded-lg bg-yellow-500/20 px-4 py-2 text-xs font-medium text-yellow-500 hover:bg-yellow-500/30 transition-colors disabled:opacity-50"
+                    >
+                        {isRetryingPayment ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                            <CreditCard className="h-3.5 w-3.5" />
+                        )}
+                        Zapłać ponownie
+                    </button>
                 </motion.div>
             )}
 
@@ -373,19 +403,24 @@ function OrderConfirmationContent() {
                         Jesli nie, sprobuj ponownie lub skontaktuj sie z nami.
                     </p>
                     <div className="flex gap-2 ml-8">
+                        <button
+                            onClick={handleRetryPayment}
+                            disabled={isRetryingPayment}
+                            className="flex items-center gap-1.5 rounded-lg bg-orange-500/20 px-4 py-2 text-xs font-medium text-orange-400 hover:bg-orange-500/30 transition-colors disabled:opacity-50"
+                        >
+                            {isRetryingPayment ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                                <CreditCard className="h-3.5 w-3.5" />
+                            )}
+                            Zapłać ponownie
+                        </button>
                         <a
                             href="mailto:zamowienia@mesofood.pl"
-                            className="text-xs text-orange-400 hover:text-orange-300 underline transition-colors"
+                            className="flex items-center text-xs text-orange-400 hover:text-orange-300 underline transition-colors"
                         >
                             Napisz do nas
                         </a>
-                        <span className="text-xs text-muted-foreground">|</span>
-                        <Link
-                            href="/checkout"
-                            className="text-xs text-orange-400 hover:text-orange-300 underline transition-colors"
-                        >
-                            Sprobuj ponownie
-                        </Link>
                     </div>
                 </motion.div>
             )}

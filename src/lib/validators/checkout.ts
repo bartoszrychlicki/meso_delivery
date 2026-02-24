@@ -2,8 +2,8 @@ import { z } from 'zod'
 
 // Dane kontaktowe (wymagane dla obu typów: pickup i delivery)
 export const contactSchema = z.object({
-    firstName: z.string().min(2, 'Imię jest zbyt krótkie'),
-    lastName: z.string().min(2, 'Nazwisko jest zbyt krótkie'),
+    firstName: z.string().min(1, 'Imię jest wymagane').min(2, 'Imię jest zbyt krótkie'),
+    lastName: z.string().min(1, 'Nazwisko jest wymagane').min(2, 'Nazwisko jest zbyt krótkie'),
     email: z.string().email('Nieprawidłowy adres email'),
     phone: z.string().regex(/^\d{9}$/, 'Numer telefonu musi mieć 9 cyfr'),
 })

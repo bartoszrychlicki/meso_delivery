@@ -71,9 +71,19 @@ export function LoyaltyBox() {
                 pkt
               </span>
             </span>
-            {nextReward && (
-              <span className="text-xs text-muted-foreground">
-                do nagrody: {nextReward.points_cost - points} pkt
+            {nextReward ? (
+              nextReward.points_cost - points === 0 ? (
+                <span className="text-xs text-primary font-medium">
+                  Możesz odebrać!
+                </span>
+              ) : (
+                <span className="text-xs text-muted-foreground">
+                  do nagrody: {nextReward.points_cost - points} pkt
+                </span>
+              )
+            ) : (
+              <span className="text-xs text-primary font-medium">
+                Masz nagrodę do odebrania!
               </span>
             )}
           </div>
@@ -85,7 +95,7 @@ export function LoyaltyBox() {
             />
           </div>
 
-          {nextReward && (
+          {nextReward ? (
             <div className="flex items-center gap-2 rounded-lg bg-secondary/50 p-2.5">
               <Gift className="h-4 w-4 text-primary shrink-0" />
               <div className="min-w-0">
@@ -93,10 +103,22 @@ export function LoyaltyBox() {
                   {nextReward.icon} {nextReward.name}
                 </p>
                 <p className="text-[10px] text-muted-foreground">
-                  Następna nagroda za {nextReward.points_cost - points} pkt
+                  {nextReward.points_cost - points === 0
+                    ? 'Możesz odebrać tę nagrodę!'
+                    : `Następna nagroda za ${nextReward.points_cost - points} pkt`}
                 </p>
               </div>
             </div>
+          ) : (
+            <Link
+              href="/loyalty"
+              className="flex items-center gap-2 rounded-lg bg-primary/10 border border-primary/30 p-2.5"
+            >
+              <Gift className="h-4 w-4 text-primary shrink-0" />
+              <p className="text-xs font-medium text-primary">
+                Masz nagrodę do odebrania! Sprawdź dostępne nagrody →
+              </p>
+            </Link>
           )}
         </>
       )}

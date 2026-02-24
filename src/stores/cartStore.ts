@@ -148,7 +148,7 @@ export const useCartStore = create<CartState>()(
         })
       },
 
-      setTip: (amount) => set({ tip: Math.max(0, amount) }),
+      setTip: (amount) => set({ tip: Math.min(200, Math.max(0, amount)) }),
 
       setLocationConfig: (minOrder, deliveryFee) => {
         set({ minOrderValue: minOrder, baseDeliveryFee: deliveryFee })

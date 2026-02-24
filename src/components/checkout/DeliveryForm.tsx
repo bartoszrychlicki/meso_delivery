@@ -1,7 +1,6 @@
 'use client'
 
 import { Store, Truck, ShoppingBag } from 'lucide-react'
-import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
 interface DeliveryFormProps {
@@ -13,11 +12,6 @@ interface DeliveryFormProps {
 }
 
 export function DeliveryForm({ value, onChange }: DeliveryFormProps) {
-    const handleDeliveryClick = () => {
-        toast.info('Dostawy realizujemy poprzez Glovo, Pyszne.pl i Wolt', {
-            duration: 4000,
-        })
-    }
 
     return (
         <div className="rounded-xl border border-border bg-card p-4">
@@ -41,18 +35,16 @@ export function DeliveryForm({ value, onChange }: DeliveryFormProps) {
                 </button>
                 <button
                     type="button"
-                    onClick={handleDeliveryClick}
-                    className={cn(
-                        'flex-1 flex items-center justify-center gap-2 rounded-lg py-3 text-sm font-medium transition-all',
-                        value.type === 'delivery'
-                            ? 'bg-primary text-primary-foreground neon-glow-sm'
-                            : 'bg-secondary text-foreground hover:bg-secondary/80'
-                    )}
+                    disabled
+                    className="flex-1 flex items-center justify-center gap-2 rounded-lg py-3 text-sm font-medium bg-secondary text-muted-foreground opacity-50 cursor-not-allowed"
                 >
                     <Truck className="h-4 w-4" />
                     Dostawa
                 </button>
             </div>
+            <p className="mt-2 text-[10px] text-muted-foreground text-center">
+                Dostawy przez Glovo, Pyszne.pl i Wolt
+            </p>
         </div>
     )
 }

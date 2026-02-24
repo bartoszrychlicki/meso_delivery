@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { Search, X, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
+import { formatPrice } from '@/lib/formatters'
 
 interface Product {
   id: string
@@ -152,7 +153,7 @@ export default function SearchPage() {
                       <p className="mt-0.5 text-xs text-muted-foreground font-japanese">{product.name_jp}</p>
                     )}
                     <p className="mt-2 text-sm font-bold text-accent">
-                      {product.price.toFixed(2)} zł
+                      {formatPrice(product.price)}
                     </p>
                   </div>
                 </Link>

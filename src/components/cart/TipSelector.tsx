@@ -4,6 +4,9 @@ import { useState } from 'react'
 import { Heart } from 'lucide-react'
 import { useCartStore } from '@/stores/cartStore'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
+
+const MAX_TIP = 200
 
 const TIP_OPTIONS = [0, 5, 10, 15]
 
@@ -21,9 +24,11 @@ export function TipSelector() {
 
   const handleCustomTip = () => {
     const amount = parseFloat(customTip)
-    if (!isNaN(amount) && amount >= 0) {
-      setTip(amount)
+    if (isNaN(amount) || amount < 0 || amount > MAX_TIP) {
+      toast.error(`Napiwek musi być w zakresie 0–${MAX_TIP} zł`)
+      return
     }
+    setTip(amount)
   }
 
   const isSelected = (amount: number) => tip === amount && !showCustom
@@ -72,6 +77,7 @@ export function TipSelector() {
             <input
               type="number"
               min="0"
+              max={MAX_TIP}
               step="1"
               value={customTip}
               onChange={(e) => setCustomTip(e.target.value)}

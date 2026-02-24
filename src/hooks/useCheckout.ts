@@ -154,6 +154,9 @@ export function useCheckout() {
             }
 
             if (data.url) {
+                // Clear cart before redirecting to P24 — if payment fails,
+                // user can retry from order-confirmation page
+                clearCart()
                 // Redirect to P24
                 window.location.href = data.url
             } else {

@@ -1,12 +1,14 @@
 /**
  * Format price for display in PLN
- * Rounds up to whole numbers for cleaner display
+ * Shows exact price with 2 decimal places for consistency
  * @param price - Price in PLN
  * @returns Formatted price string with "zł" suffix
  */
 export function formatPrice(price: number): string {
-    const roundedPrice = Math.ceil(price)
-    return `${roundedPrice} zł`
+    return new Intl.NumberFormat('pl-PL', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(price) + ' zł'
 }
 
 /**
