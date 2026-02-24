@@ -2,7 +2,9 @@
 export { useAuth } from '@/providers/AuthProvider'
 
 // Additional auth utility hook for checking specific permissions
+import { useState, useEffect } from 'react'
 import { useAuth as useAuthBase } from '@/providers/AuthProvider'
+import { createClient } from '@/lib/supabase/client'
 
 /**
  * Hook for checking if user can access MESO Club features
@@ -20,18 +22,53 @@ export function useMesoClub() {
 }
 
 /**
+ * Resolve display name from user metadata, preferring full_name > first+last > name > email prefix
+ */
+function resolveMetadataName(meta: Record<string, unknown> | undefined): string | null {
+  if (!meta) return null
+  if (typeof meta.full_name === 'string' && meta.full_name.trim()) return meta.full_name.trim()
+  const first = typeof meta.first_name === 'string' ? meta.first_name.trim() : ''
+  const last = typeof meta.last_name === 'string' ? meta.last_name.trim() : ''
+  if (first || last) return `${first} ${last}`.trim()
+  if (typeof meta.name === 'string' && meta.name.trim()) return meta.name.trim()
+  return null
+}
+
+/**
  * Hook for getting user display info
  * Returns appropriate display name for anonymous vs permanent users
+ * Prefers full_name / first_name+last_name from customers table and user metadata
  */
 export function useUserDisplay() {
   const { user, isAnonymous, isPermanent } = useAuthBase()
+  const [customerName, setCustomerName] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!user || !isPermanent) return
+
+    const supabase = createClient()
+    supabase
+      .from('customers')
+      .select('first_name, last_name')
+      .eq('auth_id', user.id)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          const first = data.first_name?.trim() ?? ''
+          const last = data.last_name?.trim() ?? ''
+          if (first || last) setCustomerName(`${first} ${last}`.trim())
+        }
+      })
+  }, [user, isPermanent])
+
+  const metadataName = resolveMetadataName(user?.user_metadata)
 
   const displayName = isPermanent
-    ? user?.user_metadata?.name || user?.email?.split('@')[0] || 'Użytkownik'
+    ? customerName || metadataName || user?.email?.split('@')[0] || 'Użytkownik'
     : 'Gość'
 
   const avatarInitial = isPermanent
-    ? (user?.user_metadata?.name?.[0] || user?.email?.[0] || 'U').toUpperCase()
+    ? (customerName?.[0] || metadataName?.[0] || user?.email?.[0] || 'U').toUpperCase()
     : 'G'
 
   return {
