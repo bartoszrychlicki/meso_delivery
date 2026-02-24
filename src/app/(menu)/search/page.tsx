@@ -65,7 +65,7 @@ export default function SearchPage() {
   return (
     <div className="px-4 py-6 space-y-6">
       {/* Search Input */}
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-[640px] mx-auto">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <input
