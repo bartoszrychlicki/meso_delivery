@@ -16,6 +16,7 @@
 
 import { test, expect, Page } from '@playwright/test'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { bypassGate } from './helpers'
 
 // ──────────────────────────────────────────────────────────
 // Helpers
@@ -68,6 +69,7 @@ async function ensureTestUser(admin: SupabaseClient): Promise<string> {
 }
 
 async function loginUser(page: Page) {
+  await bypassGate(page)
   await page.goto('/login')
   await page.locator('input[type="email"]').fill(TEST_EMAIL)
   await page.locator('input[type="password"]').fill(TEST_PASSWORD)
@@ -127,25 +129,24 @@ test.describe('Order → Supabase', () => {
 
     // 3. Go to checkout
     await page.goto('/checkout')
-    await expect(page.getByRole('heading', { name: 'CHECKOUT' })).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByRole('heading', { name: /PODSUMOWANIE/i })).toBeVisible({ timeout: 10_000 })
+
+    // Wait for profile data to load and populate the form (ContactForm re-mounts on profileLoaded)
+    await page.waitForFunction(() => {
+      const el = document.getElementById('firstName') as HTMLInputElement
+      return el && el.value.length > 0
+    }, { timeout: 10_000 })
 
     // 4. Fill contact form (pickup mode is default)
     await page.getByLabel('Imię').fill('Jan')
     await page.getByLabel('Nazwisko').fill('Testowy')
-    await page.locator('input[type="email"]').nth(0).fill(TEST_EMAIL)
+    await page.getByLabel('Email').fill(TEST_EMAIL)
     await page.getByLabel(/Numer telefonu|Telefon/).fill('500100200')
 
-    // Submit contact form (if there's a save button — some forms require it)
-    const saveContactBtn = page.getByRole('button', { name: /Zapisz|Dalej|Kontynuuj|Zatwierdź/i })
-    if (await saveContactBtn.count() > 0) {
-      await saveContactBtn.first().click()
-    }
-
     // 5. Accept terms
-    const termsCheckbox = page.locator('#terms-acceptance')
+    const termsCheckbox = page.getByTestId('terms-acceptance')
     if (await termsCheckbox.count() > 0) {
-      const isChecked = await termsCheckbox.getAttribute('data-state')
-      if (isChecked !== 'checked') {
+      if (!(await termsCheckbox.isChecked())) {
         await termsCheckbox.click()
       }
     }
@@ -153,7 +154,8 @@ test.describe('Order → Supabase', () => {
     // 6. Intercept P24 — zamień redirect na stronę potwierdzenia lokalną
     //    Dzięki temu nie musimy przechodzić prawdziwej płatności
     await page.route('**/api/payments/p24/register', async (route) => {
-      const body = await route.request().postDataJSON().catch(() => ({}))
+      let body: Record<string, unknown> = {}
+      try { body = route.request().postDataJSON() as Record<string, unknown> } catch { /* empty */ }
       const orderId = body?.orderId
       console.log(`[TEST] Intercepted P24 register, orderId=${orderId}`)
       await route.fulfill({
@@ -166,9 +168,14 @@ test.describe('Order → Supabase', () => {
       })
     })
 
-    // 7. Submit
+    // 7. Submit (two-click flow: first click submits contact form, second click submits order)
     const submitBtn = page.getByTestId('checkout-submit-button')
     await expect(submitBtn).toBeEnabled()
+    // First click triggers contact form submission (async react-hook-form validation)
+    await submitBtn.click()
+    // Wait for React to process the state update from form submission
+    await page.waitForTimeout(500)
+    // Second click performs order creation and mocked payment registration
     await submitBtn.click()
 
     // 8. Wait for redirect to order-confirmation

@@ -1,9 +1,11 @@
 import { test, expect } from '@playwright/test';
+import { bypassGate } from './helpers';
 
 test.describe('Navigation', () => {
   test('Desktop nav should be visible on desktop', async ({ page, isMobile }) => {
     test.skip(isMobile, 'Desktop-only assertion');
 
+    await bypassGate(page);
     await page.goto('/menu');
 
     const desktopNav = page.getByTestId('desktop-nav');
@@ -19,6 +21,7 @@ test.describe('Navigation', () => {
   test('Mobile nav should be visible on mobile', async ({ page, isMobile }) => {
     test.skip(!isMobile, 'Mobile-only assertion');
 
+    await bypassGate(page);
     await page.goto('/menu');
 
     const mobileNav = page.getByTestId('mobile-nav');

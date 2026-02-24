@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import {
+  loginTestUser,
   addFirstProductToCart,
   ensureCheckoutIsAvailable,
   fillCheckoutContactForm,
@@ -8,6 +9,9 @@ import {
 test.describe('Full User Journey', () => {
   test('Complete flow: Menu -> Cart -> Checkout (ready to submit)', async ({ page, isMobile }) => {
     test.skip(isMobile, 'Checkout flow covered on desktop to reduce mobile flakiness')
+
+    // Login required for checkout access
+    await loginTestUser(page)
 
     await addFirstProductToCart(page)
     await ensureCheckoutIsAvailable(page)
@@ -22,11 +26,13 @@ test.describe('Full User Journey', () => {
 
     const submitButton = page.getByTestId('checkout-submit-button')
     await expect(submitButton).toBeVisible()
-    await expect(submitButton).toBeEnabled()
 
-    await submitButton.click()
-    await expect(
-      page.getByText('Musisz zaakceptować Regulamin i Politykę Prywatności')
-    ).toBeVisible()
+    // Submit button should be disabled until terms are accepted
+    await expect(submitButton).toBeDisabled()
+
+    // Accept terms and verify button becomes enabled
+    const termsCheckbox = page.getByTestId('terms-acceptance')
+    await termsCheckbox.click()
+    await expect(submitButton).toBeEnabled()
   })
 })

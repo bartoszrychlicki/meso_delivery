@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import {
+  loginTestUser,
   addFirstProductToCart,
   ensureCheckoutIsAvailable,
   fillCheckoutContactForm,
@@ -9,6 +10,9 @@ import {
 test.describe('P24 Payment Flow (Mocked)', () => {
   test('Full flow: Menu -> Checkout -> Mock Payment Redirect -> Confirmation', async ({ page, isMobile }) => {
     test.skip(isMobile, 'Payment flow covered on desktop to reduce mobile flakiness')
+
+    // Login required for checkout access
+    await loginTestUser(page)
 
     await addFirstProductToCart(page)
     await ensureCheckoutIsAvailable(page)
@@ -43,7 +47,7 @@ test.describe('P24 Payment Flow (Mocked)', () => {
     await submitButton.click()
 
     await expect(page).toHaveURL(/\/order-confirmation\?orderId=.*status=success/)
-    await expect(page.getByText('Oczekiwanie na płatność...')).toBeVisible()
+    await expect(page.getByText('ZAMÓWIENIE ZŁOŻONE')).toBeVisible()
     await expect(page.getByText('Twoje zamówienie')).toBeVisible()
     await expect(page.getByText(new RegExp(`#${createdOrderId.slice(-6).toUpperCase()}`))).toBeVisible()
   })

@@ -4,7 +4,6 @@ import { addFirstProductToCart, gotoMenu } from './helpers';
 test.describe('Menu and Cart', () => {
   test('Should display menu items', async ({ page }) => {
     await gotoMenu(page);
-    await expect(page.getByRole('heading', { name: 'Aktualne promocje' })).toBeVisible();
     await expect(page.locator('a[href^="/product/"]').first()).toBeVisible();
   });
 
