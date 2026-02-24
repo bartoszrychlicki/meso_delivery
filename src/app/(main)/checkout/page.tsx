@@ -50,6 +50,7 @@ export default function CheckoutPage() {
     // Phone saved in customer profile
     const [savedPhone, setSavedPhone] = useState<string>('')
     const [savePhoneToProfile, setSavePhoneToProfile] = useState(false)
+    const [profileLoaded, setProfileLoaded] = useState(false)
 
     // Redirect if not logged in
     useEffect(() => {
@@ -61,60 +62,63 @@ export default function CheckoutPage() {
     // Pre-fill address and contact data from customer profile
     useEffect(() => {
         const loadCustomerData = async () => {
-            if (!user || addressData || contactData) return
+            if (!user || profileLoaded) return
 
             try {
                 const supabase = createClient()
 
                 const { data: customer } = await supabase
                     .from('customers')
-                    .select('name, email, phone')
-                    .eq('id', user.id)
+                    .select('id, first_name, last_name, email, phone')
+                    .eq('auth_id', user.id)
                     .single()
 
-                const { data: address } = await supabase
-                    .from('customer_addresses')
-                    .select('*')
-                    .eq('customer_id', user.id)
-                    .eq('is_default', true)
-                    .single()
+                let address = null
+                if (customer?.id) {
+                    const { data: addr } = await supabase
+                        .from('customer_addresses')
+                        .select('*')
+                        .eq('customer_id', customer.id)
+                        .eq('is_default', true)
+                        .single()
+                    address = addr
+                }
 
                 if (customer?.phone) {
                     setSavedPhone(customer.phone)
                 }
 
-                if (customer || address) {
-                    const nameParts = (customer?.name || '').split(' ')
-                    const firstName = nameParts[0] || ''
-                    const lastName = nameParts.slice(1).join(' ') || ''
+                const firstName = customer?.first_name || ''
+                const lastName = customer?.last_name || ''
 
-                    setContactData({
-                        firstName,
-                        lastName,
-                        email: customer?.email || user.email || '',
-                        phone: customer?.phone || '',
-                    })
+                setContactData({
+                    firstName,
+                    lastName,
+                    email: customer?.email || user.email || '',
+                    phone: customer?.phone || '',
+                })
 
-                    setAddressData({
-                        firstName,
-                        lastName,
-                        email: customer?.email || user.email || '',
-                        phone: customer?.phone || '',
-                        street: address?.street || '',
-                        houseNumber: address?.building_number || '',
-                        apartmentNumber: address?.apartment_number || '',
-                        postalCode: address?.postal_code || '',
-                        city: address?.city || 'Gdańsk',
-                        notes: address?.notes || ''
-                    })
-                }
+                setAddressData({
+                    firstName,
+                    lastName,
+                    email: customer?.email || user.email || '',
+                    phone: customer?.phone || '',
+                    street: address?.street || '',
+                    houseNumber: address?.building_number || '',
+                    apartmentNumber: address?.apartment_number || '',
+                    postalCode: address?.postal_code || '',
+                    city: address?.city || 'Gdańsk',
+                    notes: address?.notes || ''
+                })
             } catch (error) {
                 console.error('Error loading customer data:', error)
+            } finally {
+                setProfileLoaded(true)
             }
         }
 
         loadCustomerData()
-    }, [user, addressData, contactData])
+    }, [user, profileLoaded])
 
     if (authLoading) {
         return (
@@ -202,6 +206,7 @@ export default function CheckoutPage() {
                 </h2>
                 {deliveryData.type === 'pickup' ? (
                     <ContactForm
+                        key={profileLoaded ? 'loaded' : 'init'}
                         defaultValues={contactData || {
                             firstName: addressData?.firstName || '',
                             lastName: addressData?.lastName || '',
@@ -213,6 +218,7 @@ export default function CheckoutPage() {
                     />
                 ) : (
                     <AddressForm
+                        key={profileLoaded ? 'loaded' : 'init'}
                         defaultValues={addressData || undefined}
                         savedPhone={savedPhone}
                         onSubmit={handleAddressSubmit}
