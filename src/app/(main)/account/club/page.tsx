@@ -78,14 +78,14 @@ export default function MesoClubPage() {
     const pointsToNextTier = nextTier ? (tierThresholds[nextTier] ?? 0) - loyaltyPoints : 0
 
     return (
-        <div className="px-4 py-6 space-y-6">
-            {/* Header */}
-            <div className="flex items-center gap-4">
-                <Link href="/account" className="text-white/60 hover:text-white">
-                    <ArrowLeft className="w-6 h-6" />
-                </Link>
-                <h1 className="text-xl font-bold text-white">MESO Club</h1>
-            </div>
+        <div className="mx-auto max-w-2xl px-4 py-6 space-y-6">
+            {/* Back */}
+            <Link href="/account" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <ArrowLeft className="h-4 w-4" />
+                Profil
+            </Link>
+
+            <h1 className="font-display text-xl font-bold">MESO Club</h1>
 
             {/* Membership Card */}
             <div className={cn(

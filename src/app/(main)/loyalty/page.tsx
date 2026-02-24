@@ -48,7 +48,7 @@ export default function LoyaltyPage() {
   const progress = nextReward ? Math.min((points / nextReward.points_cost) * 100, 100) : 100
 
   return (
-    <div className="px-4 py-6 space-y-6">
+    <div className="mx-auto max-w-2xl px-4 py-6 space-y-6">
       {/* Back button */}
       <Link href="/account" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <ArrowLeft className="h-4 w-4" />

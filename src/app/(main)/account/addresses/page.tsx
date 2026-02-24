@@ -225,15 +225,15 @@ export default function AddressesPage() {
     }
 
     return (
-        <div className="px-4 py-6 space-y-6">
-            {/* Header */}
+        <div className="mx-auto max-w-2xl px-4 py-6 space-y-6">
+            {/* Back */}
+            <Link href="/account" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <ArrowLeft className="h-4 w-4" />
+                Profil
+            </Link>
+
             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <Link href="/account" className="text-white/60 hover:text-white">
-                        <ArrowLeft className="w-6 h-6" />
-                    </Link>
-                    <h1 className="text-xl font-bold text-white">Adresy dostawy</h1>
-                </div>
+                <h1 className="font-display text-xl font-bold">Adresy dostawy</h1>
                 {!showForm && (
                     <Button
                         onClick={handleAddNew}

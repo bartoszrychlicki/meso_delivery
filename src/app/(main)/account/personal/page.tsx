@@ -7,10 +7,10 @@ import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
+import { LoginPrompt } from '@/components/auth'
 
 interface PersonalData {
-  first_name: string
-  last_name: string
+  name: string
   email: string
   phone: string
   birthday: string
@@ -19,8 +19,7 @@ interface PersonalData {
 export default function PersonalPage() {
   const { user, isPermanent, isLoading: authLoading } = useAuth()
   const [form, setForm] = useState<PersonalData>({
-    first_name: '',
-    last_name: '',
+    name: '',
     email: '',
     phone: '',
     birthday: '',
@@ -39,14 +38,13 @@ export default function PersonalPage() {
       const supabase = createClient()
       const { data } = await supabase
         .from('customers')
-        .select('first_name, last_name, email, phone, birthday')
-        .eq('auth_id', user!.id)
+        .select('name, email, phone, birthday')
+        .eq('id', user!.id)
         .single()
 
       if (data) {
         setForm({
-          first_name: data.first_name ?? '',
-          last_name: data.last_name ?? '',
+          name: data.name ?? '',
           email: data.email ?? user!.email ?? '',
           phone: data.phone ?? '',
           birthday: data.birthday ?? '',
@@ -70,12 +68,11 @@ export default function PersonalPage() {
     await supabase
       .from('customers')
       .update({
-        first_name: form.first_name || null,
-        last_name: form.last_name || null,
+        name: form.name || null,
         phone: form.phone || null,
         birthday: form.birthday || null,
       })
-      .eq('auth_id', user.id)
+      .eq('id', user.id)
 
     setIsSaving(false)
     setSaved(true)
@@ -92,17 +89,16 @@ export default function PersonalPage() {
 
   if (!isPermanent) {
     return (
-      <div className="flex flex-col items-center justify-center px-4 py-20 text-center">
-        <p className="mb-4 text-sm text-muted-foreground">Zaloguj się, aby edytować dane</p>
-        <Link href="/login">
-          <Button className="bg-accent text-accent-foreground">Zaloguj się</Button>
-        </Link>
-      </div>
+      <LoginPrompt
+        icon="👤"
+        title="DANE OSOBOWE"
+        description="Zaloguj się, aby edytować swoje dane osobowe."
+      />
     )
   }
 
   return (
-    <div className="px-4 py-6 space-y-6">
+    <div className="mx-auto max-w-2xl px-4 py-6 space-y-6">
       {/* Back */}
       <Link href="/account" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <ArrowLeft className="h-4 w-4" />
@@ -116,26 +112,14 @@ export default function PersonalPage() {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-4"
       >
-        {/* First Name */}
+        {/* Name */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-muted-foreground">Imię</label>
+          <label className="text-xs font-medium text-muted-foreground">Imię i nazwisko</label>
           <input
             type="text"
-            value={form.first_name}
-            onChange={(e) => setForm({ ...form, first_name: e.target.value })}
-            placeholder="Jan"
-            className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-          />
-        </div>
-
-        {/* Last Name */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-medium text-muted-foreground">Nazwisko</label>
-          <input
-            type="text"
-            value={form.last_name}
-            onChange={(e) => setForm({ ...form, last_name: e.target.value })}
-            placeholder="Kowalski"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder="Jan Kowalski"
             className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
         </div>
@@ -172,13 +156,14 @@ export default function PersonalPage() {
             onChange={(e) => setForm({ ...form, birthday: e.target.value })}
             className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
+          <p className="text-xs text-muted-foreground/60">Zdobywaj x2 punkty w urodziny!</p>
         </div>
 
         {/* Save Button */}
         <Button
           onClick={handleSave}
           disabled={isSaving}
-          className="w-full bg-accent text-accent-foreground neon-glow-yellow h-12 font-semibold"
+          className="w-full bg-accent text-accent-foreground neon-glow-yellow h-12 font-display font-semibold"
         >
           {isSaving ? (
             <Loader2 className="h-4 w-4 animate-spin" />
