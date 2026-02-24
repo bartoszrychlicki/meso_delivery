@@ -9,7 +9,6 @@ import { LoginPrompt } from '@/components/auth'
 import { cn } from '@/lib/utils'
 import { useCustomerLoyalty } from '@/hooks/useCustomerLoyalty'
 import { useLoyaltyRewards } from '@/hooks/useLoyaltyRewards'
-import { useLoyaltyHistory } from '@/hooks/useLoyaltyHistory'
 
 const REWARD_ICONS: Record<string, typeof Gift> = {
   free_delivery: Truck,
@@ -21,7 +20,6 @@ export default function LoyaltyPage() {
   const { isPermanent, isLoading: authLoading } = useAuth()
   const { points, isLoading: loyaltyLoading } = useCustomerLoyalty()
   const { rewards, isLoading: rewardsLoading } = useLoyaltyRewards()
-  const { history, isLoading: historyLoading } = useLoyaltyHistory()
   const [activeTab, setActiveTab] = useState<'rewards' | 'history'>('rewards')
 
   const isLoading = authLoading || loyaltyLoading
@@ -190,36 +188,15 @@ export default function LoyaltyPage() {
           animate={{ opacity: 1 }}
           className="space-y-2"
         >
-          {historyLoading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <div className="flex flex-col items-center justify-center py-12 text-center rounded-xl border border-primary/20 bg-primary/5">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-4">
+              <Trophy className="h-6 w-6 text-primary" />
             </div>
-          ) : history.length === 0 ? (
-            <p className="text-center text-sm text-muted-foreground py-8">Brak historii punktów</p>
-          ) : (
-            history.map((entry, i) => (
-              <motion.div
-                key={entry.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="flex items-center justify-between rounded-xl border border-border bg-card p-4"
-              >
-                <div>
-                  <p className="text-sm font-medium">{entry.label}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(entry.created_at).toLocaleDateString('pl-PL')}
-                  </p>
-                </div>
-                <span className={cn(
-                  'text-sm font-bold',
-                  entry.points > 0 ? 'text-green-400' : 'text-primary'
-                )}>
-                  {entry.points > 0 ? '+' : ''}{entry.points}
-                </span>
-              </motion.div>
-            ))
-          )}
+            <p className="text-sm font-semibold text-foreground mb-1">Historia punktów nadchodzi wkrótce</p>
+            <p className="text-xs text-muted-foreground max-w-xs">
+              Pracujemy nad pełną historią Twoich punktów i transakcji. Już niedługo zobaczysz tu wszystkie szczegóły!
+            </p>
+          </div>
         </motion.div>
       )}
     </div>

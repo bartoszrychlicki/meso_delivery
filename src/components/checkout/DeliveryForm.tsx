@@ -43,7 +43,7 @@ export function DeliveryForm({ value, onChange }: DeliveryFormProps) {
                 </button>
             </div>
             <p className="mt-2 text-[10px] text-muted-foreground text-center">
-                Dostawy przez Glovo, Pyszne.pl i Wolt
+                Dostawę realizują nasi partnerzy — Glovo, Pyszne.pl i Wolt. Szukaj nas w swojej ulubionej aplikacji!
             </p>
         </div>
     )
