@@ -1,16 +1,17 @@
 'use client'
 
-import { useEffect, useState, Suspense, useMemo } from 'react'
+import { useEffect, useState, useRef, Suspense, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { CheckCircle2, ChefHat, Package, MapPin, Navigation, Loader2, XCircle } from 'lucide-react'
+import { CheckCircle2, ChefHat, Package, MapPin, Navigation, Loader2, XCircle, CreditCard, AlertTriangle } from 'lucide-react'
 import { useOrderConfirmationStore } from '@/stores/orderConfirmationStore'
 import { formatPriceExact } from '@/lib/formatters'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import type { OrderConfirmation } from '@/stores/orderConfirmationStore'
 import { useCartStore } from '@/stores/cartStore'
+import { PAYMENT_TIMEOUT_MS, getPickupStepIndex, isPaymentPending } from '@/lib/order-confirmation-utils'
 
 // Step definitions for pickup orders
 const pickupSteps = [
@@ -19,19 +20,6 @@ const pickupSteps = [
     { key: 'preparing', label: 'W przygotowaniu', icon: ChefHat },
     { key: 'ready', label: 'Gotowe do odbioru', icon: Package },
 ]
-
-function getPickupStepIndex(orderStatus: string, paymentStatus: string): number {
-    // Step 0: Accepted (order placed, payment not confirmed yet)
-    // Step 1: Payment confirmed
-    // Step 2: Preparing
-    // Step 3: Ready for pickup
-
-    if (orderStatus === 'ready' || orderStatus === 'delivered') return 3
-    if (orderStatus === 'preparing') return 2
-    if (paymentStatus === 'paid' && (orderStatus === 'confirmed' || orderStatus === 'pending_payment')) return 1
-    // Default: accepted (order placed)
-    return 0
-}
 
 function buildConfirmation(order: any): OrderConfirmation {
     const deliveryAddress = order.delivery_address as any
@@ -188,6 +176,8 @@ function OrderConfirmationContent() {
     }, [orderId, setConfirmation])
 
     const { clearCart } = useCartStore()
+    const [paymentTimedOut, setPaymentTimedOut] = useState(false)
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
     useEffect(() => {
         if (confirmation?.paymentStatus === 'paid') {
@@ -195,10 +185,29 @@ function OrderConfirmationContent() {
         }
     }, [confirmation?.paymentStatus, clearCart])
 
+    // Payment timeout — if payment stays pending for 3 minutes, show warning
+    useEffect(() => {
+        if (!confirmation) return
+
+        if (isPaymentPending(confirmation.paymentStatus)) {
+            timeoutRef.current = setTimeout(() => {
+                setPaymentTimedOut(true)
+            }, PAYMENT_TIMEOUT_MS)
+        } else {
+            setPaymentTimedOut(false)
+        }
+
+        return () => {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current)
+        }
+    }, [confirmation?.paymentStatus, confirmation])
+
     const currentStep = useMemo(() => {
         if (!confirmation) return 0
         return getPickupStepIndex(confirmation.orderStatus, confirmation.paymentStatus)
     }, [confirmation])
+
+    const isPendingPayment = confirmation && isPaymentPending(confirmation.paymentStatus)
 
     if (isLoading) {
         return (
@@ -324,10 +333,64 @@ function OrderConfirmationContent() {
                 </div>
             </div>
 
+            {/* Pending payment indicator */}
+            {isPendingPayment && !paymentTimedOut && (
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-6 rounded-xl border border-yellow-500/30 bg-yellow-500/5 p-5"
+                >
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="relative">
+                            <CreditCard className="h-5 w-5 text-yellow-500" />
+                            <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-yellow-500 animate-ping" />
+                            <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-yellow-500" />
+                        </div>
+                        <p className="text-sm font-semibold text-yellow-500">Oczekujemy na potwierdzenie platnosci...</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground ml-8">
+                        Trwa to zazwyczaj do 30 sekund. Nie zamykaj tej strony.
+                    </p>
+                </motion.div>
+            )}
+
+            {/* Payment timeout warning */}
+            {isPendingPayment && paymentTimedOut && (
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-6 rounded-xl border border-orange-500/30 bg-orange-500/5 p-5"
+                >
+                    <div className="flex items-center gap-3 mb-2">
+                        <AlertTriangle className="h-5 w-5 text-orange-500 shrink-0" />
+                        <p className="text-sm font-semibold text-orange-500">Platnosc trwa dluzej niz zwykle</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground ml-8 mb-3">
+                        Jesli Twoja platnosc zostala pobrana, zamowienie zostanie potwierdzone automatycznie.
+                        Jesli nie, sprobuj ponownie lub skontaktuj sie z nami.
+                    </p>
+                    <div className="flex gap-2 ml-8">
+                        <a
+                            href="mailto:zamowienia@mesofood.pl"
+                            className="text-xs text-orange-400 hover:text-orange-300 underline transition-colors"
+                        >
+                            Napisz do nas
+                        </a>
+                        <span className="text-xs text-muted-foreground">|</span>
+                        <Link
+                            href="/checkout"
+                            className="text-xs text-orange-400 hover:text-orange-300 underline transition-colors"
+                        >
+                            Sprobuj ponownie
+                        </Link>
+                    </div>
+                </motion.div>
+            )}
+
             {/* ETA */}
             <div className="mb-6 rounded-xl border border-border bg-card p-6 text-center">
                 <p className="text-sm text-muted-foreground mb-1">
-                    Szacowany czas przygotowania
+                    {isPendingPayment ? 'Szacowany czas po oplaceniu' : 'Szacowany czas przygotowania'}
                 </p>
                 <p className="font-display text-3xl font-bold text-primary neon-text">
                     {confirmation.estimatedTime}
