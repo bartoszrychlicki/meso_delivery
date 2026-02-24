@@ -449,6 +449,7 @@ export default function CheckoutPage() {
 
             {/* Section 9: Submit button */}
             <motion.button
+                data-testid="checkout-submit-button"
                 whileTap={{ scale: 0.98 }}
                 onClick={handleFinalSubmit}
                 disabled={!termsAccepted || isSubmitting}

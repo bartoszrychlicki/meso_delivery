@@ -14,6 +14,7 @@ export function TermsAcceptance({ accepted, onChange, error }: TermsAcceptancePr
             <label className="flex items-start gap-3 cursor-pointer">
                 <input
                     type="checkbox"
+                    data-testid="terms-acceptance"
                     checked={accepted}
                     onChange={(e) => onChange(e.target.checked)}
                     className="mt-0.5 h-4 w-4 rounded border-border accent-primary shrink-0"

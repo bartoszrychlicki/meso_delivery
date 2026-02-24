@@ -26,18 +26,23 @@ export interface OrderConfirmation {
   total: number
   paymentMethod: string
   paymentStatus: string
+  orderStatus: string
   estimatedTime: string
   createdAt: string
 }
 
+type ConfirmationUpdater = OrderConfirmation | ((prev: OrderConfirmation | null) => OrderConfirmation | null)
+
 interface OrderConfirmationState {
   confirmation: OrderConfirmation | null
-  setConfirmation: (data: OrderConfirmation) => void
+  setConfirmation: (data: ConfirmationUpdater) => void
   clearConfirmation: () => void
 }
 
 export const useOrderConfirmationStore = create<OrderConfirmationState>()((set) => ({
   confirmation: null,
-  setConfirmation: (data) => set({ confirmation: data }),
+  setConfirmation: (data) => set((state) => ({
+    confirmation: typeof data === 'function' ? data(state.confirmation) : data,
+  })),
   clearConfirmation: () => set({ confirmation: null }),
 }))

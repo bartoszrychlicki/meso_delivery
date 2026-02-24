@@ -1,15 +1,87 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState, Suspense, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { CheckCircle2, Clock, MapPin, Store, ArrowLeft, Loader2, XCircle, ExternalLink } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { CheckCircle2, ChefHat, Package, MapPin, Navigation, Loader2, XCircle } from 'lucide-react'
 import { useOrderConfirmationStore } from '@/stores/orderConfirmationStore'
 import { formatPriceExact } from '@/lib/formatters'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import type { OrderConfirmation } from '@/stores/orderConfirmationStore'
 import { useCartStore } from '@/stores/cartStore'
+
+// Step definitions for pickup orders
+const pickupSteps = [
+    { key: 'accepted', label: 'Przyjęte', icon: CheckCircle2 },
+    { key: 'paid', label: 'Opłacone', icon: CheckCircle2 },
+    { key: 'preparing', label: 'W przygotowaniu', icon: ChefHat },
+    { key: 'ready', label: 'Gotowe do odbioru', icon: Package },
+]
+
+function getPickupStepIndex(orderStatus: string, paymentStatus: string): number {
+    // Step 0: Accepted (order placed, payment not confirmed yet)
+    // Step 1: Payment confirmed
+    // Step 2: Preparing
+    // Step 3: Ready for pickup
+
+    if (orderStatus === 'ready' || orderStatus === 'delivered') return 3
+    if (orderStatus === 'preparing') return 2
+    if (paymentStatus === 'paid' && (orderStatus === 'confirmed' || orderStatus === 'pending_payment')) return 1
+    // Default: accepted (order placed)
+    return 0
+}
+
+function buildConfirmation(order: any): OrderConfirmation {
+    const deliveryAddress = order.delivery_address as any
+    const location = order.location as any
+
+    return {
+        orderId: order.id.toString(),
+        orderNumber: order.id.toString().slice(-6).toUpperCase(),
+        items: order.items.map((item: any) => ({
+            id: item.id,
+            productId: item.product_id,
+            name: item.product?.name || item.custom_name || 'Produkt',
+            price: item.unit_price,
+            variantPrice: 0,
+            image: item.product?.image_url,
+            quantity: item.quantity,
+            spiceLevel: item.spice_level,
+            variantId: item.variant_id,
+            variantName: item.variant_name,
+            addons: item.addons || [],
+            notes: item.notes
+        })),
+        deliveryType: order.delivery_type,
+        deliveryAddress: order.delivery_type === 'delivery' ? {
+            street: deliveryAddress?.street,
+            houseNumber: deliveryAddress?.houseNumber,
+            apartmentNumber: deliveryAddress?.apartmentNumber,
+            city: deliveryAddress?.city,
+            firstName: deliveryAddress?.firstName,
+            lastName: deliveryAddress?.lastName,
+        } : null,
+        pickupLocation: location ? {
+            name: location.name || 'MESO',
+            address: location.address || '',
+            city: location.city || '',
+        } : null,
+        subtotal: order.subtotal,
+        deliveryFee: order.delivery_fee,
+        discount: order.promo_discount || 0,
+        tip: order.tip || 0,
+        total: order.total,
+        paymentMethod: order.payment_method,
+        paymentStatus: order.payment_status,
+        orderStatus: order.status,
+        estimatedTime: order.delivery_type === 'delivery'
+            ? `${location?.delivery_time_min ?? 30}-${location?.delivery_time_max ?? 45} min`
+            : '15-20 min',
+        createdAt: order.created_at,
+    }
+}
 
 function OrderConfirmationContent() {
     const router = useRouter()
@@ -21,19 +93,15 @@ function OrderConfirmationContent() {
     const orderId = searchParams.get('orderId')
     const status = searchParams.get('status')
 
+    // Initial fetch
     useEffect(() => {
-        let pollInterval: NodeJS.Timeout
-
         const fetchOrder = async () => {
-            // We fetch if we have orderId. 
-            // If we already have confirmation but it's pending, we ALSO fetch to update status.
             if (!orderId) {
                 if (!confirmation) router.replace('/')
                 return
             }
 
             try {
-                // Determine if we need to show loading (only if no data yet)
                 if (!confirmation) setIsLoading(true)
 
                 const supabase = createClient()
@@ -55,63 +123,7 @@ function OrderConfirmationContent() {
                     throw new Error('Nie znaleziono zamówienia')
                 }
 
-                const deliveryAddress = order.delivery_address as any
-
-                const location = order.location as any
-
-                const confirmationData: OrderConfirmation = {
-                    orderId: order.id.toString(),
-                    orderNumber: order.id.toString().slice(-6).toUpperCase(),
-                    items: order.items.map((item: any) => ({
-                        id: item.id,
-                        productId: item.product_id,
-                        name: item.product?.name || item.custom_name || 'Produkt',
-                        price: item.unit_price,
-                        variantPrice: 0,
-                        image: item.product?.image_url,
-                        quantity: item.quantity,
-                        spiceLevel: item.spice_level,
-                        variantId: item.variant_id,
-                        variantName: item.variant_name,
-                        addons: item.addons || [],
-                        notes: item.notes
-                    })),
-                    deliveryType: order.delivery_type,
-                    deliveryAddress: order.delivery_type === 'delivery' ? {
-                        street: deliveryAddress?.street,
-                        houseNumber: deliveryAddress?.houseNumber,
-                        apartmentNumber: deliveryAddress?.apartmentNumber,
-                        city: deliveryAddress?.city,
-                        firstName: deliveryAddress?.firstName,
-                        lastName: deliveryAddress?.lastName,
-                    } : null,
-                    pickupLocation: location ? {
-                        name: location.name || 'MESO',
-                        address: location.address || '',
-                        city: location.city || '',
-                    } : null,
-                    subtotal: order.subtotal,
-                    deliveryFee: order.delivery_fee,
-                    discount: order.promo_discount || 0,
-                    tip: order.tip || 0,
-                    total: order.total,
-                    paymentMethod: order.payment_method,
-                    paymentStatus: order.payment_status, // Map from DB
-                    estimatedTime: order.delivery_type === 'delivery'
-                        ? `${location?.delivery_time_min ?? 30}-${location?.delivery_time_max ?? 45} min`
-                        : '15-20 min',
-                    createdAt: order.created_at,
-                }
-
-                setConfirmation(confirmationData)
-
-                // If pending, poll again
-                if (order.payment_status === 'pending' && order.payment_method === 'p24') {
-                    // Poll every 3 seconds
-                    // We handle interval outside to avoid overlaps?
-                    // actually simple recursion or interval in useEffect is fine.
-                }
-
+                setConfirmation(buildConfirmation(order))
             } catch (err) {
                 console.error('Error fetching order:', err)
                 setError('Nie udało się pobrać szczegółów zamówienia')
@@ -122,29 +134,71 @@ function OrderConfirmationContent() {
         }
 
         fetchOrder()
-
-        // Set up polling if needed
-        pollInterval = setInterval(() => {
-            // access current confirmation state? Ref might be better or just simpler logic:
-            // logic: if orderId exists, fetch. The fetch function handles updating store.
-            // optimization: only fetch if specifically needed.
-            // For simplicity: just fetch every 5s if we are on this page with orderId.
-            // The user stays here waiting for payment.
-            fetchOrder()
-        }, 5000)
-
-        return () => clearInterval(pollInterval)
     }, [orderId, router, setConfirmation])
+
+    // Supabase Realtime — listen for order updates (status, payment_status)
+    useEffect(() => {
+        if (!orderId) return
+
+        const supabase = createClient()
+
+        const channel = supabase
+            .channel(`order-confirmation-${orderId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'orders',
+                    filter: `id=eq.${orderId}`,
+                },
+                (payload) => {
+                    const updated = payload.new as any
+                    console.log('[Realtime] Order updated:', updated.status, updated.payment_status)
+
+                    setConfirmation((prev) => {
+                        if (!prev) return prev
+                        return {
+                            ...prev,
+                            orderStatus: updated.status ?? prev.orderStatus,
+                            paymentStatus: updated.payment_status ?? prev.paymentStatus,
+                        }
+                    })
+
+                    // Toast on status changes
+                    if (updated.payment_status === 'paid') {
+                        toast.success('Płatność potwierdzona!')
+                    }
+                    if (updated.status === 'preparing') {
+                        toast.info('Przygotowujemy Twój posiłek!')
+                    }
+                    if (updated.status === 'ready') {
+                        toast.success('Zamówienie gotowe do odbioru!')
+                    }
+                    if (updated.payment_status === 'failed') {
+                        toast.error('Płatność nie powiodła się')
+                    }
+                }
+            )
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(channel)
+        }
+    }, [orderId, setConfirmation])
 
     const { clearCart } = useCartStore()
 
-    // Separate effect for clearing cart on success status
     useEffect(() => {
-        // If payment is confirmed (paid), clear cart
         if (confirmation?.paymentStatus === 'paid') {
             clearCart()
         }
     }, [confirmation?.paymentStatus, clearCart])
+
+    const currentStep = useMemo(() => {
+        if (!confirmation) return 0
+        return getPickupStepIndex(confirmation.orderStatus, confirmation.paymentStatus)
+    }, [confirmation])
 
     if (isLoading) {
         return (
@@ -176,8 +230,7 @@ function OrderConfirmationContent() {
     }
 
     const { paymentStatus } = confirmation
-    const isPending = paymentStatus === 'pending'
-    const isFailed = paymentStatus === 'failed' || paymentStatus === 'cancelled' || status === 'error' // Callback might set status=error query param
+    const isFailed = paymentStatus === 'failed' || paymentStatus === 'cancelled' || status === 'error'
 
     if (isFailed) {
         return (
@@ -211,176 +264,187 @@ function OrderConfirmationContent() {
         router.push('/')
     }
 
-    // Build Google Maps URL for pickup location
     const getMapsUrl = (address: string, city: string) => {
         const query = encodeURIComponent(`${address}, ${city}`)
-        // Use universal maps link that works on both iOS (opens Apple Maps) and Android/desktop (opens Google Maps)
-        return `https://maps.google.com/?q=${query}`
+        return `https://www.google.com/maps/dir/?api=1&destination=${query}`
     }
 
+    const getAppleMapsUrl = (address: string, city: string) => {
+        const query = encodeURIComponent(`${address}, ${city}`)
+        return `https://maps.apple.com/?daddr=${query}`
+    }
+
+    const steps = pickupSteps
+
     return (
-        <div className="flex flex-col min-h-screen pb-24 mx-auto max-w-2xl">
-            {/* Success Header */}
-            <div className="bg-gradient-to-b from-green-500/20 to-transparent px-4 pt-8 pb-6 text-center">
-                {isPending ? (
-                    <div className="w-16 h-16 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                        <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+        <div className="mx-auto max-w-2xl px-4 py-8 pb-32">
+            {/* Title */}
+            <h1 className="mb-2 font-display text-xl font-bold tracking-wider text-center">
+                ZAMÓWIENIE ZŁOŻONE
+            </h1>
+            <p className="mb-8 text-center text-sm text-muted-foreground">
+                Zamówienie #{confirmation.orderNumber}
+            </p>
+
+            {/* Progress bar */}
+            <div className="relative mb-10 mx-2">
+                {/* Background track */}
+                <div className="absolute top-5 left-0 right-0 h-1 rounded-full bg-secondary" />
+                {/* Active track */}
+                <motion.div
+                    className="absolute top-5 left-0 h-1 rounded-full bg-primary neon-glow-sm"
+                    animate={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
+                    transition={{ duration: 1, ease: 'easeOut' }}
+                />
+                {/* Step indicators */}
+                <div className="relative flex justify-between">
+                    {steps.map((step, i) => (
+                        <div key={step.key} className="flex flex-col items-center" style={{ width: `${100 / steps.length}%` }}>
+                            <motion.div
+                                animate={{
+                                    scale: i === currentStep ? 1.2 : 1,
+                                }}
+                                className={`relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 transition-colors ${
+                                    i <= currentStep
+                                        ? 'border-primary bg-primary'
+                                        : 'border-border bg-card'
+                                }`}
+                            >
+                                <step.icon className={`h-4 w-4 ${
+                                    i <= currentStep ? 'text-primary-foreground' : 'text-muted-foreground'
+                                }`} />
+                            </motion.div>
+                            <span className={`mt-2 text-[10px] font-medium text-center leading-tight ${
+                                i <= currentStep ? 'text-primary' : 'text-muted-foreground'
+                            }`}>
+                                {step.label}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* ETA */}
+            <div className="mb-6 rounded-xl border border-border bg-card p-6 text-center">
+                <p className="text-sm text-muted-foreground mb-1">
+                    Szacowany czas przygotowania
+                </p>
+                <p className="font-display text-3xl font-bold text-primary neon-text">
+                    {confirmation.estimatedTime}
+                </p>
+            </div>
+
+            {/* Pickup location with map links */}
+            {confirmation.pickupLocation && (
+                <div className="mb-6 rounded-xl border border-border bg-card p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                        <MapPin className="h-4 w-4 text-primary" />
+                        <h3 className="font-display text-xs font-semibold uppercase tracking-wider">Punkt odbioru</h3>
                     </div>
-                ) : (
-                    <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <CheckCircle2 className="w-8 h-8 text-white" />
+                    <p className="text-sm font-medium text-foreground mb-0.5">{confirmation.pickupLocation.name}</p>
+                    <p className="text-xs text-muted-foreground mb-4">
+                        {confirmation.pickupLocation.address}, {confirmation.pickupLocation.city}
+                    </p>
+
+                    <div className="flex items-center gap-2 mb-2">
+                        <Navigation className="h-4 w-4 text-primary" />
+                        <span className="text-xs font-medium text-muted-foreground">Wskazówki dojazdu</span>
+                    </div>
+                    <div className="flex gap-2">
+                        <a
+                            href={getMapsUrl(confirmation.pickupLocation.address, confirmation.pickupLocation.city)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-secondary py-3 text-sm font-medium text-foreground hover:bg-secondary/80 transition-all"
+                        >
+                            Google Maps
+                        </a>
+                        <a
+                            href={getAppleMapsUrl(confirmation.pickupLocation.address, confirmation.pickupLocation.city)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-secondary py-3 text-sm font-medium text-foreground hover:bg-secondary/80 transition-all"
+                        >
+                            Apple Maps
+                        </a>
+                    </div>
+                </div>
+            )}
+
+            {/* Order Items */}
+            <div className="mb-4 rounded-xl border border-border bg-card p-4">
+                <h3 className="font-display text-xs font-semibold uppercase tracking-wider mb-3">Twoje zamówienie</h3>
+                <div className="space-y-3">
+                    {confirmation.items.map((item, idx) => {
+                        const itemTotal = (item.price + (item.variantPrice || 0) + (item.addons?.reduce((s, a) => s + a.price, 0) || 0)) * item.quantity
+                        return (
+                            <div key={item.id || idx} className="flex justify-between items-start">
+                                <div className="flex-1">
+                                    <p className="text-foreground text-sm">
+                                        <span className="text-muted-foreground">{item.quantity}x</span>{' '}
+                                        {item.name}
+                                    </p>
+                                    {item.variantName && (
+                                        <p className="text-muted-foreground text-xs">{item.variantName}</p>
+                                    )}
+                                    {item.spiceLevel && (
+                                        <p className="text-muted-foreground text-xs">
+                                            {'🔥'.repeat(item.spiceLevel)}
+                                        </p>
+                                    )}
+                                    {item.addons && item.addons.length > 0 && (
+                                        <p className="text-muted-foreground text-xs">
+                                            + {item.addons.map(a => a.name).join(', ')}
+                                        </p>
+                                    )}
+                                </div>
+                                <span className="text-muted-foreground text-sm ml-2">
+                                    {formatPriceExact(itemTotal)}
+                                </span>
+                            </div>
+                        )
+                    })}
+                </div>
+            </div>
+
+            {/* Price Summary */}
+            <div className="mb-6 rounded-xl border border-border bg-card p-4 space-y-2 text-sm">
+                <div className="flex justify-between">
+                    <span className="text-muted-foreground">Produkty</span>
+                    <span className="text-foreground">{formatPriceExact(confirmation.subtotal)}</span>
+                </div>
+                {confirmation.discount > 0 && (
+                    <div className="flex justify-between">
+                        <span className="text-green-400">Rabat</span>
+                        <span className="text-green-400">-{formatPriceExact(confirmation.discount)}</span>
                     </div>
                 )}
-
-                <h1 className="text-2xl font-bold text-white mb-1">
-                    {isPending ? 'Oczekiwanie na płatność...' : 'Zamówienie przyjęte!'}
-                </h1>
-                <p className="text-white/60">
-                    {isPending ? 'Trwa weryfikacja płatności' : 'Numer zamówienia'}
-                </p>
-
-                <p className="text-accent font-mono text-lg font-bold mt-1">
-                    #{confirmation.orderNumber}
-                </p>
-            </div>
-
-            <div className="px-4 space-y-4">
-                {/* Estimated Time */}
-                <div className="bg-card rounded-xl p-4 border border-white/5">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-orange-500/10 rounded-lg">
-                            <Clock className="w-5 h-5 text-orange-500" />
-                        </div>
-                        <div>
-                            <p className="text-white/60 text-sm">Szacowany czas</p>
-                            <p className="text-white font-bold text-lg">{confirmation.estimatedTime}</p>
-                        </div>
-                    </div>
+                <div className="flex justify-between">
+                    <span className="text-muted-foreground">Dostawa</span>
+                    <span className="text-foreground">
+                        {confirmation.deliveryFee > 0 ? formatPriceExact(confirmation.deliveryFee) : 'Gratis'}
+                    </span>
                 </div>
-
-                {/* Delivery Info */}
-                <div className="bg-card rounded-xl p-4 border border-white/5">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/10 rounded-lg">
-                            {confirmation.deliveryType === 'delivery' ? (
-                                <MapPin className="w-5 h-5 text-primary" />
-                            ) : (
-                                <Store className="w-5 h-5 text-primary" />
-                            )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-white/60 text-sm">
-                                {confirmation.deliveryType === 'delivery' ? 'Adres dostawy' : 'Odbiór osobisty'}
-                            </p>
-                            {confirmation.deliveryType === 'delivery' && confirmation.deliveryAddress ? (
-                                <p className="text-white font-medium">
-                                    {confirmation.deliveryAddress.street} {confirmation.deliveryAddress.houseNumber}
-                                    {confirmation.deliveryAddress.apartmentNumber ? `/${confirmation.deliveryAddress.apartmentNumber}` : ''}
-                                    , {confirmation.deliveryAddress.city}
-                                </p>
-                            ) : confirmation.pickupLocation ? (
-                                <>
-                                    <p className="text-white font-medium">{confirmation.pickupLocation.name}</p>
-                                    <p className="text-white/60 text-sm">{confirmation.pickupLocation.address}, {confirmation.pickupLocation.city}</p>
-                                    <a
-                                        href={getMapsUrl(confirmation.pickupLocation.address, confirmation.pickupLocation.city)}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1.5 mt-2 text-sm text-primary hover:text-primary/80 transition-colors"
-                                    >
-                                        <ExternalLink className="w-3.5 h-3.5" />
-                                        Otwórz w mapach
-                                    </a>
-                                </>
-                            ) : (
-                                <p className="text-white font-medium">MESO</p>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Order Items */}
-                <div className="bg-card rounded-xl p-4 border border-white/5">
-                    <h3 className="text-white font-medium mb-3">Twoje zamówienie</h3>
-                    <div className="space-y-3">
-                        {confirmation.items.map((item, idx) => {
-                            // Calculate item total properly
-                            // If coming from DB, price might be total unit price?
-                            // Let's rely on stored price in item
-                            const itemTotal = (item.price + (item.variantPrice || 0) + (item.addons?.reduce((s, a) => s + a.price, 0) || 0)) * item.quantity
-                            return (
-                                <div key={item.id || idx} className="flex justify-between items-start">
-                                    <div className="flex-1">
-                                        <p className="text-white text-sm">
-                                            <span className="text-white/50">{item.quantity}x</span>{' '}
-                                            {item.name}
-                                        </p>
-                                        {item.variantName && (
-                                            <p className="text-white/40 text-xs">{item.variantName}</p>
-                                        )}
-                                        {item.spiceLevel && (
-                                            <p className="text-white/40 text-xs">
-                                                {'🔥'.repeat(item.spiceLevel)}
-                                            </p>
-                                        )}
-                                        {item.addons && item.addons.length > 0 && (
-                                            <p className="text-white/40 text-xs">
-                                                + {item.addons.map(a => a.name).join(', ')}
-                                            </p>
-                                        )}
-                                    </div>
-                                    <span className="text-white/60 text-sm ml-2">
-                                        {formatPriceExact(itemTotal)}
-                                    </span>
-                                </div>
-                            )
-                        })}
-                    </div>
-                </div>
-
-                {/* Price Summary */}
-                <div className="bg-card rounded-xl p-4 border border-white/5 space-y-2 text-sm">
+                {confirmation.tip > 0 && (
                     <div className="flex justify-between">
-                        <span className="text-white/60">Produkty</span>
-                        <span className="text-white">{formatPriceExact(confirmation.subtotal)}</span>
+                        <span className="text-muted-foreground">Napiwek</span>
+                        <span className="text-foreground">{formatPriceExact(confirmation.tip)}</span>
                     </div>
-                    {confirmation.discount > 0 && (
-                        <div className="flex justify-between">
-                            <span className="text-green-400">Rabat</span>
-                            <span className="text-green-400">-{formatPriceExact(confirmation.discount)}</span>
-                        </div>
-                    )}
-                    <div className="flex justify-between">
-                        <span className="text-white/60">Dostawa</span>
-                        <span className="text-white">
-                            {confirmation.deliveryFee > 0 ? formatPriceExact(confirmation.deliveryFee) : 'Gratis'}
-                        </span>
-                    </div>
-                    {confirmation.tip > 0 && (
-                        <div className="flex justify-between">
-                            <span className="text-white/60">Napiwek</span>
-                            <span className="text-white">{formatPriceExact(confirmation.tip)}</span>
-                        </div>
-                    )}
-                    <div className="flex justify-between font-bold pt-2 border-t border-border">
-                        <span className="text-foreground">Razem</span>
-                        <span className="text-accent text-lg">{formatPriceExact(confirmation.total)}</span>
-                    </div>
+                )}
+                <div className="flex justify-between font-bold pt-2 border-t border-border">
+                    <span className="text-foreground">Razem</span>
+                    <span className="text-accent text-lg">{formatPriceExact(confirmation.total)}</span>
                 </div>
             </div>
 
-            {/* Back to Menu Button */}
-            <div className="fixed bottom-[85px] left-0 right-0 z-50 mx-4 lg:relative lg:bottom-auto lg:mx-0 lg:mt-6 lg:px-4">
-                <div className="bg-background border border-border p-4 rounded-2xl shadow-xl lg:p-0 lg:border-0 lg:shadow-none lg:bg-transparent max-w-2xl mx-auto">
-                    <button
-                        onClick={handleBackToMenu}
-                        className="w-full rounded-xl py-4 font-display text-sm font-semibold tracking-wider bg-accent text-accent-foreground neon-glow-yellow hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                        WRÓĆ DO MENU
-                    </button>
-                </div>
-            </div>
+            {/* Back to Menu */}
+            <Link
+                href="/"
+                onClick={(e) => { e.preventDefault(); handleBackToMenu() }}
+                className="block text-center text-sm text-primary hover:underline"
+            >
+                Zamów więcej
+            </Link>
         </div>
     )
 }
