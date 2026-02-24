@@ -3,10 +3,12 @@
 import Link from 'next/link'
 import { ShoppingCart, Minus, Plus, Trash2 } from 'lucide-react'
 import { useCartStore, selectItemCount, selectSubtotal } from '@/stores/cartStore'
+import { useAuth } from '@/hooks/useAuth'
 import { formatPrice } from '@/lib/formatters'
 import { LoyaltyBox } from './LoyaltyBox'
 
 export function CartSidebar() {
+  const { isPermanent } = useAuth()
   const items = useCartStore((s) => s.items)
   const totalItems = useCartStore(selectItemCount)
   const subtotal = useCartStore(selectSubtotal)
@@ -109,10 +111,10 @@ export function CartSidebar() {
             </div>
 
             <Link
-              href="/checkout"
+              href={isPermanent ? '/checkout' : '/login?redirect=/checkout'}
               className="mt-4 block w-full rounded-lg bg-accent py-3 text-center font-display text-sm font-semibold tracking-wider text-accent-foreground transition-all neon-glow-yellow hover:scale-[1.02]"
             >
-              ZAMÓW &bull; {formatPrice(subtotal)}
+              {isPermanent ? `ZAMÓW \u2022 ${formatPrice(subtotal)}` : 'ZALOGUJ SIĘ I ZAMÓW'}
             </Link>
           </>
         )}

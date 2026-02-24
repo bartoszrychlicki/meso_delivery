@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { CheckCircle2, Clock, MapPin, Store, ArrowLeft, Loader2, XCircle } from 'lucide-react'
+import { CheckCircle2, Clock, MapPin, Store, ArrowLeft, Loader2, XCircle, ExternalLink } from 'lucide-react'
 import { useOrderConfirmationStore } from '@/stores/orderConfirmationStore'
 import { formatPriceExact } from '@/lib/formatters'
 import { createClient } from '@/lib/supabase/client'
@@ -42,7 +42,7 @@ function OrderConfirmationContent() {
                     .from('orders')
                     .select(`
                         *,
-                        location:locations(delivery_time_min, delivery_time_max),
+                        location:locations(name, address, city, delivery_time_min, delivery_time_max),
                         items:order_items(
                             *,
                             product:products(*)
@@ -56,6 +56,8 @@ function OrderConfirmationContent() {
                 }
 
                 const deliveryAddress = order.delivery_address as any
+
+                const location = order.location as any
 
                 const confirmationData: OrderConfirmation = {
                     orderId: order.id.toString(),
@@ -83,6 +85,11 @@ function OrderConfirmationContent() {
                         firstName: deliveryAddress?.firstName,
                         lastName: deliveryAddress?.lastName,
                     } : null,
+                    pickupLocation: location ? {
+                        name: location.name || 'MESO',
+                        address: location.address || '',
+                        city: location.city || '',
+                    } : null,
                     subtotal: order.subtotal,
                     deliveryFee: order.delivery_fee,
                     discount: order.promo_discount || 0,
@@ -91,7 +98,7 @@ function OrderConfirmationContent() {
                     paymentMethod: order.payment_method,
                     paymentStatus: order.payment_status, // Map from DB
                     estimatedTime: order.delivery_type === 'delivery'
-                        ? `${(order.location as any)?.delivery_time_min ?? 30}-${(order.location as any)?.delivery_time_max ?? 45} min`
+                        ? `${location?.delivery_time_min ?? 30}-${location?.delivery_time_max ?? 45} min`
                         : '15-20 min',
                     createdAt: order.created_at,
                 }
@@ -204,8 +211,15 @@ function OrderConfirmationContent() {
         router.push('/')
     }
 
+    // Build Google Maps URL for pickup location
+    const getMapsUrl = (address: string, city: string) => {
+        const query = encodeURIComponent(`${address}, ${city}`)
+        // Use universal maps link that works on both iOS (opens Apple Maps) and Android/desktop (opens Google Maps)
+        return `https://maps.google.com/?q=${query}`
+    }
+
     return (
-        <div className="flex flex-col min-h-screen pb-24">
+        <div className="flex flex-col min-h-screen pb-24 mx-auto max-w-2xl">
             {/* Success Header */}
             <div className="bg-gradient-to-b from-green-500/20 to-transparent px-4 pt-8 pb-6 text-center">
                 {isPending ? (
@@ -254,7 +268,7 @@ function OrderConfirmationContent() {
                                 <Store className="w-5 h-5 text-primary" />
                             )}
                         </div>
-                        <div>
+                        <div className="flex-1 min-w-0">
                             <p className="text-white/60 text-sm">
                                 {confirmation.deliveryType === 'delivery' ? 'Adres dostawy' : 'Odbiór osobisty'}
                             </p>
@@ -264,8 +278,22 @@ function OrderConfirmationContent() {
                                     {confirmation.deliveryAddress.apartmentNumber ? `/${confirmation.deliveryAddress.apartmentNumber}` : ''}
                                     , {confirmation.deliveryAddress.city}
                                 </p>
+                            ) : confirmation.pickupLocation ? (
+                                <>
+                                    <p className="text-white font-medium">{confirmation.pickupLocation.name}</p>
+                                    <p className="text-white/60 text-sm">{confirmation.pickupLocation.address}, {confirmation.pickupLocation.city}</p>
+                                    <a
+                                        href={getMapsUrl(confirmation.pickupLocation.address, confirmation.pickupLocation.city)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 mt-2 text-sm text-primary hover:text-primary/80 transition-colors"
+                                    >
+                                        <ExternalLink className="w-3.5 h-3.5" />
+                                        Otwórz w mapach
+                                    </a>
+                                </>
                             ) : (
-                                <p className="text-white font-medium">MESO Food, Gdańsk</p>
+                                <p className="text-white font-medium">MESO</p>
                             )}
                         </div>
                     </div>
@@ -342,8 +370,8 @@ function OrderConfirmationContent() {
             </div>
 
             {/* Back to Menu Button */}
-            <div className="fixed bottom-[85px] left-0 right-0 z-50 mx-4 lg:relative lg:bottom-auto lg:mx-0 lg:mt-6">
-                <div className="bg-background border border-border p-4 rounded-2xl shadow-xl lg:p-0 lg:border-0 lg:shadow-none lg:bg-transparent">
+            <div className="fixed bottom-[85px] left-0 right-0 z-50 mx-4 lg:relative lg:bottom-auto lg:mx-0 lg:mt-6 lg:px-4">
+                <div className="bg-background border border-border p-4 rounded-2xl shadow-xl lg:p-0 lg:border-0 lg:shadow-none lg:bg-transparent max-w-2xl mx-auto">
                     <button
                         onClick={handleBackToMenu}
                         className="w-full rounded-xl py-4 font-display text-sm font-semibold tracking-wider bg-accent text-accent-foreground neon-glow-yellow hover:scale-[1.02] transition-all flex items-center justify-center gap-2"

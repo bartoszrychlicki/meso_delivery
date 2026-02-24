@@ -26,7 +26,7 @@ import type { ContactFormData, DeliveryFormData, PaymentFormData } from '@/lib/v
 export default function CheckoutPage() {
     const router = useRouter()
     const { items, getTotal, getSubtotal, getDeliveryFee, getDiscount, tip, setDeliveryType } = useCartStore()
-    const { user, isLoading: authLoading } = useAuth()
+    const { user, isLoading: authLoading, isPermanent } = useAuth()
     const { submitOrder, isLoading: isSubmitting } = useCheckout()
 
     // Form States
@@ -95,11 +95,12 @@ export default function CheckoutPage() {
     const [savePhoneToProfile, setSavePhoneToProfile] = useState(false)
     const [profileLoaded, setProfileLoaded] = useState(false)
 
-    // Pickup location
-    const pickupLocations = [
-        { id: 'bosmanska', name: 'MESO Dąbrowa', address: 'Bosmańska 1C/2, Dąbrowa' },
-    ]
-    const [selectedLocationId, setSelectedLocationId] = useState(pickupLocations[0].id)
+    // Pickup location (fetched from DB)
+    const [pickupLocation, setPickupLocation] = useState<{
+        name: string
+        address: string
+        city: string
+    } | null>(null)
 
     // Sync delivery type to cart store on mount and changes
     useEffect(() => {
@@ -114,7 +115,7 @@ export default function CheckoutPage() {
             const [locationRes, configRes] = await Promise.all([
                 supabase
                     .from('locations')
-                    .select('open_time, close_time')
+                    .select('name, address, city, open_time, close_time')
                     .eq('is_default', true)
                     .single(),
                 supabase
@@ -132,6 +133,11 @@ export default function CheckoutPage() {
                 setLocationHours({
                     open_time: locationRes.data.open_time,
                     close_time: locationRes.data.close_time,
+                })
+                setPickupLocation({
+                    name: locationRes.data.name,
+                    address: locationRes.data.address,
+                    city: locationRes.data.city,
                 })
             }
 
@@ -161,12 +167,12 @@ export default function CheckoutPage() {
         fetchLocationConfig()
     }, [])
 
-    // Redirect if not logged in
+    // Redirect if not logged in (anonymous users cannot checkout)
     useEffect(() => {
-        if (!authLoading && !user) {
+        if (!authLoading && !isPermanent) {
             router.push('/login?redirect=/checkout')
         }
-    }, [authLoading, user, router])
+    }, [authLoading, isPermanent, router])
 
     // Pre-fill contact data from customer profile
     useEffect(() => {
@@ -212,6 +218,15 @@ export default function CheckoutPage() {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        )
+    }
+
+    // Show loader while checking auth or redirecting anonymous user
+    if (authLoading || !isPermanent) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
         )
     }
@@ -304,29 +319,20 @@ export default function CheckoutPage() {
                     <Store className="h-4 w-4 text-primary" />
                     <h3 className="font-display text-xs font-semibold uppercase tracking-wider">Punkt odbioru</h3>
                 </div>
-                <div className="space-y-2">
-                    {pickupLocations.map((loc) => (
-                        <button
-                            key={loc.id}
-                            type="button"
-                            onClick={() => setSelectedLocationId(loc.id)}
-                            className={`w-full flex items-center gap-3 rounded-lg px-3 py-3 text-left transition-all ${
-                                selectedLocationId === loc.id
-                                    ? 'bg-primary/10 border border-primary/40 neon-border'
-                                    : 'bg-secondary/50 border border-transparent hover:border-border'
-                            }`}
-                        >
-                            <span className="text-lg">📍</span>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-foreground">{loc.name}</p>
-                                <p className="text-xs text-muted-foreground">{loc.address}</p>
-                            </div>
-                            {selectedLocationId === loc.id && (
-                                <Check className="h-4 w-4 text-primary shrink-0" />
-                            )}
-                        </button>
-                    ))}
-                </div>
+                {pickupLocation ? (
+                    <div className="flex items-center gap-3 rounded-lg px-3 py-3 bg-primary/10 border border-primary/40 neon-border">
+                        <span className="text-lg">📍</span>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground">{pickupLocation.name}</p>
+                            <p className="text-xs text-muted-foreground">{pickupLocation.address}, {pickupLocation.city}</p>
+                        </div>
+                        <Check className="h-4 w-4 text-primary shrink-0" />
+                    </div>
+                ) : (
+                    <div className="flex items-center justify-center py-3">
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    </div>
+                )}
             </section>
 
             {/* Section 3: Pickup time */}

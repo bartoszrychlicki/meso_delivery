@@ -42,6 +42,9 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json()
 
     const allowedFields = [
+      'name',
+      'address',
+      'city',
       'delivery_fee',
       'min_order_value',
       'delivery_time_min',

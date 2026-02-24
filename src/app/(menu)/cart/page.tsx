@@ -8,11 +8,13 @@ import { useCartStore, selectItemCount, selectTotal } from '@/stores/cartStore'
 import { CartItem, CartSummary, PromoCodeInput } from '@/components/cart'
 import { EmptyState } from '@/components/common/EmptyState'
 import { AnonymousBanner } from '@/components/auth'
+import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/formatters'
 
 export default function CartPage() {
   const router = useRouter()
+  const { isPermanent } = useAuth()
   const items = useCartStore((state) => state.items)
   const itemCount = useCartStore(selectItemCount)
   const canCheckout = useCartStore((state) => state.canCheckout)
@@ -116,7 +118,7 @@ export default function CartPage() {
         <div className="bg-background border border-border p-4 rounded-2xl shadow-xl lg:p-0 lg:border-0 lg:shadow-none lg:bg-transparent">
           <Link
             data-testid="cart-checkout-link"
-            href={checkout.allowed ? '/checkout' : '#'}
+            href={checkout.allowed ? (isPermanent ? '/checkout' : '/login?redirect=/checkout') : '#'}
             onClick={(e) => !checkout.allowed && e.preventDefault()}
             className={cn(
               'block w-full rounded-xl py-4 text-center font-display text-sm font-semibold tracking-wider transition-all',
@@ -125,7 +127,7 @@ export default function CartPage() {
                 : 'bg-secondary text-muted-foreground cursor-not-allowed'
             )}
           >
-            ZAMÓW &bull; {formatPrice(total)}
+            {checkout.allowed && !isPermanent ? 'ZALOGUJ SIĘ I ZAMÓW' : `ZAMÓW \u2022 ${formatPrice(total)}`}
           </Link>
         </div>
       </div>

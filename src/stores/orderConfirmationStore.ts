@@ -14,6 +14,11 @@ export interface OrderConfirmation {
     firstName?: string
     lastName?: string
   } | null
+  pickupLocation: {
+    name: string
+    address: string
+    city: string
+  } | null
   subtotal: number
   deliveryFee: number
   discount: number

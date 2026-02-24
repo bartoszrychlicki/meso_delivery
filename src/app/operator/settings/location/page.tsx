@@ -7,6 +7,9 @@ import { toast } from 'sonner'
 
 interface LocationSettings {
   id: string
+  name: string
+  address: string
+  city: string
   delivery_fee: number
   min_order_value: number
   delivery_time_min: number
@@ -22,6 +25,9 @@ export default function LocationSettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
+    name: '',
+    address: '',
+    city: '',
     delivery_fee: 0,
     min_order_value: 0,
     delivery_time_min: 0,
@@ -64,6 +70,9 @@ export default function LocationSettingsPage() {
       const loc: LocationSettings = data.location
 
       setForm({
+        name: loc.name ?? '',
+        address: loc.address ?? '',
+        city: loc.city ?? '',
         delivery_fee: loc.delivery_fee ?? 0,
         min_order_value: loc.min_order_value ?? 0,
         delivery_time_min: loc.delivery_time_min ?? 0,
@@ -157,6 +166,48 @@ export default function LocationSettingsPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Location name & address */}
+            <div className="space-y-2">
+              <label className="text-sm text-white/60">
+                Nazwa lokalu
+              </label>
+              <input
+                type="text"
+                value={form.name}
+                onChange={(e) => handleChange('name', e.target.value)}
+                placeholder="np. MESO Gdańsk Długa"
+                className="w-full h-12 px-4 text-white bg-meso-dark-900 border border-white/10 rounded-xl focus:border-meso-red-500 focus:outline-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm text-white/60">
+                  Adres
+                </label>
+                <input
+                  type="text"
+                  value={form.address}
+                  onChange={(e) => handleChange('address', e.target.value)}
+                  placeholder="np. ul. Długa 15"
+                  className="w-full h-12 px-4 text-white bg-meso-dark-900 border border-white/10 rounded-xl focus:border-meso-red-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm text-white/60">
+                  Miasto
+                </label>
+                <input
+                  type="text"
+                  value={form.city}
+                  onChange={(e) => handleChange('city', e.target.value)}
+                  placeholder="np. Gdańsk"
+                  className="w-full h-12 px-4 text-white bg-meso-dark-900 border border-white/10 rounded-xl focus:border-meso-red-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
             {/* Delivery fee & Min order */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
