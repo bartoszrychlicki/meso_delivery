@@ -1,12 +1,15 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, MapPin, Phone, Clock, CreditCard, Truck, Store } from 'lucide-react'
+import Link from 'next/link'
+import { ArrowLeft, MapPin, Phone, Clock, CreditCard, Truck, Store, Radio } from 'lucide-react'
 import { useOrderDetails } from '@/hooks/useOrderDetails'
 import { OrderTimeline, OrderStatusBadge, OrderItemsList } from '@/components/orders'
 import { ORDER_STATUS_MESSAGES, formatOrderDate } from '@/types/order'
 import { formatPrice } from '@/lib/formatters'
 import { Button } from '@/components/ui/button'
+
+const ACTIVE_STATUSES = new Set(['pending_payment', 'confirmed', 'preparing', 'ready', 'awaiting_courier', 'in_delivery'])
 
 export default function OrderDetailsPage() {
     const params = useParams()
@@ -80,6 +83,15 @@ export default function OrderDetailsPage() {
                     <div className="mt-4">
                         <OrderStatusBadge status={order.status} size="lg" />
                     </div>
+                    {ACTIVE_STATUSES.has(order.status) && (
+                        <Link
+                            href={`/order-confirmation?orderId=${order.id}`}
+                            className="mt-4 inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors"
+                        >
+                            <Radio className="w-4 h-4" />
+                            Sledz na zywo
+                        </Link>
+                    )}
                 </section>
 
                 {/* Timeline */}

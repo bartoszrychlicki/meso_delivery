@@ -98,6 +98,21 @@ describe('buildOrderConfirmationHtml', () => {
     expect(html).not.toContain('Napiwek')
     expect(html).not.toContain('Rabat')
   })
+
+  it('zawiera link do sledzenia zamowienia gdy trackingUrl podany', () => {
+    const withTracking: OrderEmailData = {
+      ...sampleData,
+      trackingUrl: 'https://meso.pl/order-confirmation?orderId=123456',
+    }
+    const html = buildOrderConfirmationHtml(withTracking, '1E240')
+    expect(html).toContain('https://meso.pl/order-confirmation?orderId=123456')
+    expect(html).toContain('Sledz zamowienie')
+  })
+
+  it('nie zawiera przycisku sledzenia gdy brak trackingUrl', () => {
+    const html = buildOrderConfirmationHtml(sampleData, '1E240')
+    expect(html).not.toContain('Sledz zamowienie')
+  })
 })
 
 describe('sendOrderConfirmationEmail', () => {

@@ -31,6 +31,7 @@ export interface OrderEmailData {
   locationName: string
   locationAddress: string
   locationCity: string
+  trackingUrl?: string
 }
 
 export async function sendOrderConfirmationEmail(
@@ -187,6 +188,15 @@ export function buildOrderConfirmationHtml(
 
       <!-- Delivery / Pickup info -->
       ${deliverySection}
+
+      <!-- Track order CTA -->
+      ${data.trackingUrl ? `
+      <div style="margin-top:24px;text-align:center;">
+        <a href="${data.trackingUrl}" style="display:inline-block;padding:14px 32px;background-color:#ef4444;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;border-radius:8px;">
+          Sledz zamowienie
+        </a>
+      </div>
+      ` : ''}
     </div>
 
     <!-- Footer -->

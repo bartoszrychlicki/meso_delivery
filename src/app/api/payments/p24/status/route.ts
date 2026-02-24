@@ -107,6 +107,12 @@ export async function POST(request: Request) {
         if (fullOrder) {
             const addr = (fullOrder.delivery_address ?? {}) as DeliveryAddressJson
 
+            // Build tracking URL
+            const appUrl = process.env.NEXT_PUBLIC_APP_URL
+                || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null)
+                || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
+                || 'http://localhost:3000'
+
             const emailData: OrderEmailData = {
                 orderId: fullOrder.id,
                 customerFirstName: addr.firstName ?? 'Kliencie',
@@ -135,6 +141,7 @@ export async function POST(request: Request) {
                 locationName: fullOrder.location?.name ?? '',
                 locationAddress: fullOrder.location?.address ?? '',
                 locationCity: fullOrder.location?.city ?? '',
+                trackingUrl: `${appUrl}/order-confirmation?orderId=${fullOrder.id}`,
             }
 
             // Fire-and-forget: email does not block webhook response
