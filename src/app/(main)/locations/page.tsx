@@ -1,63 +1,36 @@
 'use client'
 
-import { MapPin, Clock, Truck, Store, ArrowLeft } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { MapPin, Clock, Truck, Store, ArrowLeft, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
 
-interface Location {
+interface LocationData {
   id: string
   name: string
   address: string
-  hours: string
-  type: 'food_truck' | 'restaurant'
-  isOpen: boolean
-  lat: number
-  lng: number
+  city: string
+  open_time: string
+  close_time: string
+  type: string | null
+  is_active: boolean
 }
 
-const MOCK_LOCATIONS: Location[] = [
-  {
-    id: '1',
-    name: 'MESO Mokotow',
-    address: 'ul. Pulawska 24, 02-512 Warszawa',
-    hours: '11:00 - 22:00',
-    type: 'restaurant',
-    isOpen: true,
-    lat: 52.199,
-    lng: 21.004,
-  },
-  {
-    id: '2',
-    name: 'MESO Centrum',
-    address: 'ul. Marszalkowska 89, 00-693 Warszawa',
-    hours: '11:00 - 22:00',
-    type: 'food_truck',
-    isOpen: true,
-    lat: 52.228,
-    lng: 21.014,
-  },
-  {
-    id: '3',
-    name: 'MESO Wilanow',
-    address: 'ul. Klimczaka 1, 02-797 Warszawa',
-    hours: '11:00 - 21:00',
-    type: 'food_truck',
-    isOpen: false,
-    lat: 52.164,
-    lng: 21.076,
-  },
-  {
-    id: '4',
-    name: 'MESO Zoliborz',
-    address: 'ul. Slowackiego 15, 01-592 Warszawa',
-    hours: '11:00 - 22:00',
-    type: 'restaurant',
-    isOpen: true,
-    lat: 52.267,
-    lng: 20.982,
-  },
-]
+function isLocationOpen(openTime: string, closeTime: string): boolean {
+  const now = new Date()
+  const hours = now.getHours()
+  const minutes = now.getMinutes()
+  const currentMinutes = hours * 60 + minutes
+
+  const [openH, openM] = openTime.split(':').map(Number)
+  const [closeH, closeM] = closeTime.split(':').map(Number)
+  const openMinutes = openH * 60 + openM
+  const closeMinutes = closeH * 60 + closeM
+
+  return currentMinutes >= openMinutes && currentMinutes < closeMinutes
+}
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -73,6 +46,24 @@ const itemVariants = {
 }
 
 export default function LocationsPage() {
+  const [locations, setLocations] = useState<LocationData[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase
+      .from('locations')
+      .select('id, name, address, city, open_time, close_time, type, is_active')
+      .eq('is_active', true)
+      .order('name')
+      .then(({ data, error }) => {
+        if (!error && data) {
+          setLocations(data)
+        }
+        setIsLoading(false)
+      })
+  }, [])
+
   return (
     <div className="px-4 py-6 space-y-6">
       {/* Back */}
@@ -97,59 +88,73 @@ export default function LocationsPage() {
       </div>
 
       {/* Location Cards */}
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-        className="space-y-3"
-      >
-        {MOCK_LOCATIONS.map((location) => (
-          <motion.div
-            key={location.id}
-            variants={itemVariants}
-            className="rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/30"
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-display text-sm font-semibold">{location.name}</h3>
+      {isLoading ? (
+        <div className="flex justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : locations.length === 0 ? (
+        <p className="text-center text-sm text-muted-foreground py-8">Brak dostępnych lokalizacji</p>
+      ) : (
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="show"
+          className="space-y-3"
+        >
+          {locations.map((location) => {
+            const locType = (location.type || 'restaurant') as 'food_truck' | 'restaurant'
+            const isOpen = isLocationOpen(location.open_time, location.close_time)
+            const hours = `${location.open_time.slice(0, 5)} - ${location.close_time.slice(0, 5)}`
+
+            return (
+              <motion.div
+                key={location.id}
+                variants={itemVariants}
+                className="rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/30"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-display text-sm font-semibold">{location.name}</h3>
+                      <span className={cn(
+                        'rounded-full px-2 py-0.5 text-[10px] font-medium',
+                        locType === 'restaurant'
+                          ? 'bg-primary/20 text-primary'
+                          : 'bg-accent/20 text-accent'
+                      )}>
+                        {locType === 'restaurant' ? (
+                          <span className="flex items-center gap-1">
+                            <Store className="h-3 w-3" /> Lokal
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1">
+                            <Truck className="h-3 w-3" /> Food Truck
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">{location.address}, {location.city}</p>
+                    <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {hours}
+                      </span>
+                    </div>
+                  </div>
                   <span className={cn(
-                    'rounded-full px-2 py-0.5 text-[10px] font-medium',
-                    location.type === 'restaurant'
-                      ? 'bg-primary/20 text-primary'
-                      : 'bg-accent/20 text-accent'
+                    'mt-1 rounded-full px-2 py-0.5 text-[10px] font-medium',
+                    isOpen
+                      ? 'bg-green-500/20 text-green-400'
+                      : 'bg-red-500/20 text-red-400'
                   )}>
-                    {location.type === 'restaurant' ? (
-                      <span className="flex items-center gap-1">
-                        <Store className="h-3 w-3" /> Lokal
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1">
-                        <Truck className="h-3 w-3" /> Food Truck
-                      </span>
-                    )}
+                    {isOpen ? 'Otwarte' : 'Zamknięte'}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">{location.address}</p>
-                <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {location.hours}
-                  </span>
-                </div>
-              </div>
-              <span className={cn(
-                'mt-1 rounded-full px-2 py-0.5 text-[10px] font-medium',
-                location.isOpen
-                  ? 'bg-green-500/20 text-green-400'
-                  : 'bg-red-500/20 text-red-400'
-              )}>
-                {location.isOpen ? 'Otwarte' : 'Zamknięte'}
-              </span>
-            </div>
-          </motion.div>
-        ))}
-      </motion.div>
+              </motion.div>
+            )
+          })}
+        </motion.div>
+      )}
     </div>
   )
 }

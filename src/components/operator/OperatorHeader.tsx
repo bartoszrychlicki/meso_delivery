@@ -51,7 +51,7 @@ export function OperatorHeader() {
                         <UtensilsCrossed className="w-4 h-4" />
                         Statystyki
                     </NavLink>
-                    <NavLink href="/operator/settings" active={pathname === '/operator/settings'}>
+                    <NavLink href="/operator/settings" active={pathname.startsWith('/operator/settings')}>
                         <Settings className="w-4 h-4" />
                         Ustawienia
                     </NavLink>

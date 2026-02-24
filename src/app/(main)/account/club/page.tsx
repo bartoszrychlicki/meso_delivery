@@ -1,28 +1,26 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Star, Gift, Users, Cake, ChevronRight, Loader2, Check } from 'lucide-react'
+import { ArrowLeft, Star, Gift, Users, Cake, Loader2, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { LoginPrompt } from '@/components/auth'
 import { useAuth, useMesoClub } from '@/hooks/useAuth'
-import { createClient } from '@/lib/supabase/client'
-import { Customer, LoyaltyReward, LOYALTY_REWARDS, LoyaltyTier } from '@/types'
+import { useCustomerLoyalty } from '@/hooks/useCustomerLoyalty'
+import { useLoyaltyRewards, type LoyaltyRewardRow } from '@/hooks/useLoyaltyRewards'
+import { useAppConfig } from '@/hooks/useAppConfig'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 
-const TIER_THRESHOLDS = {
-    bronze: 0,
-    silver: 500,
-    gold: 1500,
-}
+const DEFAULT_TIER_THRESHOLDS = { bronze: 0, silver: 500, gold: 1500 }
 
-const TIER_LABELS = {
+const TIER_LABELS: Record<string, string> = {
     bronze: 'Brązowy',
     silver: 'Srebrny',
     gold: 'Złoty',
 }
 
-const TIER_COLORS = {
+const TIER_COLORS: Record<string, string> = {
     bronze: 'from-orange-600 to-orange-800',
     silver: 'from-gray-400 to-gray-600',
     gold: 'from-yellow-500 to-yellow-700',
@@ -31,39 +29,15 @@ const TIER_COLORS = {
 export default function MesoClubPage() {
     const { user, isLoading: authLoading, isPermanent } = useAuth()
     const { canUseRewards } = useMesoClub()
-    const [customer, setCustomer] = useState<Customer | null>(null)
-    const [isLoading, setIsLoading] = useState(true)
+    const { points: loyaltyPoints, tier: loyaltyTier, isLoading: loyaltyLoading } = useCustomerLoyalty()
+    const { rewards, isLoading: rewardsLoading } = useLoyaltyRewards()
+    const { getValue, isLoading: configLoading } = useAppConfig()
     const [redeemingReward, setRedeemingReward] = useState<string | null>(null)
 
-    useEffect(() => {
-        async function fetchCustomer() {
-            if (!user?.id) {
-                setIsLoading(false)
-                return
-            }
+    const tierThresholds = getValue<Record<string, number>>('loyalty_tier_thresholds', DEFAULT_TIER_THRESHOLDS)
 
-            const supabase = createClient()
-            const { data, error } = await supabase
-                .from('customers')
-                .select('*')
-                .eq('id', user.id)
-                .single()
-
-            if (error) {
-                console.error('Error fetching customer:', error)
-            } else {
-                setCustomer(data)
-            }
-            setIsLoading(false)
-        }
-
-        if (!authLoading) {
-            fetchCustomer()
-        }
-    }, [user?.id, authLoading])
-
-    const handleRedeemReward = async (reward: LoyaltyReward) => {
-        if (!customer || customer.loyalty_points < reward.points_cost) {
+    const handleRedeemReward = async (reward: LoyaltyRewardRow) => {
+        if (loyaltyPoints < reward.points_cost) {
             toast.error('Nie masz wystarczającej liczby punktów')
             return
         }
@@ -71,7 +45,6 @@ export default function MesoClubPage() {
         setRedeemingReward(reward.id)
 
         // TODO: Implement actual reward redemption via API
-        // For now, just show a placeholder
         await new Promise(resolve => setTimeout(resolve, 1000))
 
         toast.success(`Dodano nagrodę: ${reward.name}`, {
@@ -81,7 +54,9 @@ export default function MesoClubPage() {
         setRedeemingReward(null)
     }
 
-    if (authLoading || isLoading) {
+    const isLoading = authLoading || loyaltyLoading || rewardsLoading || configLoading
+
+    if (isLoading) {
         return (
             <div className="min-h-[60vh] flex items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -91,32 +66,16 @@ export default function MesoClubPage() {
 
     if (!isPermanent) {
         return (
-            <div className="px-4 py-6">
-                <Link href="/account" className="inline-flex items-center gap-2 text-white/60 hover:text-white mb-6">
-                    <ArrowLeft className="w-5 h-5" />
-                    Wróć do konta
-                </Link>
-
-                <div className="bg-card/50 rounded-xl p-6 border border-white/5 text-center">
-                    <Star className="w-12 h-12 text-accent mx-auto mb-4" />
-                    <h2 className="text-xl font-bold text-white mb-2">MESO Club</h2>
-                    <p className="text-white/60 mb-6">
-                        Załóż konto, aby dołączyć do programu lojalnościowego i zdobywać punkty!
-                    </p>
-                    <Link href="/login">
-                        <Button className="bg-accent hover:bg-accent/90 text-black font-semibold">
-                            Załóż konto
-                        </Button>
-                    </Link>
-                </div>
-            </div>
+            <LoginPrompt
+                icon={<Star className="w-12 h-12 text-primary" />}
+                title="MESO CLUB"
+                description="Zaloguj się, aby dołączyć do programu lojalnościowego i zdobywać punkty!"
+            />
         )
     }
 
-    const loyaltyPoints = customer?.loyalty_points || 0
-    const loyaltyTier = customer?.loyalty_tier || 'bronze'
     const nextTier = loyaltyTier === 'bronze' ? 'silver' : loyaltyTier === 'silver' ? 'gold' : null
-    const pointsToNextTier = nextTier ? TIER_THRESHOLDS[nextTier] - loyaltyPoints : 0
+    const pointsToNextTier = nextTier ? (tierThresholds[nextTier] ?? 0) - loyaltyPoints : 0
 
     return (
         <div className="px-4 py-6 space-y-6">
@@ -131,7 +90,7 @@ export default function MesoClubPage() {
             {/* Membership Card */}
             <div className={cn(
                 'relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br',
-                TIER_COLORS[loyaltyTier]
+                TIER_COLORS[loyaltyTier] || TIER_COLORS.bronze
             )}>
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
@@ -143,10 +102,7 @@ export default function MesoClubPage() {
                     </div>
 
                     <p className="text-white text-lg font-semibold mb-1">
-                        {customer?.name || customer?.email?.split('@')[0] || 'Członek'}
-                    </p>
-                    <p className="text-white/70 text-sm">
-                        Członek od {customer?.created_at ? new Date(customer.created_at).toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' }) : 'niedawna'}
+                        {user?.email?.split('@')[0] || 'Członek'}
                     </p>
 
                     <div className="mt-6">
@@ -156,9 +112,9 @@ export default function MesoClubPage() {
 
                     <div className="mt-4 flex items-center gap-2">
                         <span className="px-3 py-1 bg-white/20 rounded-full text-white text-sm font-medium">
-                            {TIER_LABELS[loyaltyTier]}
+                            {TIER_LABELS[loyaltyTier] || loyaltyTier}
                         </span>
-                        {nextTier && (
+                        {nextTier && pointsToNextTier > 0 && (
                             <span className="text-white/60 text-sm">
                                 {pointsToNextTier} pkt do {TIER_LABELS[nextTier]}
                             </span>
@@ -190,7 +146,7 @@ export default function MesoClubPage() {
                 </h2>
 
                 <div className="space-y-3">
-                    {LOYALTY_REWARDS.filter(r => r.is_active).map((reward) => {
+                    {rewards.map((reward) => {
                         const canRedeem = loyaltyPoints >= reward.points_cost
                         const isRedeeming = redeemingReward === reward.id
 

@@ -8,30 +8,31 @@ import { cn } from '@/lib/utils'
 
 interface PromoBanner {
   id: string
-  imageUrl: string
+  image_url: string
   title: string
-  subtitle: string
-  href?: string
+  subtitle: string | null
+  href: string | null
 }
 
-const PROMO_BANNERS: PromoBanner[] = [
+// Fallback banners used only when no DB banners are provided
+const FALLBACK_BANNERS: PromoBanner[] = [
   {
     id: 'promo-ramen',
-    imageUrl: '/images/promos/promo-ramen.jpg',
+    image_url: '/images/promos/promo-ramen.jpg',
     title: 'Nowy Spicy Miso 🔥',
     subtitle: 'Sprawdź nasz najostrzejszy ramen w historii!',
     href: '/',
   },
   {
     id: 'promo-delivery',
-    imageUrl: '/images/promos/promo-delivery.jpg',
+    image_url: '/images/promos/promo-delivery.jpg',
     title: 'Darmowa dostawa',
     subtitle: 'Przy zamówieniu powyżej 60 zł – tylko dziś!',
     href: '/',
   },
   {
     id: 'promo-gyoza',
-    imageUrl: '/images/promos/promo-gyoza.jpg',
+    image_url: '/images/promos/promo-gyoza.jpg',
     title: 'Gyoza Festival 🥟',
     subtitle: 'Zestaw 12 szt. w cenie 8 – weekendowa oferta',
     href: '/',
@@ -40,9 +41,11 @@ const PROMO_BANNERS: PromoBanner[] = [
 
 interface PromoCarouselProps {
   className?: string
+  banners?: PromoBanner[]
 }
 
-export function PromoCarousel({ className }: PromoCarouselProps) {
+export function PromoCarousel({ className, banners }: PromoCarouselProps) {
+  const displayBanners = banners && banners.length > 0 ? banners : FALLBACK_BANNERS
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true })
   const [activeIndex, setActiveIndex] = useState(0)
 
@@ -68,12 +71,12 @@ export function PromoCarousel({ className }: PromoCarouselProps) {
     <div className={cn('mb-6', className)}>
       <div ref={emblaRef} className="overflow-hidden rounded-2xl">
         <div className="flex">
-          {PROMO_BANNERS.map((banner) => (
+          {displayBanners.map((banner) => (
             <div key={banner.id} className="min-w-0 shrink-0 grow-0 basis-full">
               <Link href={banner.href || '#'} className="block">
                 <div className="relative aspect-[2.2/1] lg:aspect-[3.5/1] overflow-hidden rounded-2xl neon-border">
                   <Image
-                    src={banner.imageUrl}
+                    src={banner.image_url}
                     alt={banner.title}
                     fill
                     className="object-cover"
@@ -98,7 +101,7 @@ export function PromoCarousel({ className }: PromoCarouselProps) {
 
       {/* Dots */}
       <div className="mt-3 flex justify-center gap-1.5">
-        {PROMO_BANNERS.map((_, i) => (
+        {displayBanners.map((_, i) => (
           <button
             key={i}
             onClick={() => emblaApi?.scrollTo(i)}

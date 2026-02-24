@@ -30,6 +30,8 @@ interface CartState {
   promoDiscount: number
   promoDiscountType: 'percent' | 'fixed' | 'free_delivery' | null
   tip: number
+  minOrderValue: number
+  baseDeliveryFee: number
 
   // Actions
   addItem: (item: Omit<CartItem, 'id'>) => void
@@ -41,6 +43,7 @@ interface CartState {
   setPromoCode: (code: string, discount: number, discountType: 'percent' | 'fixed' | 'free_delivery') => void
   clearPromoCode: () => void
   setTip: (amount: number) => void
+  setLocationConfig: (minOrder: number, deliveryFee: number) => void
 
   // Getters
   getItemCount: () => number
@@ -51,8 +54,18 @@ interface CartState {
   canCheckout: () => { allowed: boolean; reason?: string }
 }
 
-const MIN_ORDER_VALUE = 35 // zł
-const BASE_DELIVERY_FEE = 7.99 // zł
+// Fallback defaults (used until location data is loaded from DB)
+const DEFAULT_MIN_ORDER_VALUE = 35 // zł
+const DEFAULT_DELIVERY_FEE = 7.99 // zł
+
+// Standalone helper – reused by selectors and store methods
+function computeSubtotal(items: CartItem[]) {
+  return items.reduce((sum, item) => {
+    const basePrice = (item.price || 0) + (item.variantPrice || 0)
+    const addonsPrice = (item.addons || []).reduce((a, addon) => a + (addon.price || 0), 0)
+    return sum + (basePrice + addonsPrice) * (item.quantity || 1)
+  }, 0)
+}
 
 export const useCartStore = create<CartState>()(
   persist(
@@ -64,9 +77,11 @@ export const useCartStore = create<CartState>()(
       promoDiscount: 0,
       promoDiscountType: null,
       tip: 0,
+      minOrderValue: DEFAULT_MIN_ORDER_VALUE,
+      baseDeliveryFee: DEFAULT_DELIVERY_FEE,
 
       addItem: (item) => {
-        const id = `${item.productId}-${item.variantId || 'base'}-${item.spiceLevel || 0}-${JSON.stringify(item.addons)}-${Date.now()}`
+        const id = `${item.productId}-${item.variantId || 'base'}-${item.spiceLevel || 0}-${JSON.stringify(item.addons || [])}-${Date.now()}`
 
         // Check if identical item exists (same product, variant, spice level, addons)
         const existingIndex = get().items.findIndex(
@@ -74,7 +89,7 @@ export const useCartStore = create<CartState>()(
             i.productId === item.productId &&
             i.variantId === item.variantId &&
             i.spiceLevel === item.spiceLevel &&
-            JSON.stringify(i.addons) === JSON.stringify(item.addons)
+            JSON.stringify(i.addons || []) === JSON.stringify(item.addons || [])
         )
 
         if (existingIndex > -1) {
@@ -135,23 +150,21 @@ export const useCartStore = create<CartState>()(
 
       setTip: (amount) => set({ tip: Math.max(0, amount) }),
 
+      setLocationConfig: (minOrder, deliveryFee) => {
+        set({ minOrderValue: minOrder, baseDeliveryFee: deliveryFee })
+      },
+
       getItemCount: () => {
         return get().items.reduce((sum, item) => sum + item.quantity, 0)
       },
 
-      getSubtotal: () => {
-        return get().items.reduce((sum, item) => {
-          const basePrice = item.price + (item.variantPrice || 0)
-          const addonsPrice = item.addons.reduce((a, addon) => a + addon.price, 0)
-          return sum + (basePrice + addonsPrice) * item.quantity
-        }, 0)
-      },
+      getSubtotal: () => computeSubtotal(get().items),
 
       getDeliveryFee: () => {
-        const { deliveryType, promoDiscountType } = get()
+        const { deliveryType, promoDiscountType, baseDeliveryFee } = get()
         if (deliveryType === 'pickup') return 0
         if (promoDiscountType === 'free_delivery') return 0
-        return BASE_DELIVERY_FEE
+        return baseDeliveryFee
       },
 
       getDiscount: () => {
@@ -181,16 +194,17 @@ export const useCartStore = create<CartState>()(
       canCheckout: () => {
         const items = get().items
         const subtotal = get().getSubtotal()
+        const { minOrderValue } = get()
 
         if (items.length === 0) {
           return { allowed: false, reason: 'Koszyk jest pusty' }
         }
 
-        if (subtotal < MIN_ORDER_VALUE) {
-          const missing = (MIN_ORDER_VALUE - subtotal).toFixed(2)
+        if (subtotal < minOrderValue) {
+          const missing = (minOrderValue - subtotal).toFixed(2)
           return {
             allowed: false,
-            reason: `Minimalna wartość zamówienia to ${MIN_ORDER_VALUE} zł. Brakuje ${missing} zł.`,
+            reason: `Minimalna wartość zamówienia to ${minOrderValue} zł. Brakuje ${missing} zł.`,
           }
         }
 
@@ -205,6 +219,47 @@ export const useCartStore = create<CartState>()(
         deliveryType: state.deliveryType,
         tip: state.tip,
       }),
+      merge: (persisted, current) => {
+        const p = persisted as Partial<CartState>
+        const items = (p.items || []).filter(
+          (item) => item && typeof item.price === 'number' && !isNaN(item.price) && item.productId
+        ).map((item) => ({
+          ...item,
+          addons: item.addons || [],
+          quantity: item.quantity || 1,
+        }))
+        return { ...current, ...p, items }
+      },
     }
   )
 )
+
+// ── Stable selectors (safe for use in components) ──
+export const selectItemCount = (s: CartState) =>
+  s.items.reduce((sum, item) => sum + item.quantity, 0)
+
+export const selectSubtotal = (s: CartState) => computeSubtotal(s.items)
+
+export const selectDeliveryFee = (s: CartState) => {
+  if (s.deliveryType === 'pickup') return 0
+  if (s.promoDiscountType === 'free_delivery') return 0
+  return s.baseDeliveryFee
+}
+
+export const selectDiscount = (s: CartState) => {
+  if (!s.promoDiscount || !s.promoDiscountType) return 0
+  if (s.promoDiscountType === 'percent') return computeSubtotal(s.items) * (s.promoDiscount / 100)
+  if (s.promoDiscountType === 'fixed') return s.promoDiscount
+  return 0
+}
+
+export const selectTotal = (s: CartState) => {
+  const subtotal = computeSubtotal(s.items)
+  const deliveryFee = s.deliveryType === 'pickup' ? 0 : s.promoDiscountType === 'free_delivery' ? 0 : s.baseDeliveryFee
+  let discount = 0
+  if (s.promoDiscount && s.promoDiscountType) {
+    if (s.promoDiscountType === 'percent') discount = subtotal * (s.promoDiscount / 100)
+    else if (s.promoDiscountType === 'fixed') discount = s.promoDiscount
+  }
+  return Math.max(0, subtotal - discount + deliveryFee + s.tip)
+}

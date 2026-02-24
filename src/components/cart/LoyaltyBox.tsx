@@ -3,9 +3,13 @@
 import Link from 'next/link'
 import { Crown, Gift, ChevronRight } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { useCustomerLoyalty } from '@/hooks/useCustomerLoyalty'
+import { useLoyaltyRewards } from '@/hooks/useLoyaltyRewards'
 
 export function LoyaltyBox() {
   const { isPermanent } = useAuth()
+  const { points, isLoading: loyaltyLoading } = useCustomerLoyalty()
+  const { rewards, isLoading: rewardsLoading } = useLoyaltyRewards()
 
   if (!isPermanent) {
     return (
@@ -33,10 +37,12 @@ export function LoyaltyBox() {
     )
   }
 
-  // TODO: Fetch real points from Supabase
-  const points = 340
-  const nextReward = 500
-  const progress = Math.min((points / nextReward) * 100, 100)
+  const isLoading = loyaltyLoading || rewardsLoading
+
+  // Find the next reward the user can't yet afford
+  const nextReward = rewards.find((r) => r.points_cost > points)
+  const nextRewardCost = nextReward?.points_cost ?? (rewards.length > 0 ? rewards[rewards.length - 1].points_cost : 500)
+  const progress = Math.min((points / nextRewardCost) * 100, 100)
 
   return (
     <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card p-4">
@@ -52,36 +58,48 @@ export function LoyaltyBox() {
         </Link>
       </div>
 
-      <div className="flex items-baseline justify-between mb-1.5">
-        <span className="text-lg font-display font-bold text-foreground">
-          {points}{' '}
-          <span className="text-xs text-muted-foreground font-sans font-normal">
-            pkt
-          </span>
-        </span>
-        <span className="text-xs text-muted-foreground">
-          do nagrody: {nextReward - points} pkt
-        </span>
-      </div>
-
-      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden mb-3">
-        <div
-          className="h-full rounded-full bg-primary transition-all duration-500 neon-glow-sm"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-
-      <div className="flex items-center gap-2 rounded-lg bg-secondary/50 p-2.5">
-        <Gift className="h-4 w-4 text-primary shrink-0" />
-        <div className="min-w-0">
-          <p className="text-xs font-medium text-foreground truncate">
-            Darmowe Gyoza 🥟
-          </p>
-          <p className="text-[10px] text-muted-foreground">
-            Następna nagroda za {nextReward - points} pkt
-          </p>
+      {isLoading ? (
+        <div className="h-16 flex items-center justify-center">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
-      </div>
+      ) : (
+        <>
+          <div className="flex items-baseline justify-between mb-1.5">
+            <span className="text-lg font-display font-bold text-foreground">
+              {points}{' '}
+              <span className="text-xs text-muted-foreground font-sans font-normal">
+                pkt
+              </span>
+            </span>
+            {nextReward && (
+              <span className="text-xs text-muted-foreground">
+                do nagrody: {nextReward.points_cost - points} pkt
+              </span>
+            )}
+          </div>
+
+          <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden mb-3">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-500 neon-glow-sm"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+
+          {nextReward && (
+            <div className="flex items-center gap-2 rounded-lg bg-secondary/50 p-2.5">
+              <Gift className="h-4 w-4 text-primary shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-foreground truncate">
+                  {nextReward.icon} {nextReward.name}
+                </p>
+                <p className="text-[10px] text-muted-foreground">
+                  Następna nagroda za {nextReward.points_cost - points} pkt
+                </p>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }

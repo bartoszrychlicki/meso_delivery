@@ -6,13 +6,6 @@ import { useCartStore } from '@/stores/cartStore'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 
-// Mock promo codes for testing (would be validated via API in production)
-const PROMO_CODES: Record<string, { discount: number; type: 'percent' | 'fixed' | 'free_delivery'; minOrder?: number; firstOrderOnly?: boolean }> = {
-  'PIERWSZYRAMEN': { discount: 15, type: 'percent', firstOrderOnly: true },
-  'MESOCLUB': { discount: 10, type: 'percent' },
-  'DOSTAWAZERO': { discount: 0, type: 'free_delivery', minOrder: 40 },
-}
-
 export function PromoCodeInput() {
   const [code, setCode] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -29,35 +22,39 @@ export function PromoCodeInput() {
 
     setIsLoading(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    try {
+      const response = await fetch('/api/promo-codes/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code.trim(), subtotal: getSubtotal() }),
+      })
 
-    const upperCode = code.toUpperCase().trim()
-    const promo = PROMO_CODES[upperCode]
+      const data = await response.json()
 
-    if (!promo) {
-      toast.error('Nieprawidłowy kod promocyjny')
+      if (!response.ok || !data.valid) {
+        toast.error(data.error || 'Nieprawidłowy kod promocyjny')
+        setIsLoading(false)
+        return
+      }
+
+      const discountType = data.discount_type as 'percent' | 'fixed' | 'free_delivery'
+      const discountValue = data.discount_value ?? 0
+
+      setPromoCode(data.code, discountValue, discountType)
+
+      const message = discountType === 'percent'
+        ? `Zastosowano rabat ${discountValue}%`
+        : discountType === 'free_delivery'
+        ? 'Darmowa dostawa aktywowana!'
+        : `Zastosowano rabat ${discountValue} zł`
+
+      toast.success(message)
+      setCode('')
+    } catch {
+      toast.error('Błąd weryfikacji kodu. Spróbuj ponownie.')
+    } finally {
       setIsLoading(false)
-      return
     }
-
-    if (promo.minOrder && getSubtotal() < promo.minOrder) {
-      toast.error(`Minimalna wartość zamówienia dla tego kodu to ${promo.minOrder} zł`)
-      setIsLoading(false)
-      return
-    }
-
-    setPromoCode(upperCode, promo.discount, promo.type)
-
-    const message = promo.type === 'percent'
-      ? `Zastosowano rabat ${promo.discount}%`
-      : promo.type === 'free_delivery'
-      ? 'Darmowa dostawa aktywowana!'
-      : `Zastosowano rabat ${promo.discount} zł`
-
-    toast.success(message)
-    setCode('')
-    setIsLoading(false)
   }
 
   const getPromoDescription = () => {

@@ -76,38 +76,12 @@ export interface LoyaltyReward {
   is_active: boolean
 }
 
-export const LOYALTY_REWARDS: LoyaltyReward[] = [
-  {
-    id: 'free-delivery',
-    name: 'Darmowa dostawa',
-    description: 'Twoje następne zamówienie bez kosztów dostawy',
-    points_cost: 100,
-    reward_type: 'free_delivery',
-    is_active: true,
-  },
-  {
-    id: 'gyoza-free',
-    name: 'Gyoza (6 szt)',
-    description: 'Darmowa porcja gyozy do zamówienia',
-    points_cost: 150,
-    reward_type: 'free_product',
-    is_active: true,
-  },
-  {
-    id: 'discount-10',
-    name: '10 zł rabatu',
-    description: 'Rabat na następne zamówienie',
-    points_cost: 200,
-    reward_type: 'discount',
-    discount_value: 10,
-    is_active: true,
-  },
-  {
-    id: 'ramen-free',
-    name: 'Ramen do wyboru',
-    description: 'Dowolny ramen z menu gratis',
-    points_cost: 300,
-    reward_type: 'free_product',
-    is_active: true,
-  },
-]
+export interface LoyaltyHistoryEntry {
+  id: string
+  customer_id: string
+  label: string
+  points: number
+  type: 'earned' | 'spent' | 'bonus' | 'expired'
+  order_id: number | null
+  created_at: string
+}

@@ -6,7 +6,7 @@ export const revalidate = 60
 async function getMenuData() {
   const supabase = await createClient()
 
-  const [categoriesResult, productsResult, locationResult] = await Promise.all([
+  const [categoriesResult, productsResult, locationResult, bannersResult] = await Promise.all([
     supabase
       .from('categories')
       .select('id, name, name_jp, slug, icon, description')
@@ -44,22 +44,28 @@ async function getMenuData() {
       .select('*')
       .eq('is_default', true)
       .single(),
+    supabase
+      .from('promo_banners')
+      .select('id, image_url, title, subtitle, href')
+      .eq('is_active', true)
+      .order('sort_order'),
   ])
 
   return {
     categories: categoriesResult.data || [],
     products: productsResult.data || [],
     location: locationResult.data,
+    banners: bannersResult.data || [],
   }
 }
 
 export default async function MenuPage() {
-  const { categories, products, location } = await getMenuData()
+  const { categories, products, location, banners } = await getMenuData()
 
   return (
     <div className="min-h-screen bg-background">
       {/* Menu content */}
-      <MenuClient categories={categories} products={products} location={location} />
+      <MenuClient categories={categories} products={products} location={location} banners={banners} />
     </div>
   )
 }

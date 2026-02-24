@@ -42,6 +42,7 @@ function OrderConfirmationContent() {
                     .from('orders')
                     .select(`
                         *,
+                        location:locations(delivery_time_min, delivery_time_max),
                         items:order_items(
                             *,
                             product:products(*)
@@ -89,7 +90,9 @@ function OrderConfirmationContent() {
                     total: order.total,
                     paymentMethod: order.payment_method,
                     paymentStatus: order.payment_status, // Map from DB
-                    estimatedTime: order.delivery_type === 'delivery' ? '30-45 min' : '15-20 min',
+                    estimatedTime: order.delivery_type === 'delivery'
+                        ? `${(order.location as any)?.delivery_time_min ?? 30}-${(order.location as any)?.delivery_time_max ?? 45} min`
+                        : '15-20 min',
                     createdAt: order.created_at,
                 }
 

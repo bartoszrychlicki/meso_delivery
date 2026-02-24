@@ -8,6 +8,7 @@ import { ProductCard, PromoCarousel } from '@/components/menu'
 import { CartSidebar } from '@/components/cart/CartSidebar'
 import { MobileStickyHeader } from '@/components/layout/MobileStickyHeader'
 import { useAuth } from '@/hooks/useAuth'
+import { useCartStore } from '@/stores/cartStore'
 
 interface Category {
   id: string
@@ -48,16 +49,34 @@ interface Location {
   delivery_time_min: number
   delivery_time_max: number
   min_order_value: number
+  delivery_fee: number
+}
+
+export interface PromoBannerData {
+  id: string
+  image_url: string
+  title: string
+  subtitle: string | null
+  href: string | null
 }
 
 interface MenuClientProps {
   categories: Category[]
   products: Product[]
   location?: Location | null
+  banners?: PromoBannerData[]
 }
 
-export function MenuClient({ categories, products, location }: MenuClientProps) {
+export function MenuClient({ categories, products, location, banners }: MenuClientProps) {
   const { isPermanent } = useAuth()
+  const setLocationConfig = useCartStore((s) => s.setLocationConfig)
+
+  // Sync location config (min order, delivery fee) to cart store
+  useEffect(() => {
+    if (location) {
+      setLocationConfig(location.min_order_value, location.delivery_fee)
+    }
+  }, [location, setLocationConfig])
 
   // Refs for sticky header
   const mobileHeaderRef = useRef<HTMLDivElement>(null)
@@ -146,7 +165,7 @@ export function MenuClient({ categories, products, location }: MenuClientProps) 
         </div>
 
         {/* Promo Banner */}
-        <PromoCarousel />
+        <PromoCarousel banners={banners} />
 
         {/* Ostatnio zamawiane (only for logged-in users) */}
         {isPermanent && bestsellerProducts.length > 0 && (

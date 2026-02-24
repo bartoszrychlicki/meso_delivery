@@ -9,9 +9,11 @@ interface DeliveryFormProps {
         time: 'asap' | 'scheduled'
     }
     onChange: (value: { type: 'delivery' | 'pickup'; time: 'asap' | 'scheduled' }) => void
+    deliveryTimeMin?: number
+    deliveryTimeMax?: number
 }
 
-export function DeliveryForm({ value, onChange }: DeliveryFormProps) {
+export function DeliveryForm({ value, onChange, deliveryTimeMin = 30, deliveryTimeMax = 45 }: DeliveryFormProps) {
     return (
         <div className="space-y-6">
             <div className="space-y-3">
@@ -62,7 +64,7 @@ export function DeliveryForm({ value, onChange }: DeliveryFormProps) {
                         </div>
                         <div>
                             <div className="font-medium">Jak najszybciej</div>
-                            <div className="text-sm opacity-60">Szacowany czas: 30-45 min</div>
+                            <div className="text-sm opacity-60">Szacowany czas: {deliveryTimeMin}-{deliveryTimeMax} min</div>
                         </div>
                     </button>
 
