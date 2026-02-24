@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Trophy, Gift, Truck, Percent, UtensilsCrossed, ArrowLeft, ChevronRight } from 'lucide-react'
+import { Trophy, Gift, Truck, Percent, UtensilsCrossed, ArrowLeft, ChevronRight, ArrowRight } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
@@ -53,8 +53,9 @@ export default function LoyaltyPage() {
           Zaloguj się, aby zbierać punkty i odbierać nagrody za każde zamówienie.
         </p>
         <Link href="/login">
-          <button className="bg-accent text-accent-foreground font-bold uppercase tracking-wider px-8 py-3 rounded-xl">
-            →) ZALOGUJ SIĘ
+          <button className="flex items-center gap-2 bg-accent text-accent-foreground font-display font-bold uppercase tracking-wider px-8 py-3 rounded-xl">
+            <ArrowRight className="h-5 w-5" />
+            ZALOGUJ SIĘ
           </button>
         </Link>
       </div>

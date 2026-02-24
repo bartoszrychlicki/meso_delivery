@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { User, MapPin, CreditCard, Heart, Settings, LogOut, ChevronRight, Loader2, Star, Package } from 'lucide-react'
+import { User, MapPin, CreditCard, Heart, Settings, LogOut, ChevronRight, Loader2, Star, Package, ArrowRight } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { useAuth, useUserDisplay } from '@/hooks/useAuth'
@@ -42,8 +42,9 @@ export default function AccountPage() {
           Zaloguj się, aby zarządzać profilem, adresami i metodami płatności.
         </p>
         <Link href="/login">
-          <button className="bg-accent text-accent-foreground font-bold uppercase tracking-wider px-8 py-3 rounded-xl">
-            →) ZALOGUJ SIĘ
+          <button className="flex items-center gap-2 bg-accent text-accent-foreground font-display font-bold uppercase tracking-wider px-8 py-3 rounded-xl">
+            <ArrowRight className="h-5 w-5" />
+            ZALOGUJ SIĘ
           </button>
         </Link>
       </div>
