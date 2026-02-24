@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, Trophy, ClipboardList, User } from 'lucide-react'
-import { useCartStore } from '@/stores/cartStore'
+import { useCartStore, selectItemCount, selectSubtotal } from '@/stores/cartStore'
 import { motion, AnimatePresence } from 'framer-motion'
 import { formatPrice } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
@@ -16,8 +16,8 @@ const baseNavItems = [
 
 export function MobileNav() {
   const pathname = usePathname()
-  const totalItems = useCartStore((s) => s.getItemCount())
-  const subtotal = useCartStore((s) => s.getSubtotal())
+  const totalItems = useCartStore(selectItemCount)
+  const subtotal = useCartStore(selectSubtotal)
 
   const hideCart =
     pathname === '/cart' ||

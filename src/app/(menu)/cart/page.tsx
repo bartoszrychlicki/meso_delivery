@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, ShoppingCart } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { useCartStore } from '@/stores/cartStore'
+import { useCartStore, selectItemCount, selectTotal } from '@/stores/cartStore'
 import { CartItem, CartSummary, PromoCodeInput } from '@/components/cart'
 import { EmptyState } from '@/components/common/EmptyState'
 import { AnonymousBanner } from '@/components/auth'
@@ -14,11 +14,11 @@ import { formatPrice } from '@/lib/formatters'
 export default function CartPage() {
   const router = useRouter()
   const items = useCartStore((state) => state.items)
-  const itemCount = useCartStore((state) => state.getItemCount())
+  const itemCount = useCartStore(selectItemCount)
   const canCheckout = useCartStore((state) => state.canCheckout)
   const promoDiscount = useCartStore((state) => state.promoDiscount)
   const tip = useCartStore((state) => state.tip)
-  const total = useCartStore((state) => state.getTotal())
+  const total = useCartStore(selectTotal)
 
   const checkout = canCheckout()
 

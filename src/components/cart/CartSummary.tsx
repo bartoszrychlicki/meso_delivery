@@ -1,25 +1,18 @@
 'use client'
 
-import { useCartStore } from '@/stores/cartStore'
+import { useCartStore, selectSubtotal, selectDeliveryFee, selectDiscount, selectTotal } from '@/stores/cartStore'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/formatters'
 import { Truck, Tag } from 'lucide-react'
 
 export function CartSummary() {
-  const getSubtotal = useCartStore((state) => state.getSubtotal)
-  const getDeliveryFee = useCartStore((state) => state.getDeliveryFee)
-  const getDiscount = useCartStore((state) => state.getDiscount)
-  const getTotal = useCartStore((state) => state.getTotal)
+  const subtotal = useCartStore(selectSubtotal)
+  const deliveryFee = useCartStore(selectDeliveryFee)
+  const discount = useCartStore(selectDiscount)
+  const total = useCartStore(selectTotal)
   const tip = useCartStore((state) => state.tip)
   const promoCode = useCartStore((state) => state.promoCode)
   const promoDiscountType = useCartStore((state) => state.promoDiscountType)
-
-
-
-  const subtotal = getSubtotal()
-  const deliveryFee = getDeliveryFee()
-  const discount = getDiscount()
-  const total = getTotal()
 
   return (
     <div className={cn(

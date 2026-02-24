@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, Search, ClipboardList, User, Trophy, ShoppingCart } from 'lucide-react'
-import { useCartStore } from '@/stores/cartStore'
+import { useCartStore, selectItemCount, selectSubtotal } from '@/stores/cartStore'
 import { formatPrice } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 
@@ -17,8 +17,8 @@ const navItems = [
 
 export function DesktopNav() {
   const pathname = usePathname()
-  const totalItems = useCartStore((s) => s.getItemCount())
-  const subtotal = useCartStore((s) => s.getSubtotal())
+  const totalItems = useCartStore(selectItemCount)
+  const subtotal = useCartStore(selectSubtotal)
 
   return (
     <header

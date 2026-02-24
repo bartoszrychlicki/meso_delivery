@@ -2,16 +2,14 @@
 
 import Link from 'next/link'
 import { ShoppingCart, Minus, Plus, Trash2 } from 'lucide-react'
-import { useCartStore } from '@/stores/cartStore'
+import { useCartStore, selectItemCount, selectSubtotal } from '@/stores/cartStore'
 import { formatPrice } from '@/lib/formatters'
 import { LoyaltyBox } from './LoyaltyBox'
 
 export function CartSidebar() {
   const items = useCartStore((s) => s.items)
-  const totalItems = useCartStore((s) => s.getItemCount())
-  const subtotal = useCartStore((s) => s.getSubtotal())
-  const deliveryFee = useCartStore((s) => s.getDeliveryFee())
-  const total = useCartStore((s) => s.getTotal())
+  const totalItems = useCartStore(selectItemCount)
+  const subtotal = useCartStore(selectSubtotal)
   const updateQuantity = useCartStore((s) => s.updateQuantity)
   const removeItem = useCartStore((s) => s.removeItem)
 
@@ -45,9 +43,9 @@ export function CartSidebar() {
                       <p className="text-sm font-medium text-foreground truncate">
                         {item.name}
                       </p>
-                      {item.addons.length > 0 && (
+                      {(item.addons || []).length > 0 && (
                         <div className="mt-0.5">
-                          {item.addons.map((addon) => (
+                          {(item.addons || []).map((addon) => (
                             <span
                               key={addon.id}
                               className="mr-1 text-[10px] text-muted-foreground"
@@ -67,7 +65,7 @@ export function CartSidebar() {
                       {formatPrice(
                         (item.price +
                           (item.variantPrice || 0) +
-                          item.addons.reduce((s, a) => s + a.price, 0)) *
+                          (item.addons || []).reduce((s, a) => s + a.price, 0)) *
                           item.quantity
                       )}
                     </span>
@@ -104,17 +102,9 @@ export function CartSidebar() {
             </div>
 
             <div className="mt-4 space-y-2 border-t border-border pt-4 text-sm">
-              <div className="flex justify-between text-muted-foreground">
-                <span>Produkty</span>
-                <span>{formatPrice(subtotal)}</span>
-              </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Dostawa</span>
-                <span>{formatPrice(deliveryFee)}</span>
-              </div>
               <div className="flex justify-between font-display text-base font-bold text-foreground">
                 <span>Razem</span>
-                <span>{formatPrice(total)}</span>
+                <span>{formatPrice(subtotal)}</span>
               </div>
             </div>
 
@@ -122,7 +112,7 @@ export function CartSidebar() {
               href="/checkout"
               className="mt-4 block w-full rounded-lg bg-accent py-3 text-center font-display text-sm font-semibold tracking-wider text-accent-foreground transition-all neon-glow-yellow hover:scale-[1.02]"
             >
-              ZAMÓW &bull; {formatPrice(total)}
+              ZAMÓW &bull; {formatPrice(subtotal)}
             </Link>
           </>
         )}
