@@ -21,6 +21,24 @@ interface PromoCode {
   created_at: string
 }
 
+type PromoStatus = 'active' | 'expired' | 'exhausted' | 'inactive' | 'scheduled'
+
+function getPromoStatus(code: PromoCode): PromoStatus {
+  if (!code.is_active) return 'inactive'
+  if (code.valid_until && new Date(code.valid_until) < new Date()) return 'expired'
+  if (code.valid_from && new Date(code.valid_from) > new Date()) return 'scheduled'
+  if (code.max_uses != null && code.max_uses > 0 && code.uses_count >= code.max_uses) return 'exhausted'
+  return 'active'
+}
+
+const PROMO_STATUS_CONFIG: Record<PromoStatus, { label: string; className: string }> = {
+  active: { label: 'Aktywny', className: 'bg-green-500/20 text-green-400' },
+  expired: { label: 'Wygasł', className: 'bg-orange-500/20 text-orange-400' },
+  exhausted: { label: 'Wyczerpany', className: 'bg-yellow-500/20 text-yellow-400' },
+  inactive: { label: 'Nieaktywny', className: 'bg-red-500/20 text-red-400' },
+  scheduled: { label: 'Zaplanowany', className: 'bg-blue-500/20 text-blue-400' },
+}
+
 const DISCOUNT_TYPES = [
   { value: 'percent', label: 'Procent (%)' },
   { value: 'fixed', label: 'Kwota (PLN)' },
@@ -119,13 +137,12 @@ export default function PromoCodesSettingsPage() {
         code: addForm.code.toUpperCase(),
         discount_type: addForm.discount_type,
         is_active: addForm.is_active,
+        first_order_only: addForm.first_order_only,
+        discount_value: addForm.discount_value || null,
+        min_order_value: addForm.min_order_value || null,
+        max_uses: addForm.max_uses || null,
+        valid_until: addForm.valid_until || null,
       }
-
-      if (addForm.discount_value) body.discount_value = addForm.discount_value
-      if (addForm.min_order_value) body.min_order_value = addForm.min_order_value
-      if (addForm.max_uses) body.max_uses = addForm.max_uses
-      if (addForm.first_order_only) body.first_order_only = addForm.first_order_only
-      if (addForm.valid_until) body.valid_until = addForm.valid_until
 
       const res = await fetch('/api/operator/settings/promo-codes', {
         method: 'POST',
@@ -180,12 +197,11 @@ export default function PromoCodesSettingsPage() {
         discount_type: editForm.discount_type,
         is_active: editForm.is_active,
         first_order_only: editForm.first_order_only,
+        discount_value: editForm.discount_value || null,
+        min_order_value: editForm.min_order_value || null,
+        max_uses: editForm.max_uses || null,
+        valid_until: editForm.valid_until || null,
       }
-
-      if (editForm.discount_value) body.discount_value = editForm.discount_value
-      if (editForm.min_order_value) body.min_order_value = editForm.min_order_value
-      if (editForm.max_uses) body.max_uses = editForm.max_uses
-      if (editForm.valid_until) body.valid_until = editForm.valid_until
 
       const res = await fetch('/api/operator/settings/promo-codes', {
         method: 'PATCH',
@@ -433,9 +449,9 @@ export default function PromoCodesSettingsPage() {
                 <div
                   key={code.id}
                   className={`p-4 rounded-xl border ${
-                    code.is_active
+                    getPromoStatus(code) === 'active'
                       ? 'bg-meso-dark-900 border-white/5'
-                      : 'bg-meso-dark-900/50 border-white/5 opacity-50'
+                      : 'bg-meso-dark-900/50 border-white/5 opacity-60'
                   }`}
                 >
                   {/* Mobile layout */}
@@ -443,11 +459,16 @@ export default function PromoCodesSettingsPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-white font-mono font-bold">{code.code}</span>
-                        {!code.is_active && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-400">
-                            Nieaktywny
-                          </span>
-                        )}
+                        {(() => {
+                          const status = getPromoStatus(code)
+                          if (status === 'active') return null
+                          const config = PROMO_STATUS_CONFIG[status]
+                          return (
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${config.className}`}>
+                              {config.label}
+                            </span>
+                          )
+                        })()}
                       </div>
                       <div className="flex items-center gap-2">
                         <button
@@ -506,15 +527,15 @@ export default function PromoCodesSettingsPage() {
                         : '-'}
                     </div>
                     <div>
-                      {code.is_active ? (
-                        <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400">
-                          Aktywny
-                        </span>
-                      ) : (
-                        <span className="text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-400">
-                          Nieaktywny
-                        </span>
-                      )}
+                      {(() => {
+                        const status = getPromoStatus(code)
+                        const config = PROMO_STATUS_CONFIG[status]
+                        return (
+                          <span className={`text-xs px-2 py-1 rounded-full ${config.className}`}>
+                            {config.label}
+                          </span>
+                        )
+                      })()}
                     </div>
                     <div className="flex items-center gap-2">
                       <button
