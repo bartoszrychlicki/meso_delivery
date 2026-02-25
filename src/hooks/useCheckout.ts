@@ -6,7 +6,6 @@ import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { useCartStore } from '@/stores/cartStore'
 import { useAuth } from '@/hooks/useAuth'
-import { useOrderConfirmationStore } from '@/stores/orderConfirmationStore'
 import type { AddressFormData, DeliveryFormData, PaymentFormData } from '@/lib/validators/checkout'
 
 export function useCheckout() {
@@ -14,7 +13,6 @@ export function useCheckout() {
     const supabase = createClient()
     const { user } = useAuth()
     const { items, getTotal, getSubtotal, getDeliveryFee, getDiscount, tip, promoDiscount, clearCart } = useCartStore()
-    const { setConfirmation } = useOrderConfirmationStore()
 
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)

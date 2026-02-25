@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { P24 } from '@/lib/p24'
 
 export const dynamic = 'force-dynamic'
@@ -28,10 +29,8 @@ export async function POST(request: Request) {
         // Get Order using Admin Client to bypass RLS
         console.log(`[P24 Register] Processing for Order ID: ${orderId}, User ID: ${user.id}`)
 
-        // Inline admin client creation if helper doesn't exist, or use standard if we can't find it.
-        // Assuming standard client for now but verifying RLS bypass in next step if this fails.
-        // ACTUALLY, let's fix the query first as the previous step failed.
-        const { data: order, error: orderError } = await supabase
+        const supabaseAdmin = createAdminClient()
+        const { data: order, error: orderError } = await supabaseAdmin
             .from('orders')
             .select('*')
             .eq('id', orderId)
@@ -39,11 +38,7 @@ export async function POST(request: Request) {
 
         if (orderError || !order) {
             console.error('[P24 Register] Order lookup failed:', orderError)
-            return NextResponse.json({ error: 'Nie znaleziono zamówienia w bazie danych (RLS?)' }, { status: 400 })
-        }
-
-        if (order.customer_id !== user.id) {
-            return NextResponse.json({ error: 'Brak uprawnień do tego zamówienia' }, { status: 403 })
+            return NextResponse.json({ error: 'Nie znaleziono zamówienia w bazie danych' }, { status: 400 })
         }
 
         if (order.customer_id !== user.id) {

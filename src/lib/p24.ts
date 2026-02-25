@@ -108,14 +108,18 @@ export class P24 {
         }
 
         try {
+            const controller = new AbortController()
+            const timeoutId = setTimeout(() => controller.abort(), 15_000)
             const response = await fetch(`${this.baseUrl}/api/v1/transaction/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Basic ${Buffer.from(`${this.config.posId}:${this.config.apiKey}`).toString('base64')}`
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(payload),
+                signal: controller.signal,
             })
+            clearTimeout(timeoutId)
 
             const data = await response.json()
 
@@ -159,12 +163,15 @@ export class P24 {
         ).digest('hex')
 
         try {
+            const verifyController = new AbortController()
+            const verifyTimeoutId = setTimeout(() => verifyController.abort(), 15_000)
             const response = await fetch(`${this.baseUrl}/api/v1/transaction/verify`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Basic ${Buffer.from(`${this.config.posId}:${this.config.apiKey}`).toString('base64')}`
                 },
+                signal: verifyController.signal,
                 body: JSON.stringify({
                     merchantId: this.config.merchantId,
                     posId: this.config.posId,
@@ -176,6 +183,7 @@ export class P24 {
                 })
             })
 
+            clearTimeout(verifyTimeoutId)
             const data = await response.json()
             if (response.ok && data.data?.status === 'success') {
                 return true;

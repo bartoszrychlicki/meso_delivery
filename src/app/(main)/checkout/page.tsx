@@ -250,11 +250,14 @@ export default function CheckoutPage() {
             return
         }
 
-        // Validate contact - trigger form submit
+        // Validate contact - trigger form submit if not yet validated
         if (!addressSubmitted) {
             const form = document.getElementById('address-form') as HTMLFormElement | null
             if (form) {
                 form.requestSubmit()
+                // After form validation succeeds, handleContactSubmit sets addressSubmitted=true.
+                // User needs to click again — show a toast so the action isn't silent.
+                toast.info('Sprawdzamy dane kontaktowe...')
                 return
             }
         }

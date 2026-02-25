@@ -41,11 +41,11 @@ export async function POST(request: Request) {
 
         console.log('[P24 Status] Signature verified successfully.')
 
-        // Parse order ID from sessionId or use returned orderId if P24 sends our ID there?
+        // Parse order ID from sessionId.
         // P24 'orderId' in notification is P24's transaction ID, NOT our database ID.
-        // Our database ID is usually embedded in 'sessionId' or passed as 'p24_session_id'.
-        // logic: sessionId was `${order.id}-${timestamp}`
-        const paramOrderId = sessionId.split('-')[0]
+        // Our database ID is embedded in 'sessionId' as `${uuid}-${timestamp}`.
+        // UUIDs contain hyphens, so we strip only the last segment (the timestamp).
+        const paramOrderId = sessionId.replace(/-\d+$/, '')
 
         console.log(`[P24 Status] Extracted Order ID: ${paramOrderId} from Session ID: ${sessionId}`)
 
