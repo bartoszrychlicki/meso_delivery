@@ -7,7 +7,6 @@ const tabs = [
   { href: '/operator/settings', label: 'PIN' },
   { href: '/operator/settings/location', label: 'Lokalizacja' },
   { href: '/operator/settings/loyalty', label: 'Lojalność' },
-  { href: '/operator/settings/promo-codes', label: 'Kody promo' },
   { href: '/operator/settings/banners', label: 'Banery' },
 ]
 

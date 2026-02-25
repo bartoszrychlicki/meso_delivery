@@ -3,7 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Clock, ChefHat, UtensilsCrossed, LayoutDashboard, LogOut, Settings } from 'lucide-react'
+import { Clock, ChefHat, UtensilsCrossed, LayoutDashboard, LogOut, Settings, Tag } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useOperatorAuthStore } from '@/stores/operatorAuthStore'
 
@@ -50,6 +50,10 @@ export function OperatorHeader() {
                     <NavLink href="/operator/stats" active={pathname === '/operator/stats'}>
                         <UtensilsCrossed className="w-4 h-4" />
                         Statystyki
+                    </NavLink>
+                    <NavLink href="/operator/promo-codes" active={pathname.startsWith('/operator/promo-codes')}>
+                        <Tag className="w-4 h-4" />
+                        Kody promo
                     </NavLink>
                     <NavLink href="/operator/settings" active={pathname.startsWith('/operator/settings')}>
                         <Settings className="w-4 h-4" />
