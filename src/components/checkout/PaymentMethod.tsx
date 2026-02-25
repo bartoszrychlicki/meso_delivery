@@ -35,7 +35,7 @@ export function PaymentMethod() {
 
             <p className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Ban className="w-3.5 h-3.5 flex-shrink-0" />
-                Na tą chwilę gotówki nie przyjmujemy
+                Na tę chwilę gotówki nie przyjmujemy
             </p>
         </div>
     )
