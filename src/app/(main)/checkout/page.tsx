@@ -132,8 +132,7 @@ export default function CheckoutPage() {
                     .in('key', [
                         'pickup_buffer_after_open',
                         'pickup_buffer_before_close',
-                        'pickup_time_min',
-                        'pickup_time_max',
+                        'estimated_wait_time',
                         'pay_on_pickup_fee',
                         'pay_on_pickup_max_order',
                     ]),
@@ -166,10 +165,9 @@ export default function CheckoutPage() {
                         : 30,
                 })
 
-                const min = configMap.pickup_time_min
-                const max = configMap.pickup_time_max
-                if (min && max) {
-                    setPickupEstimate(`~${min}-${max}`)
+                const waitTime = configMap.estimated_wait_time
+                if (waitTime) {
+                    setPickupEstimate(`~${waitTime}`)
                 }
 
                 // Payment on pickup config

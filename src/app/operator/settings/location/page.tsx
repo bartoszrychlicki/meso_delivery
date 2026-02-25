@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { MapPin, Loader2, Clock, Truck, Store, CreditCard } from 'lucide-react'
+import { MapPin, Loader2, Clock, Truck, Store, CreditCard, Timer } from 'lucide-react'
 import { useOperatorAuthStore } from '@/stores/operatorAuthStore'
 import { toast } from 'sonner'
 
@@ -36,6 +36,7 @@ export default function LocationSettingsPage() {
     close_time: '',
     delivery_radius_km: 0,
   })
+  const [estimatedWaitTime, setEstimatedWaitTime] = useState(20)
   const [pickupBufferAfterOpen, setPickupBufferAfterOpen] = useState(30)
   const [pickupBufferBeforeClose, setPickupBufferBeforeClose] = useState(30)
   const [pickupOnlineFee, setPickupOnlineFee] = useState(0)
@@ -92,6 +93,8 @@ export default function LocationSettingsPage() {
         const beforeClose = configArr.find((c) => c.key === 'pickup_buffer_before_close')
         if (afterOpen) setPickupBufferAfterOpen(parseInt(afterOpen.value) || 30)
         if (beforeClose) setPickupBufferBeforeClose(parseInt(beforeClose.value) || 30)
+        const waitTime = configArr.find((c) => c.key === 'estimated_wait_time')
+        if (waitTime) setEstimatedWaitTime(parseInt(waitTime.value) || 20)
         const onlineFee = configArr.find((c) => c.key === 'pickup_online_fee')
         const pickupFee = configArr.find((c) => c.key === 'pay_on_pickup_fee')
         const pickupMax = configArr.find((c) => c.key === 'pay_on_pickup_max_order')
@@ -127,6 +130,7 @@ export default function LocationSettingsPage() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify([
+            { key: 'estimated_wait_time', value: String(estimatedWaitTime) },
             { key: 'pickup_buffer_after_open', value: String(pickupBufferAfterOpen) },
             { key: 'pickup_buffer_before_close', value: String(pickupBufferBeforeClose) },
             { key: 'pickup_online_fee', value: String(pickupOnlineFee) },
@@ -245,6 +249,28 @@ export default function LocationSettingsPage() {
                   className={`${inputClass} [color-scheme:dark]`}
                 />
               </div>
+            </div>
+          </div>
+
+          {/* ── Section: Czas oczekiwania ── */}
+          <div className="bg-meso-dark-800/50 rounded-xl p-6 border border-white/5">
+            <div className="flex items-center gap-2 mb-5">
+              <Timer className="w-5 h-5 text-meso-red-500" />
+              <h2 className="text-base font-semibold text-white">Czas oczekiwania</h2>
+            </div>
+
+            <div className="max-w-xs space-y-2">
+              <label className="text-sm text-white/60">Szacowany czas oczekiwania (minuty)</label>
+              <input
+                type="number"
+                min="1"
+                value={estimatedWaitTime}
+                onChange={(e) => setEstimatedWaitTime(parseInt(e.target.value) || 20)}
+                className={inputClass}
+              />
+              <p className="text-xs text-white/40">
+                Wyświetlany klientom w checkoucie i na stronie śledzenia zamówienia
+              </p>
             </div>
           </div>
 

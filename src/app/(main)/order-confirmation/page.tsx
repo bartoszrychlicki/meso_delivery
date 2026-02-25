@@ -21,7 +21,7 @@ const pickupSteps = [
 ]
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildConfirmation(order: Record<string, any>): OrderConfirmation {
+function buildConfirmation(order: Record<string, any>, waitMinutes = 20): OrderConfirmation {
     const deliveryAddress = order.delivery_address as Record<string, string | undefined>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const location = order.location as Record<string, any>
@@ -66,9 +66,7 @@ function buildConfirmation(order: Record<string, any>): OrderConfirmation {
         paymentMethod: order.payment_method,
         paymentStatus: order.payment_status,
         orderStatus: order.status,
-        estimatedTime: order.delivery_type === 'delivery'
-            ? `${location?.delivery_time_min ?? 30}-${location?.delivery_time_max ?? 45} min`
-            : '15-20 min',
+        estimatedTime: `~${waitMinutes} min`,
         createdAt: order.created_at,
     }
 }
@@ -96,24 +94,32 @@ function OrderConfirmationContent() {
 
                 const supabase = createClient()
 
-                const { data: order, error: orderError } = await supabase
-                    .from('orders')
-                    .select(`
-                        *,
-                        location:locations(name, address, city, delivery_time_min, delivery_time_max),
-                        items:order_items(
+                const [orderRes, configRes] = await Promise.all([
+                    supabase
+                        .from('orders')
+                        .select(`
                             *,
-                            product:products(*)
-                        )
-                    `)
-                    .eq('id', orderId)
-                    .single()
+                            location:locations(name, address, city, delivery_time_min, delivery_time_max),
+                            items:order_items(
+                                *,
+                                product:products(*)
+                            )
+                        `)
+                        .eq('id', orderId)
+                        .single(),
+                    supabase
+                        .from('app_config')
+                        .select('key, value')
+                        .eq('key', 'estimated_wait_time')
+                        .maybeSingle(),
+                ])
 
-                if (orderError || !order) {
+                if (orderRes.error || !orderRes.data) {
                     throw new Error('Nie znaleziono zamówienia')
                 }
 
-                setConfirmation(buildConfirmation(order))
+                const waitMinutes = configRes.data ? parseInt(configRes.data.value as string) || 20 : 20
+                setConfirmation(buildConfirmation(orderRes.data, waitMinutes))
             } catch (err) {
                 console.error('Error fetching order:', err)
                 setError('Nie udało się pobrać szczegółów zamówienia')
