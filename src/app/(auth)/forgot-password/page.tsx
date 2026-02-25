@@ -118,6 +118,7 @@ export default function ForgotPasswordPage() {
           <Input
             id="email"
             type="email"
+            autoComplete="email"
             placeholder="twoj@email.pl"
             {...register('email')}
             className="bg-card border-white/10 text-white placeholder:text-white/40 focus:border-primary"

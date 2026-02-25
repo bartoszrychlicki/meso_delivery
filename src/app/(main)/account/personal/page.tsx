@@ -126,6 +126,7 @@ export default function PersonalPage() {
           <label className="text-xs font-medium text-muted-foreground">Imię i nazwisko</label>
           <input
             type="text"
+            autoComplete="name"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             placeholder="Jan Kowalski"
@@ -138,6 +139,7 @@ export default function PersonalPage() {
           <label className="text-xs font-medium text-muted-foreground">Email</label>
           <input
             type="email"
+            autoComplete="email"
             value={form.email}
             readOnly
             className="w-full rounded-xl border border-border bg-secondary px-4 py-3 text-sm text-muted-foreground cursor-not-allowed"
@@ -149,6 +151,7 @@ export default function PersonalPage() {
           <label className="text-xs font-medium text-muted-foreground">Telefon</label>
           <input
             type="tel"
+            autoComplete="tel"
             value={form.phone}
             onChange={(e) => setForm({ ...form, phone: e.target.value })}
             placeholder="+48 500 000 000"

@@ -159,6 +159,7 @@ export default function ResetPasswordPage() {
           <Input
             id="password"
             type="password"
+            autoComplete="new-password"
             placeholder="Minimum 8 znaków"
             {...register('password')}
             className="bg-card border-white/10 text-white placeholder:text-white/40 focus:border-primary"
@@ -175,6 +176,7 @@ export default function ResetPasswordPage() {
           <Input
             id="confirmPassword"
             type="password"
+            autoComplete="new-password"
             placeholder="Powtórz nowe hasło"
             {...register('confirmPassword')}
             className="bg-card border-white/10 text-white placeholder:text-white/40 focus:border-primary"

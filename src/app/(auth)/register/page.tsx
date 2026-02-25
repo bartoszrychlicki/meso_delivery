@@ -168,6 +168,7 @@ export default function UpgradeAccountPage() {
             <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               placeholder="Imię"
+              autoComplete="name"
               {...register('name')}
               className={`${inputCls} pl-10 pr-4`}
             />
@@ -184,6 +185,7 @@ export default function UpgradeAccountPage() {
             <input
               type="email"
               placeholder="Email"
+              autoComplete="email"
               {...register('email')}
               className={`${inputCls} pl-10 pr-4`}
             />
@@ -200,6 +202,7 @@ export default function UpgradeAccountPage() {
             <input
               type={showPass ? 'text' : 'password'}
               placeholder="Hasło (min. 8 znaków)"
+              autoComplete="new-password"
               {...register('password')}
               className={`${inputCls} pl-10 pr-10`}
             />
@@ -223,6 +226,7 @@ export default function UpgradeAccountPage() {
             <input
               type={showConfirmPass ? 'text' : 'password'}
               placeholder="Powtórz hasło"
+              autoComplete="new-password"
               {...register('confirmPassword')}
               className={`${inputCls} pl-10 pr-10`}
             />

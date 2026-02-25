@@ -60,6 +60,7 @@ export function ContactForm({ defaultValues, savedPhone, onSubmit }: ContactForm
                     <label htmlFor="firstName" className="text-xs font-medium text-muted-foreground">Imię</label>
                     <input
                         id="firstName"
+                        autoComplete="given-name"
                         {...register('firstName')}
                         placeholder="Jan"
                         aria-invalid={showError('firstName') ? true : undefined}
@@ -71,6 +72,7 @@ export function ContactForm({ defaultValues, savedPhone, onSubmit }: ContactForm
                     <label htmlFor="lastName" className="text-xs font-medium text-muted-foreground">Nazwisko</label>
                     <input
                         id="lastName"
+                        autoComplete="family-name"
                         {...register('lastName')}
                         placeholder="Kowalski"
                         aria-invalid={showError('lastName') ? true : undefined}
@@ -85,6 +87,7 @@ export function ContactForm({ defaultValues, savedPhone, onSubmit }: ContactForm
                 <input
                     id="email"
                     type="email"
+                    autoComplete="email"
                     {...register('email')}
                     placeholder="jan@example.com"
                     aria-invalid={showError('email') ? true : undefined}
@@ -101,6 +104,7 @@ export function ContactForm({ defaultValues, savedPhone, onSubmit }: ContactForm
                 <input
                     id="phone"
                     type="tel"
+                    autoComplete="tel"
                     {...register('phone')}
                     placeholder="123456789"
                     maxLength={9}

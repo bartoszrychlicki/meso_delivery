@@ -111,6 +111,7 @@ function LoginForm() {
             <input
               type="email"
               placeholder="Email"
+              autoComplete="email"
               {...register('email')}
               className={`${inputCls} pl-10 pr-4`}
             />
@@ -127,6 +128,7 @@ function LoginForm() {
             <input
               type={showPass ? 'text' : 'password'}
               placeholder="Hasło"
+              autoComplete="current-password"
               {...register('password')}
               className={`${inputCls} pl-10 pr-10`}
             />
