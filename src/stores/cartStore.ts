@@ -72,7 +72,7 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
       locationId: null,
-      deliveryType: 'delivery',
+      deliveryType: 'pickup',
       promoCode: null,
       promoDiscount: 0,
       promoDiscountType: null,
@@ -217,7 +217,6 @@ export const useCartStore = create<CartState>()(
         items: state.items,
         locationId: state.locationId,
         deliveryType: state.deliveryType,
-        tip: state.tip,
       }),
       merge: (persisted, current) => {
         const p = persisted as Partial<CartState>
