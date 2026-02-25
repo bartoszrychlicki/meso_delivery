@@ -12,7 +12,7 @@ export function useCheckout() {
     const router = useRouter()
     const supabase = createClient()
     const { user } = useAuth()
-    const { items, getTotal, getSubtotal, getDeliveryFee, getPaymentFee, getDiscount, tip, promoDiscount, clearCart } = useCartStore()
+    const { items, getTotal, getSubtotal, getDeliveryFee, getPaymentFee, getDiscount, tip, promoCode, loyaltyCoupon, clearCart } = useCartStore()
 
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -81,6 +81,7 @@ export function useCheckout() {
                     subtotal,
                     delivery_fee: getDeliveryFee() + getPaymentFee(),
                     tip,
+                    promo_code: promoCode || loyaltyCoupon?.code || null,
                     promo_discount: getDiscount(),
                     total,
                     loyalty_points_earned: Math.floor(total), // 1 pkt = 1 PLN
@@ -100,6 +101,19 @@ export function useCheckout() {
                     .from('customers')
                     .update({ phone: addressData.phone })
                     .eq('id', user.id)
+            }
+
+            // 2c. Mark loyalty coupon as used
+            if (loyaltyCoupon) {
+                await supabase
+                    .from('loyalty_coupons')
+                    .update({
+                        status: 'used',
+                        used_at: new Date().toISOString(),
+                        order_id: order.id,
+                    })
+                    .eq('id', loyaltyCoupon.id)
+                    .eq('customer_id', user.id)
             }
 
             // 3. Create Order Items

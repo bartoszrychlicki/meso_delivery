@@ -24,6 +24,15 @@ export interface CartItem {
 
 type PaymentType = 'online' | 'pay_on_pickup'
 
+export interface LoyaltyCoupon {
+  id: string
+  code: string
+  coupon_type: 'free_delivery' | 'discount' | 'free_product'
+  discount_value: number | null
+  free_product_name: string | null
+  expires_at: string
+}
+
 interface CartState {
   items: CartItem[]
   locationId: string | null
@@ -33,6 +42,7 @@ interface CartState {
   promoCode: string | null
   promoDiscount: number
   promoDiscountType: 'percent' | 'fixed' | 'free_delivery' | null
+  loyaltyCoupon: LoyaltyCoupon | null
   tip: number
   minOrderValue: number
   baseDeliveryFee: number
@@ -48,6 +58,8 @@ interface CartState {
   setPayOnPickupFee: (fee: number) => void
   setPromoCode: (code: string, discount: number, discountType: 'percent' | 'fixed' | 'free_delivery') => void
   clearPromoCode: () => void
+  setLoyaltyCoupon: (coupon: LoyaltyCoupon) => void
+  clearLoyaltyCoupon: () => void
   setTip: (amount: number) => void
   setLocationConfig: (minOrder: number, deliveryFee: number) => void
 
@@ -85,6 +97,7 @@ export const useCartStore = create<CartState>()(
       promoCode: null,
       promoDiscount: 0,
       promoDiscountType: null,
+      loyaltyCoupon: null,
       tip: 0,
       minOrderValue: DEFAULT_MIN_ORDER_VALUE,
       baseDeliveryFee: DEFAULT_DELIVERY_FEE,
@@ -134,6 +147,7 @@ export const useCartStore = create<CartState>()(
           promoCode: null,
           promoDiscount: 0,
           promoDiscountType: null,
+          loyaltyCoupon: null,
           tip: 0,
         })
       },
@@ -151,6 +165,7 @@ export const useCartStore = create<CartState>()(
           promoCode: code,
           promoDiscount: discount,
           promoDiscountType: discountType,
+          loyaltyCoupon: null, // One slot: promo OR coupon
         })
       },
 
@@ -160,6 +175,20 @@ export const useCartStore = create<CartState>()(
           promoDiscount: 0,
           promoDiscountType: null,
         })
+      },
+
+      setLoyaltyCoupon: (coupon) => {
+        set({
+          loyaltyCoupon: coupon,
+          // One slot: clear promo code when coupon is set
+          promoCode: null,
+          promoDiscount: 0,
+          promoDiscountType: null,
+        })
+      },
+
+      clearLoyaltyCoupon: () => {
+        set({ loyaltyCoupon: null })
       },
 
       setTip: (amount) => set({ tip: Math.min(200, Math.max(0, amount)) }),
@@ -175,9 +204,10 @@ export const useCartStore = create<CartState>()(
       getSubtotal: () => computeSubtotal(get().items),
 
       getDeliveryFee: () => {
-        const { deliveryType, promoDiscountType, baseDeliveryFee } = get()
+        const { deliveryType, promoDiscountType, loyaltyCoupon, baseDeliveryFee } = get()
         if (deliveryType === 'pickup') return 0
         if (promoDiscountType === 'free_delivery') return 0
+        if (loyaltyCoupon?.coupon_type === 'free_delivery') return 0
         return baseDeliveryFee
       },
 
@@ -187,18 +217,25 @@ export const useCartStore = create<CartState>()(
       },
 
       getDiscount: () => {
-        const { promoDiscount, promoDiscountType } = get()
-        if (!promoDiscount || !promoDiscountType) return 0
+        const { promoDiscount, promoDiscountType, loyaltyCoupon } = get()
 
-        if (promoDiscountType === 'percent') {
-          return get().getSubtotal() * (promoDiscount / 100)
+        // Promo code discount
+        if (promoDiscount && promoDiscountType) {
+          if (promoDiscountType === 'percent') {
+            return get().getSubtotal() * (promoDiscount / 100)
+          }
+          if (promoDiscountType === 'fixed') {
+            return promoDiscount
+          }
+          return 0 // free_delivery is handled in getDeliveryFee
         }
 
-        if (promoDiscountType === 'fixed') {
-          return promoDiscount
+        // Loyalty coupon discount
+        if (loyaltyCoupon?.coupon_type === 'discount' && loyaltyCoupon.discount_value) {
+          return loyaltyCoupon.discount_value
         }
 
-        return 0 // free_delivery is handled in getDeliveryFee
+        return 0
       },
 
       getTotal: () => {
@@ -264,13 +301,19 @@ export const selectSubtotal = (s: CartState) => computeSubtotal(s.items)
 export const selectDeliveryFee = (s: CartState) => {
   if (s.deliveryType === 'pickup') return 0
   if (s.promoDiscountType === 'free_delivery') return 0
+  if (s.loyaltyCoupon?.coupon_type === 'free_delivery') return 0
   return s.baseDeliveryFee
 }
 
 export const selectDiscount = (s: CartState) => {
-  if (!s.promoDiscount || !s.promoDiscountType) return 0
-  if (s.promoDiscountType === 'percent') return computeSubtotal(s.items) * (s.promoDiscount / 100)
-  if (s.promoDiscountType === 'fixed') return s.promoDiscount
+  if (s.promoDiscount && s.promoDiscountType) {
+    if (s.promoDiscountType === 'percent') return computeSubtotal(s.items) * (s.promoDiscount / 100)
+    if (s.promoDiscountType === 'fixed') return s.promoDiscount
+    return 0
+  }
+  if (s.loyaltyCoupon?.coupon_type === 'discount' && s.loyaltyCoupon.discount_value) {
+    return s.loyaltyCoupon.discount_value
+  }
   return 0
 }
 
@@ -279,12 +322,17 @@ export const selectPaymentFee = (s: CartState) =>
 
 export const selectTotal = (s: CartState) => {
   const subtotal = computeSubtotal(s.items)
-  const deliveryFee = s.deliveryType === 'pickup' ? 0 : s.promoDiscountType === 'free_delivery' ? 0 : s.baseDeliveryFee
+  let deliveryFee = s.baseDeliveryFee
+  if (s.deliveryType === 'pickup') deliveryFee = 0
+  else if (s.promoDiscountType === 'free_delivery') deliveryFee = 0
+  else if (s.loyaltyCoupon?.coupon_type === 'free_delivery') deliveryFee = 0
   const paymentFee = s.paymentType === 'pay_on_pickup' ? s.payOnPickupFee : 0
   let discount = 0
   if (s.promoDiscount && s.promoDiscountType) {
     if (s.promoDiscountType === 'percent') discount = subtotal * (s.promoDiscount / 100)
     else if (s.promoDiscountType === 'fixed') discount = s.promoDiscount
+  } else if (s.loyaltyCoupon?.coupon_type === 'discount' && s.loyaltyCoupon.discount_value) {
+    discount = s.loyaltyCoupon.discount_value
   }
   return Math.max(0, subtotal - discount + deliveryFee + paymentFee + s.tip)
 }
