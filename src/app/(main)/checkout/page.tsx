@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -38,6 +38,7 @@ export default function CheckoutPage() {
 
     const [contactData, setContactData] = useState<ContactFormData | null>(null)
     const [addressSubmitted, setAddressSubmitted] = useState(false)
+    const contactResolveRef = useRef<((data: ContactFormData | null) => void) | null>(null)
 
     // Location hours & pickup config
     const [locationHours, setLocationHours] = useState<{
@@ -240,6 +241,11 @@ export default function CheckoutPage() {
         setContactData(data)
         setSavePhoneToProfile(savePhone)
         setAddressSubmitted(true)
+        // Resolve pending submit if handleFinalSubmit is waiting
+        if (contactResolveRef.current) {
+            contactResolveRef.current(data)
+            contactResolveRef.current = null
+        }
     }
 
     const handleFinalSubmit = async () => {
@@ -250,26 +256,34 @@ export default function CheckoutPage() {
             return
         }
 
-        // Validate contact - trigger form submit if not yet validated
+        // Validate contact - trigger form submit and wait for result
+        let resolvedContact = contactData
         if (!addressSubmitted) {
             const form = document.getElementById('address-form') as HTMLFormElement | null
             if (form) {
-                form.requestSubmit()
-                // After form validation succeeds, handleContactSubmit sets addressSubmitted=true.
-                // User needs to click again — show a toast so the action isn't silent.
-                toast.info('Sprawdzamy dane kontaktowe...')
-                return
+                const contactPromise = new Promise<ContactFormData | null>((resolve) => {
+                    contactResolveRef.current = resolve
+                    form.requestSubmit()
+                    // If validation fails, requestSubmit won't call onSubmit — resolve null after a tick
+                    setTimeout(() => {
+                        if (contactResolveRef.current) {
+                            contactResolveRef.current(null)
+                            contactResolveRef.current = null
+                        }
+                    }, 100)
+                })
+                resolvedContact = await contactPromise
             }
         }
 
-        if (!contactData) {
+        if (!resolvedContact) {
             toast.error('Uzupełnij dane kontaktowe')
             return
         }
 
         // Build address data for submitOrder (it expects AddressFormData shape)
         const addressData = {
-            ...contactData,
+            ...resolvedContact,
             street: '',
             houseNumber: '',
             postalCode: '',
