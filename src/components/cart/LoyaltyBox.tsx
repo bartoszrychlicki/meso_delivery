@@ -5,11 +5,13 @@ import { Crown, Gift, ChevronRight } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useCustomerLoyalty } from '@/hooks/useCustomerLoyalty'
 import { useLoyaltyRewards } from '@/hooks/useLoyaltyRewards'
+import { useCartStore } from '@/stores/cartStore'
 
 export function LoyaltyBox() {
   const { isPermanent } = useAuth()
   const { points, isLoading: loyaltyLoading } = useCustomerLoyalty()
   const { rewards, isLoading: rewardsLoading } = useLoyaltyRewards()
+  const loyaltyCoupon = useCartStore((s) => s.loyaltyCoupon)
 
   if (!isPermanent) {
     return (
@@ -117,6 +119,18 @@ export function LoyaltyBox() {
               <Gift className="h-4 w-4 text-primary shrink-0" />
               <p className="text-xs font-medium text-primary">
                 Masz nagrodę do odebrania! Sprawdź dostępne nagrody →
+              </p>
+            </Link>
+          )}
+
+          {!loyaltyCoupon && points > 0 && (
+            <Link
+              href="/account/club"
+              className="flex items-center gap-2 rounded-xl bg-meso-gold-400/10 border border-meso-gold-400/20 px-4 py-3 mt-3"
+            >
+              <Gift className="h-4 w-4 text-meso-gold-400" />
+              <p className="text-xs text-meso-gold-400">
+                Masz {points} pkt — aktywuj kupon!
               </p>
             </Link>
           )}

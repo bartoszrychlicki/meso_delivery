@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    const { name, description, points_cost, reward_type, discount_value, icon, sort_order } = body
+    const { name, description, points_cost, reward_type, discount_value, icon, sort_order, min_tier } = body
 
     if (!name || points_cost === undefined || !reward_type) {
       return NextResponse.json(
@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
     if (discount_value !== undefined) insertData.discount_value = discount_value
     if (icon !== undefined) insertData.icon = icon
     if (sort_order !== undefined) insertData.sort_order = sort_order
+    if (min_tier !== undefined) insertData.min_tier = min_tier
 
     const { data, error } = await supabase
       .from('loyalty_rewards')
@@ -110,6 +111,7 @@ export async function PATCH(request: NextRequest) {
       'icon',
       'sort_order',
       'is_active',
+      'min_tier',
     ]
 
     const updateData: Record<string, unknown> = {}

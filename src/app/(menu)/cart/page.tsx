@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
@@ -19,6 +20,27 @@ export default function CartPage() {
   const itemCount = useCartStore(selectItemCount)
   const canCheckout = useCartStore((state) => state.canCheckout)
   const total = useCartStore(selectTotal)
+
+  useEffect(() => {
+    async function syncCoupon() {
+      try {
+        const res = await fetch('/api/loyalty/active-coupon')
+        const { coupon } = await res.json()
+        const storeCoupon = useCartStore.getState().loyaltyCoupon
+
+        if (coupon && !storeCoupon) {
+          // DB has active coupon but store doesn't — restore it
+          useCartStore.getState().setLoyaltyCoupon(coupon)
+        } else if (!coupon && storeCoupon) {
+          // Store has coupon but it expired in DB — clear it
+          useCartStore.getState().clearLoyaltyCoupon()
+        }
+      } catch {
+        // Silently fail — non-critical
+      }
+    }
+    syncCoupon()
+  }, [])
 
   const checkout = canCheckout()
 

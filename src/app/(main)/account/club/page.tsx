@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Star, Gift, Users, Cake, Loader2, Check } from 'lucide-react'
+import { ArrowLeft, Star, Gift, Loader2, Check, Lock, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LoginPrompt } from '@/components/auth'
 import { useAuth } from '@/hooks/useAuth'
@@ -26,32 +26,63 @@ const TIER_COLORS: Record<string, string> = {
     gold: 'from-yellow-500 to-yellow-700',
 }
 
+const TIER_ORDER = ['bronze', 'silver', 'gold']
+
 export default function MesoClubPage() {
     const { user, isLoading: authLoading, isPermanent } = useAuth()
 
-    const { points: loyaltyPoints, tier: loyaltyTier, isLoading: loyaltyLoading } = useCustomerLoyalty()
+    const { points: loyaltyPoints, tier: loyaltyTier, isLoading: loyaltyLoading, refresh: refreshLoyalty } = useCustomerLoyalty()
     const { rewards, isLoading: rewardsLoading } = useLoyaltyRewards()
     const { getValue, isLoading: configLoading } = useAppConfig()
     const [redeemingReward, setRedeemingReward] = useState<string | null>(null)
+    const [confirmReward, setConfirmReward] = useState<LoyaltyRewardRow | null>(null)
+    const [activeCoupon, setActiveCoupon] = useState<{ id: string; code: string; expires_at: string } | null>(null)
 
     const tierThresholds = getValue<Record<string, number>>('loyalty_tier_thresholds', DEFAULT_TIER_THRESHOLDS)
 
-    const handleRedeemReward = async (reward: LoyaltyRewardRow) => {
-        if (loyaltyPoints < reward.points_cost) {
-            toast.error('Nie masz wystarczającej liczby punktów')
-            return
-        }
+    // Check for existing active coupon on mount
+    useEffect(() => {
+        if (!isPermanent) return
+        fetch('/api/loyalty/active-coupon')
+            .then(r => r.json())
+            .then(d => setActiveCoupon(d.coupon ?? null))
+            .catch(() => {})
+    }, [isPermanent])
 
+    const handleActivateCoupon = async (reward: LoyaltyRewardRow) => {
         setRedeemingReward(reward.id)
+        try {
+            const res = await fetch('/api/loyalty/activate-coupon', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reward_id: reward.id }),
+            })
+            const data = await res.json()
 
-        // TODO: Implement actual reward redemption via API
-        await new Promise(resolve => setTimeout(resolve, 1000))
+            if (!res.ok) {
+                toast.error(data.error || 'Nie udało się aktywować kuponu')
+                return
+            }
 
-        toast.success(`Dodano nagrodę: ${reward.name}`, {
-            description: 'Zostanie zastosowana przy następnym zamówieniu',
-        })
+            // Add coupon to cart store
+            const { useCartStore } = await import('@/stores/cartStore')
+            useCartStore.getState().setLoyaltyCoupon(data.coupon)
 
-        setRedeemingReward(null)
+            toast.success(`Aktywowano kupon: ${reward.name}`, {
+                description: 'Kupon został dodany do koszyka. Ważny 24h.',
+            })
+
+            // Update active coupon state so buttons become disabled
+            setActiveCoupon(data.coupon)
+
+            // Refresh points display
+            refreshLoyalty()
+            setConfirmReward(null)
+        } catch {
+            toast.error('Wystąpił błąd')
+        } finally {
+            setRedeemingReward(null)
+        }
     }
 
     const isLoading = authLoading || loyaltyLoading || rewardsLoading || configLoading
@@ -76,6 +107,7 @@ export default function MesoClubPage() {
 
     const nextTier = loyaltyTier === 'bronze' ? 'silver' : loyaltyTier === 'silver' ? 'gold' : null
     const pointsToNextTier = nextTier ? (tierThresholds[nextTier] ?? 0) - loyaltyPoints : 0
+    const customerTierIdx = TIER_ORDER.indexOf(loyaltyTier || 'bronze')
 
     return (
         <div className="mx-auto max-w-2xl px-4 py-6 space-y-6">
@@ -123,20 +155,18 @@ export default function MesoClubPage() {
                 </div>
             </div>
 
-            {/* Quick Actions */}
-            <div className="grid grid-cols-2 gap-3">
-                <button className="bg-card/50 rounded-xl p-4 border border-white/5 text-left hover:bg-white/5 transition-colors">
-                    <Users className="w-6 h-6 text-accent mb-2" />
-                    <p className="text-white font-medium text-sm">Poleć znajomemu</p>
-                    <p className="text-white/50 text-xs">+100 punktów</p>
-                </button>
-
-                <button className="bg-card/50 rounded-xl p-4 border border-white/5 text-left hover:bg-white/5 transition-colors">
-                    <Cake className="w-6 h-6 text-primary mb-2" />
-                    <p className="text-white font-medium text-sm">Urodziny</p>
-                    <p className="text-white/50 text-xs">x2 punkty cały dzień</p>
-                </button>
-            </div>
+            {/* Active Coupon Banner */}
+            {activeCoupon && (
+                <div className="rounded-xl bg-meso-gold-400/10 border border-meso-gold-400/20 p-4 flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-meso-gold-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                        <p className="text-sm font-medium text-meso-gold-400">Masz aktywny kupon</p>
+                        <p className="text-xs text-white/60 mt-1">
+                            Użyj go lub poczekaj aż wygaśnie, zanim aktywujesz kolejny.
+                        </p>
+                    </div>
+                </div>
+            )}
 
             {/* Available Rewards */}
             <div>
@@ -147,50 +177,76 @@ export default function MesoClubPage() {
 
                 <div className="space-y-3">
                     {rewards.map((reward) => {
-                        const canRedeem = loyaltyPoints >= reward.points_cost
+                        const canAfford = loyaltyPoints >= reward.points_cost
                         const isRedeeming = redeemingReward === reward.id
+                        const rewardTierIdx = TIER_ORDER.indexOf(reward.min_tier || 'bronze')
+                        const tierLocked = customerTierIdx < rewardTierIdx
+                        const hasActiveCoupon = !!activeCoupon
+                        const canActivate = canAfford && !tierLocked && !hasActiveCoupon
 
                         return (
                             <div
                                 key={reward.id}
-                                className="bg-card/50 rounded-xl p-4 border border-white/5 flex items-center gap-4"
+                                className={cn(
+                                    'bg-card/50 rounded-xl p-4 border border-white/5 flex items-center gap-4',
+                                    tierLocked && 'opacity-50'
+                                )}
                             >
                                 <div className={cn(
                                     'w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0',
-                                    canRedeem ? 'bg-accent/20' : 'bg-white/5'
+                                    canActivate ? 'bg-accent/20' : 'bg-white/5'
                                 )}>
-                                    <Gift className={cn(
-                                        'w-6 h-6',
-                                        canRedeem ? 'text-accent' : 'text-white/30'
-                                    )} />
+                                    {tierLocked ? (
+                                        <Lock className="w-6 h-6 text-white/30" />
+                                    ) : (
+                                        <Gift className={cn(
+                                            'w-6 h-6',
+                                            canActivate ? 'text-accent' : 'text-white/30'
+                                        )} />
+                                    )}
                                 </div>
 
                                 <div className="flex-1 min-w-0">
-                                    <p className={cn(
-                                        'font-medium',
-                                        canRedeem ? 'text-white' : 'text-white/50'
-                                    )}>
-                                        {reward.name}
-                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <p className={cn(
+                                            'font-medium',
+                                            canActivate ? 'text-white' : 'text-white/50'
+                                        )}>
+                                            {reward.name}
+                                        </p>
+                                        {tierLocked && (
+                                            <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-white/50 font-medium">
+                                                Od {TIER_LABELS[reward.min_tier] || reward.min_tier}
+                                            </span>
+                                        )}
+                                    </div>
                                     <p className="text-sm text-white/50 truncate">
                                         {reward.description}
                                     </p>
                                 </div>
 
                                 <div className="flex-shrink-0">
-                                    {canRedeem ? (
+                                    {tierLocked ? (
+                                        <span className="text-sm text-white/30">
+                                            {reward.points_cost} pkt
+                                        </span>
+                                    ) : canActivate ? (
                                         <Button
                                             size="sm"
-                                            onClick={() => handleRedeemReward(reward)}
+                                            onClick={() => setConfirmReward(reward)}
                                             disabled={isRedeeming}
                                             className="bg-accent hover:bg-accent/90 text-black font-semibold"
                                         >
                                             {isRedeeming ? (
                                                 <Loader2 className="w-4 h-4 animate-spin" />
                                             ) : (
-                                                <>{reward.points_cost} pkt</>
+                                                <>Aktywuj</>
                                             )}
                                         </Button>
+                                    ) : hasActiveCoupon ? (
+                                        <span className="text-sm text-white/30">
+                                            {reward.points_cost} pkt
+                                        </span>
                                     ) : (
                                         <span className="text-sm text-white/30">
                                             Brakuje {reward.points_cost - loyaltyPoints} pkt
@@ -229,6 +285,35 @@ export default function MesoClubPage() {
                     </li>
                 </ul>
             </div>
+
+            {/* Confirmation Modal */}
+            {confirmReward && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+                    <div className="w-full max-w-sm rounded-2xl bg-meso-dark-800 p-6 space-y-4">
+                        <h3 className="text-lg font-bold">Aktywujesz kupon</h3>
+                        <p className="text-sm text-white/70">{confirmReward.name}</p>
+                        <p className="text-sm">Koszt: <span className="font-bold text-meso-gold-400">{confirmReward.points_cost} pkt</span></p>
+                        <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3">
+                            <p className="text-xs text-red-400">Punkty nie podlegają zwrotowi. Kupon ważny 24 godziny.</p>
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setConfirmReward(null)}
+                                className="flex-1 rounded-xl bg-white/10 py-3 text-sm font-medium"
+                            >
+                                Anuluj
+                            </button>
+                            <button
+                                onClick={() => handleActivateCoupon(confirmReward)}
+                                disabled={redeemingReward === confirmReward.id}
+                                className="flex-1 rounded-xl bg-meso-red-500 py-3 text-sm font-bold"
+                            >
+                                {redeemingReward === confirmReward.id ? 'Aktywowanie...' : 'Potwierdzam'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

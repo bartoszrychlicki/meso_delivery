@@ -29,6 +29,7 @@ export interface OrderConfirmation {
   orderStatus: string
   estimatedTime: string
   createdAt: string
+  loyaltyPointsEarned?: number
 }
 
 type ConfirmationUpdater = OrderConfirmation | ((prev: OrderConfirmation | null) => OrderConfirmation | null)

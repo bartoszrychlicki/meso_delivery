@@ -16,9 +16,18 @@ export function PromoCodeInput() {
   const setPromoCode = useCartStore((state) => state.setPromoCode)
   const clearPromoCode = useCartStore((state) => state.clearPromoCode)
   const getSubtotal = useCartStore((state) => state.getSubtotal)
+  const loyaltyCoupon = useCartStore((s) => s.loyaltyCoupon)
+  const clearLoyaltyCoupon = useCartStore((s) => s.clearLoyaltyCoupon)
 
   const handleApply = async () => {
     if (!code.trim()) return
+
+    // Block promo code when loyalty coupon is active
+    const activeLoyaltyCoupon = useCartStore.getState().loyaltyCoupon
+    if (activeLoyaltyCoupon) {
+      toast.error('Masz aktywny kupon lojalnościowy. Usuń go, aby użyć kodu promocyjnego.')
+      return
+    }
 
     setIsLoading(true)
 
@@ -67,6 +76,33 @@ export function PromoCodeInput() {
       return 'Darmowa dostawa'
     }
     return `-${promoDiscount} zł`
+  }
+
+  if (loyaltyCoupon) {
+    return (
+      <div className="flex items-center justify-between rounded-xl border border-meso-gold-400/30 bg-meso-gold-400/5 px-4 py-3">
+        <div className="flex items-center gap-2">
+          <Tag className="h-4 w-4 text-meso-gold-400" />
+          <div>
+            <p className="text-sm font-medium text-meso-gold-400">Kupon: {loyaltyCoupon.code}</p>
+            <p className="text-xs text-white/50">
+              {loyaltyCoupon.coupon_type === 'free_delivery' && 'Darmowa dostawa'}
+              {loyaltyCoupon.coupon_type === 'discount' && `Rabat ${loyaltyCoupon.discount_value} zł`}
+              {loyaltyCoupon.coupon_type === 'free_product' && loyaltyCoupon.free_product_name}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => {
+            clearLoyaltyCoupon()
+            toast('Kupon usunięty z koszyka. Punkty nie wracają.')
+          }}
+          className="p-1 text-white/40 hover:text-white"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+    )
   }
 
   if (promoCode) {

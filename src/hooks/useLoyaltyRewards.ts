@@ -12,6 +12,7 @@ export interface LoyaltyRewardRow {
   icon: string | null
   sort_order: number
   is_active: boolean
+  min_tier: 'bronze' | 'silver' | 'gold'
 }
 
 interface UseLoyaltyRewardsResult {

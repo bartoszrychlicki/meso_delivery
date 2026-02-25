@@ -21,6 +21,7 @@ interface LoyaltyReward {
   icon: string | null
   sort_order: number
   is_active: boolean
+  min_tier: 'bronze' | 'silver' | 'gold' | null
 }
 
 type RewardType = 'free_delivery' | 'discount' | 'free_product'
@@ -31,6 +32,8 @@ const REWARD_TYPES = [
   { value: 'free_product', label: 'Darmowy produkt' },
 ]
 
+type TierType = 'bronze' | 'silver' | 'gold'
+
 interface RewardFormData {
   name: string
   description: string
@@ -39,6 +42,7 @@ interface RewardFormData {
   discount_value: number
   icon: string
   sort_order: number
+  min_tier: TierType
 }
 
 const emptyRewardForm: RewardFormData = {
@@ -49,6 +53,7 @@ const emptyRewardForm: RewardFormData = {
   discount_value: 0,
   icon: '',
   sort_order: 0,
+  min_tier: 'bronze',
 }
 
 export default function LoyaltySettingsPage() {
@@ -161,6 +166,7 @@ export default function LoyaltySettingsPage() {
           discount_value: addForm.discount_value || null,
           icon: addForm.icon || null,
           sort_order: addForm.sort_order,
+          min_tier: addForm.min_tier,
         }),
       })
 
@@ -190,6 +196,7 @@ export default function LoyaltySettingsPage() {
       discount_value: reward.discount_value ?? 0,
       icon: reward.icon ?? '',
       sort_order: reward.sort_order,
+      min_tier: (reward.min_tier as TierType) ?? 'bronze',
     })
   }
 
@@ -216,6 +223,7 @@ export default function LoyaltySettingsPage() {
           discount_value: editForm.discount_value || null,
           icon: editForm.icon || null,
           sort_order: editForm.sort_order,
+          min_tier: editForm.min_tier,
         }),
       })
 
@@ -453,6 +461,19 @@ export default function LoyaltySettingsPage() {
                     className="w-full h-12 px-4 text-white bg-meso-dark-900 border border-white/10 rounded-xl focus:border-meso-red-500 focus:outline-none"
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm text-white/60">Min. tier</label>
+                  <select
+                    value={addForm.min_tier || 'bronze'}
+                    onChange={(e) => setAddForm((p) => ({ ...p, min_tier: e.target.value as TierType }))}
+                    className="w-full h-12 px-4 text-white bg-meso-dark-900 border border-white/10 rounded-xl focus:border-meso-red-500 focus:outline-none"
+                  >
+                    <option value="bronze">Bronze (wszyscy)</option>
+                    <option value="silver">Silver</option>
+                    <option value="gold">Gold</option>
+                  </select>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -598,6 +619,19 @@ export default function LoyaltySettingsPage() {
                           className="w-full h-12 px-4 text-white bg-meso-dark-900 border border-white/10 rounded-xl focus:border-meso-red-500 focus:outline-none"
                         />
                       </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm text-white/60">Min. tier</label>
+                        <select
+                          value={editForm.min_tier || 'bronze'}
+                          onChange={(e) => setEditForm((p) => ({ ...p, min_tier: e.target.value as TierType }))}
+                          className="w-full h-12 px-4 text-white bg-meso-dark-900 border border-white/10 rounded-xl focus:border-meso-red-500 focus:outline-none"
+                        >
+                          <option value="bronze">Bronze (wszyscy)</option>
+                          <option value="silver">Silver</option>
+                          <option value="gold">Gold</option>
+                        </select>
+                      </div>
                     </div>
 
                     <div className="space-y-2">
@@ -652,6 +686,13 @@ export default function LoyaltySettingsPage() {
                         {!reward.is_active && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-400">
                             Nieaktywna
+                          </span>
+                        )}
+                        {reward.min_tier && reward.min_tier !== 'bronze' && (
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            reward.min_tier === 'gold' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-400/20 text-gray-300'
+                          }`}>
+                            {reward.min_tier === 'gold' ? 'Gold' : 'Silver'}
                           </span>
                         )}
                       </div>

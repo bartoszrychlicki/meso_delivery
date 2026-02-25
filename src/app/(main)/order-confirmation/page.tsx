@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, Suspense, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { CheckCircle2, ChefHat, Package, MapPin, Navigation, Loader2, XCircle, CreditCard, AlertTriangle, Banknote } from 'lucide-react'
+import { CheckCircle2, ChefHat, Package, MapPin, Navigation, Loader2, XCircle, CreditCard, AlertTriangle, Banknote, Star } from 'lucide-react'
 import { useOrderConfirmationStore } from '@/stores/orderConfirmationStore'
 import { formatPriceExact } from '@/lib/formatters'
 import { createClient } from '@/lib/supabase/client'
@@ -68,6 +68,7 @@ function buildConfirmation(order: Record<string, any>, waitMinutes = 20): OrderC
         orderStatus: order.status,
         estimatedTime: `~${waitMinutes} min`,
         createdAt: order.created_at,
+        loyaltyPointsEarned: order.loyalty_points_earned || 0,
     }
 }
 
@@ -600,6 +601,22 @@ function OrderConfirmationContent() {
                     <span className="text-accent text-lg">{formatPriceExact(confirmation.total)}</span>
                 </div>
             </div>
+
+            {/* Loyalty points earned */}
+            {confirmation.loyaltyPointsEarned != null && confirmation.loyaltyPointsEarned > 0 && (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-6 rounded-xl border border-meso-gold-400/30 bg-meso-gold-400/5 p-4"
+                >
+                    <div className="flex items-center gap-2">
+                        <Star className="h-5 w-5 text-meso-gold-400" />
+                        <p className="text-sm font-semibold text-meso-gold-400">
+                            +{confirmation.loyaltyPointsEarned} punktów MESO Club
+                        </p>
+                    </div>
+                </motion.div>
+            )}
 
             {/* Back to Menu */}
             <Link

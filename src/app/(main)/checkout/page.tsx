@@ -26,7 +26,7 @@ import type { ContactFormData, DeliveryFormData, PaymentFormData } from '@/lib/v
 
 export default function CheckoutPage() {
     const router = useRouter()
-    const { items, getTotal, getSubtotal, getDeliveryFee, getPaymentFee, getDiscount, tip, setDeliveryType, paymentType, setPaymentType, setPayOnPickupFee } = useCartStore()
+    const { items, getTotal, getSubtotal, getDeliveryFee, getPaymentFee, getDiscount, tip, setDeliveryType, paymentType, setPaymentType, setPayOnPickupFee, promoCode, loyaltyCoupon } = useCartStore()
     const { user, isLoading: authLoading, isPermanent } = useAuth()
     const { submitOrder, isLoading: isSubmitting } = useCheckout()
 
@@ -472,6 +472,18 @@ export default function CheckoutPage() {
                     <div className="flex justify-between text-muted-foreground">
                         <span>Napiwek</span>
                         <span>{formatPriceExact(tip)}</span>
+                    </div>
+                )}
+                {(promoCode || loyaltyCoupon) && (
+                    <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">
+                            {loyaltyCoupon ? `Kupon: ${loyaltyCoupon.code}` : `Kod: ${promoCode}`}
+                        </span>
+                        <span className="text-green-400">
+                            {loyaltyCoupon?.coupon_type === 'free_delivery' ? 'Darmowa dostawa' :
+                             loyaltyCoupon?.coupon_type === 'free_product' ? loyaltyCoupon.free_product_name :
+                             discount > 0 ? `-${formatPriceExact(discount)}` : null}
+                        </span>
                     </div>
                 )}
                 {discount > 0 && (

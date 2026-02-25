@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { Trophy, Gift, Truck, Percent, UtensilsCrossed, ArrowLeft, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -9,6 +9,15 @@ import { LoginPrompt } from '@/components/auth'
 import { cn } from '@/lib/utils'
 import { useCustomerLoyalty } from '@/hooks/useCustomerLoyalty'
 import { useLoyaltyRewards } from '@/hooks/useLoyaltyRewards'
+
+interface LoyaltyHistoryEntry {
+  id: string
+  label: string
+  points: number
+  type: string
+  created_at: string
+  order_id?: number
+}
 
 const REWARD_ICONS: Record<string, typeof Gift> = {
   free_delivery: Truck,
@@ -21,6 +30,29 @@ export default function LoyaltyPage() {
   const { points, isLoading: loyaltyLoading } = useCustomerLoyalty()
   const { rewards, isLoading: rewardsLoading } = useLoyaltyRewards()
   const [activeTab, setActiveTab] = useState<'rewards' | 'history'>('rewards')
+  const [history, setHistory] = useState<LoyaltyHistoryEntry[]>([])
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyPage, setHistoryPage] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
+
+  const loadHistory = useCallback(async (page = 0) => {
+    setHistoryLoading(true)
+    try {
+      const res = await fetch(`/api/loyalty/history?page=${page}`)
+      const data = await res.json()
+      setHistory(prev => page === 0 ? data.history : [...prev, ...data.history])
+      setHasMore(data.hasMore)
+      setHistoryPage(page)
+    } catch {
+      /* silent */
+    } finally {
+      setHistoryLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (activeTab === 'history') loadHistory(0)
+  }, [activeTab, loadHistory])
 
   const isLoading = authLoading || loyaltyLoading
 
@@ -188,15 +220,39 @@ export default function LoyaltyPage() {
           animate={{ opacity: 1 }}
           className="space-y-2"
         >
-          <div className="flex flex-col items-center justify-center py-12 text-center rounded-xl border border-primary/20 bg-primary/5">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-4">
-              <Trophy className="h-6 w-6 text-primary" />
+          {historyLoading && history.length === 0 ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
-            <p className="text-sm font-semibold text-foreground mb-1">Historia punktów nadchodzi wkrótce</p>
-            <p className="text-xs text-muted-foreground max-w-xs">
-              Pracujemy nad pełną historią Twoich punktów i transakcji. Już niedługo zobaczysz tu wszystkie szczegóły!
-            </p>
-          </div>
+          ) : history.length === 0 && !historyLoading ? (
+            <div className="py-12 text-center text-white/40 text-sm">
+              Brak historii punktów
+            </div>
+          ) : (
+            <div className="space-y-0">
+              {history.map((entry) => (
+                <div key={entry.id} className="flex items-center justify-between py-3 border-b border-white/5">
+                  <div>
+                    <p className="text-sm font-medium">{entry.label}</p>
+                    <p className="text-xs text-white/40">
+                      {new Date(entry.created_at).toLocaleDateString('pl-PL')}
+                    </p>
+                  </div>
+                  <span className={`text-sm font-bold ${entry.points > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {entry.points > 0 ? '+' : ''}{entry.points} pkt
+                  </span>
+                </div>
+              ))}
+              {hasMore && (
+                <button
+                  onClick={() => loadHistory(historyPage + 1)}
+                  className="w-full py-3 text-sm text-white/50 hover:text-white"
+                >
+                  {historyLoading ? 'Ładowanie...' : 'Załaduj więcej'}
+                </button>
+              )}
+            </div>
+          )}
         </motion.div>
       )}
     </div>

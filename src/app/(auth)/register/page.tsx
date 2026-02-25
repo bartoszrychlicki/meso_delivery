@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { motion } from 'framer-motion'
-import { Mail, Lock, Eye, EyeOff, User, Loader2 } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, User, Phone, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
@@ -35,6 +35,7 @@ export default function UpgradeAccountPage() {
   const [showPass, setShowPass] = useState(false)
   const [showConfirmPass, setShowConfirmPass] = useState(false)
   const [sessionError, setSessionError] = useState(false)
+  const [referralPhone, setReferralPhone] = useState('')
   const supabase = createClient()
 
   useEffect(() => {
@@ -102,6 +103,19 @@ export default function UpgradeAccountPage() {
           toast.error(error.message)
         }
         return
+      }
+
+      // Apply referral if phone was provided
+      if (referralPhone.trim()) {
+        try {
+          await fetch('/api/loyalty/apply-referral', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ referral_phone: referralPhone.trim() }),
+          })
+        } catch {
+          // Referral is optional — don't block registration on failure
+        }
       }
 
       toast.success(
@@ -257,6 +271,24 @@ export default function UpgradeAccountPage() {
           >
             Chcę otrzymywać informacje o promocjach, nowościach i ekskluzywnych ofertach MESO
           </Label>
+        </div>
+
+        {/* Referral phone (optional) */}
+        <div>
+          <div className="relative">
+            <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="tel"
+              value={referralPhone}
+              onChange={(e) => setReferralPhone(e.target.value)}
+              placeholder="Nr telefonu polecającego (opcjonalnie)"
+              autoComplete="off"
+              className={`${inputCls} pl-10 pr-4`}
+            />
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground/60">
+            Podaj numer osoby, która Cię poleciła — dostaniesz kupon powitalny na darmowe Gyoza!
+          </p>
         </div>
 
         {/* Submit CTA */}

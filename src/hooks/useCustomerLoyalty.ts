@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/providers/AuthProvider'
 import { createClient } from '@/lib/supabase/client'
 import type { LoyaltyTier } from '@/types/customer'
@@ -6,7 +6,9 @@ import type { LoyaltyTier } from '@/types/customer'
 interface CustomerLoyalty {
   points: number
   tier: LoyaltyTier
+  lifetimePoints: number
   isLoading: boolean
+  refresh: () => void
 }
 
 /**
@@ -17,7 +19,13 @@ export function useCustomerLoyalty(): CustomerLoyalty {
   const { user, isPermanent } = useAuth()
   const [points, setPoints] = useState(0)
   const [tier, setTier] = useState<LoyaltyTier>('bronze')
+  const [lifetimePoints, setLifetimePoints] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  const refresh = useCallback(() => {
+    setRefreshKey((k) => k + 1)
+  }, [])
 
   useEffect(() => {
     if (!user || !isPermanent) {
@@ -28,17 +36,18 @@ export function useCustomerLoyalty(): CustomerLoyalty {
     const supabase = createClient()
     supabase
       .from('customers')
-      .select('loyalty_points, loyalty_tier')
+      .select('loyalty_points, loyalty_tier, lifetime_points')
       .eq('id', user.id)
       .single()
       .then(({ data, error }) => {
         if (!error && data) {
           setPoints(data.loyalty_points ?? 0)
           setTier((data.loyalty_tier as LoyaltyTier) ?? 'bronze')
+          setLifetimePoints(data.lifetime_points ?? 0)
         }
         setIsLoading(false)
       })
-  }, [user, isPermanent])
+  }, [user, isPermanent, refreshKey])
 
-  return { points, tier, isLoading }
+  return { points, tier, lifetimePoints, isLoading, refresh }
 }
