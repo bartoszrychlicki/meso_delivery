@@ -22,10 +22,25 @@ export function TipSelector() {
     setCustomTip('')
   }
 
+  const handleCustomTipChange = (value: string) => {
+    setCustomTip(value)
+    // Clear tip if input is emptied
+    if (value === '') {
+      setTip(0)
+      return
+    }
+    const amount = parseFloat(value)
+    if (!isNaN(amount) && amount >= 0 && amount <= MAX_TIP) {
+      setTip(amount)
+    }
+  }
+
   const handleCustomTip = () => {
     const amount = parseFloat(customTip)
     if (isNaN(amount) || amount < 0 || amount > MAX_TIP) {
       toast.error(`Napiwek musi być w zakresie 0–${MAX_TIP} zł`)
+      setCustomTip(amount > MAX_TIP ? String(MAX_TIP) : '')
+      setTip(amount > MAX_TIP ? MAX_TIP : 0)
       return
     }
     setTip(amount)
@@ -80,7 +95,7 @@ export function TipSelector() {
               max={MAX_TIP}
               step="1"
               value={customTip}
-              onChange={(e) => setCustomTip(e.target.value)}
+              onChange={(e) => handleCustomTipChange(e.target.value)}
               placeholder="Wpisz kwotę"
               className="w-full rounded-lg border border-border bg-secondary/50 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none pr-10"
             />
@@ -89,11 +104,15 @@ export function TipSelector() {
           <button
             type="button"
             onClick={handleCustomTip}
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+            disabled={parseFloat(customTip) > MAX_TIP}
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             OK
           </button>
         </div>
+      )}
+      {showCustom && parseFloat(customTip) > MAX_TIP && (
+        <p className="text-xs text-destructive">Maksymalny napiwek to {MAX_TIP} zł</p>
       )}
     </div>
   )

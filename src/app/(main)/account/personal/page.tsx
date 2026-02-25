@@ -28,6 +28,7 @@ export default function PersonalPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [isLoadingData, setIsLoadingData] = useState(true)
+  const [birthdayError, setBirthdayError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user || !isPermanent) {
@@ -63,9 +64,11 @@ export default function PersonalPage() {
     if (!user) return
 
     if (form.birthday && form.birthday > new Date().toISOString().split('T')[0]) {
+      setBirthdayError('Data urodzenia nie może być w przyszłości')
       toast.error('Data urodzenia nie może być w przyszłości')
       return
     }
+    setBirthdayError(null)
 
     setIsSaving(true)
     setSaved(false)
@@ -159,12 +162,16 @@ export default function PersonalPage() {
           <input
             type="date"
             value={form.birthday}
-            onChange={(e) => setForm({ ...form, birthday: e.target.value })}
+            onChange={(e) => { setForm({ ...form, birthday: e.target.value }); setBirthdayError(null) }}
             max={new Date().toISOString().split('T')[0]}
             min="1900-01-01"
             className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
-          <p className="text-xs text-muted-foreground/60">Zdobywaj x2 punkty w urodziny!</p>
+          {birthdayError ? (
+            <p className="text-xs text-destructive">{birthdayError}</p>
+          ) : (
+            <p className="text-xs text-muted-foreground/60">Zdobywaj x2 punkty w urodziny!</p>
+          )}
         </div>
 
         {/* Save Button */}

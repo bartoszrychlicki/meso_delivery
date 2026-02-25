@@ -228,7 +228,9 @@ export const useCartStore = create<CartState>()(
           addons: item.addons || [],
           quantity: item.quantity || 1,
         }))
-        return { ...current, ...p, items }
+        // Clamp tip on rehydration to prevent stale values above limit
+        const tip = Math.min(200, Math.max(0, p.tip ?? 0))
+        return { ...current, ...p, items, tip }
       },
     }
   )

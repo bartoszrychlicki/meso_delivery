@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { OperatorOrder, getOrderAge, useOperatorOrders } from '@/hooks/useOperatorOrders'
 import { useOperatorAuthStore } from '@/stores/operatorAuthStore'
 import { ORDER_STATUS_MESSAGES, formatOrderDate } from '@/types/order'
+import { formatPriceExact } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 
 interface PageProps {
@@ -268,6 +269,39 @@ export default function OrderDetailPage({ params }: PageProps) {
                                 )}
                             </div>
                         )}
+                    </div>
+
+                    {/* Order value */}
+                    <div className="bg-meso-dark-800/50 rounded-xl p-4 border border-white/5">
+                        <h3 className="font-semibold text-white mb-3">Wartość zamówienia</h3>
+                        <div className="space-y-1.5 text-sm">
+                            <div className="flex justify-between text-white/60">
+                                <span>Produkty</span>
+                                <span>{formatPriceExact(order.subtotal)}</span>
+                            </div>
+                            {order.delivery_fee > 0 && (
+                                <div className="flex justify-between text-white/60">
+                                    <span>Dostawa</span>
+                                    <span>{formatPriceExact(order.delivery_fee)}</span>
+                                </div>
+                            )}
+                            {order.tip > 0 && (
+                                <div className="flex justify-between text-white/60">
+                                    <span>Napiwek</span>
+                                    <span>{formatPriceExact(order.tip)}</span>
+                                </div>
+                            )}
+                            {order.promo_discount > 0 && (
+                                <div className="flex justify-between text-green-400">
+                                    <span>Rabat</span>
+                                    <span>-{formatPriceExact(order.promo_discount)}</span>
+                                </div>
+                            )}
+                            <div className="flex justify-between font-bold text-white pt-1.5 border-t border-white/10">
+                                <span>Razem</span>
+                                <span className="text-lg">{formatPriceExact(order.total)}</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="space-y-3">

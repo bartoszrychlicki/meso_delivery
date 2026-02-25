@@ -131,11 +131,15 @@ export function useCheckout() {
             }
 
             // 4. Register Payment with P24
+            const controller = new AbortController()
+            const timeoutId = setTimeout(() => controller.abort(), 30_000)
             const response = await fetch('/api/payments/p24/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ orderId: order.id }),
+                signal: controller.signal,
             })
+            clearTimeout(timeoutId)
 
             let data
             const contentType = response.headers.get('content-type')
@@ -164,7 +168,10 @@ export function useCheckout() {
             }
 
         } catch (err) {
-            const message = err instanceof Error ? err.message : 'Wystąpił nieoczekiwany błąd'
+            const isAbort = err instanceof DOMException && err.name === 'AbortError'
+            const message = isAbort
+                ? 'Serwer płatności nie odpowiada. Spróbuj ponownie za chwilę.'
+                : err instanceof Error ? err.message : 'Wystąpił nieoczekiwany błąd'
             setError(message)
             toast.error(message)
             // If we failed after setting isLoading to true, we must unset it to allow retry

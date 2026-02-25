@@ -18,6 +18,7 @@ import { ContactForm } from '@/components/checkout/ContactForm'
 import { PaymentMethod } from '@/components/checkout/PaymentMethod'
 import { TermsAcceptance } from '@/components/checkout/TermsAcceptance'
 import { TipSelector } from '@/components/cart/TipSelector'
+import { PromoCodeInput } from '@/components/cart/PromoCodeInput'
 import { EmptyState } from '@/components/common/EmptyState'
 
 // Types
@@ -400,7 +401,12 @@ export default function CheckoutPage() {
                 <PaymentMethod />
             </section>
 
-            {/* Section 6: Tip */}
+            {/* Section 6: Promo code */}
+            <section className="mb-4 rounded-xl border border-border bg-card p-4">
+                <PromoCodeInput />
+            </section>
+
+            {/* Section 7: Tip */}
             <section className="mb-4 rounded-xl border border-border bg-card p-4">
                 <TipSelector />
             </section>
