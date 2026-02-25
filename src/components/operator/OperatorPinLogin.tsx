@@ -111,9 +111,6 @@ export function OperatorPinLogin() {
                     )}
                 </div>
 
-                <p className="text-white/30 text-xs text-center mt-4">
-                    Domyślny PIN: 0000
-                </p>
             </div>
         </div>
     )
