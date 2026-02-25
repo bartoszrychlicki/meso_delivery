@@ -49,13 +49,27 @@ export default function SearchPage() {
     setHasSearched(true)
 
     const supabase = createClient()
-    const { data } = await supabase
+    const q = searchQuery.trim()
+    const { data, error } = await supabase
       .from('products')
-      .select('id, name, name_jp, price, image_url, description')
-      .ilike('name', `%${searchQuery}%`)
+      .select('id, name, name_jp, price, image_url, description, categories!inner(name)')
+      .eq('is_active', true)
+      .or(`name.ilike.%${q}%,name_jp.ilike.%${q}%,description.ilike.%${q}%,categories.name.ilike.%${q}%`)
       .limit(20)
 
-    setResults(data ?? [])
+    if (error) {
+      console.error('Search error:', error)
+      // Fallback: simpler query without join if the above fails
+      const { data: fallback } = await supabase
+        .from('products')
+        .select('id, name, name_jp, price, image_url, description')
+        .eq('is_active', true)
+        .or(`name.ilike.%${q}%,name_jp.ilike.%${q}%,description.ilike.%${q}%`)
+        .limit(20)
+      setResults(fallback ?? [])
+    } else {
+      setResults(data ?? [])
+    }
     setIsSearching(false)
   }, [])
 
