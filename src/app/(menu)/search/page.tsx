@@ -1,20 +1,32 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
 import { Search, X, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
-import { formatPrice } from '@/lib/formatters'
+import { ProductCard } from '@/components/menu/ProductCard'
+
+const PRODUCT_FIELDS = 'id, name, name_jp, slug, description, price, original_price, image_url, is_spicy, spice_level, is_vegetarian, is_vegan, is_bestseller, is_signature, is_new, has_variants, has_addons, has_spice_level'
 
 interface Product {
   id: string
   name: string
-  name_jp: string | null
+  name_jp?: string
+  slug: string
+  description?: string
   price: number
-  image_url: string | null
-  description: string | null
+  original_price?: number
+  image_url?: string
+  is_spicy?: boolean
+  spice_level?: 1 | 2 | 3
+  is_vegetarian?: boolean
+  is_vegan?: boolean
+  is_bestseller?: boolean
+  is_signature?: boolean
+  is_new?: boolean
+  has_variants?: boolean
+  has_addons?: boolean
+  has_spice_level?: boolean
 }
 
 function useDebounce(value: string, delay: number) {
@@ -52,7 +64,7 @@ export default function SearchPage() {
     const q = searchQuery.trim()
     const { data, error } = await supabase
       .from('products')
-      .select('id, name, name_jp, price, image_url, description, categories!inner(name)')
+      .select(`${PRODUCT_FIELDS}, categories!inner(name)`)
       .eq('is_active', true)
       .or(`name.ilike.%${q}%,name_jp.ilike.%${q}%,description.ilike.%${q}%,categories.name.ilike.%${q}%`)
       .limit(20)
@@ -62,7 +74,7 @@ export default function SearchPage() {
       // Fallback: simpler query without join if the above fails
       const { data: fallback } = await supabase
         .from('products')
-        .select('id, name, name_jp, price, image_url, description')
+        .select(PRODUCT_FIELDS)
         .eq('is_active', true)
         .or(`name.ilike.%${q}%,name_jp.ilike.%${q}%,description.ilike.%${q}%`)
         .limit(20)
@@ -133,7 +145,7 @@ export default function SearchPage() {
 
       {/* Results Grid */}
       {!isSearching && results.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <AnimatePresence mode="popLayout">
             {results.map((product, i) => (
               <motion.div
@@ -143,34 +155,7 @@ export default function SearchPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ delay: i * 0.05 }}
               >
-                <Link
-                  href={`/product/${product.id}`}
-                  className="group block overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-primary/30"
-                >
-                  <div className="relative aspect-square bg-secondary">
-                    {product.image_url ? (
-                      <Image
-                        src={product.image_url}
-                        alt={product.name}
-                        fill
-                        className="object-cover transition-transform group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-2xl">
-                        🍜
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-3">
-                    <p className="text-sm font-semibold leading-tight">{product.name}</p>
-                    {product.name_jp && (
-                      <p className="mt-0.5 text-xs text-muted-foreground font-japanese">{product.name_jp}</p>
-                    )}
-                    <p className="mt-2 text-sm font-bold text-accent">
-                      {formatPrice(product.price)}
-                    </p>
-                  </div>
-                </Link>
+                <ProductCard product={product} quickAdd />
               </motion.div>
             ))}
           </AnimatePresence>
