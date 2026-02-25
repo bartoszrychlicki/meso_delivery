@@ -124,6 +124,7 @@ function OrderConfirmationContent() {
         }
 
         fetchOrder()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [orderId, router, setConfirmation])
 
     // Supabase Realtime — listen for order updates (status, payment_status)

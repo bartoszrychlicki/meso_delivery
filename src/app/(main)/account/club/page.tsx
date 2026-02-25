@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ArrowLeft, Star, Gift, Users, Cake, Loader2, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LoginPrompt } from '@/components/auth'
-import { useAuth, useMesoClub } from '@/hooks/useAuth'
+import { useAuth } from '@/hooks/useAuth'
 import { useCustomerLoyalty } from '@/hooks/useCustomerLoyalty'
 import { useLoyaltyRewards, type LoyaltyRewardRow } from '@/hooks/useLoyaltyRewards'
 import { useAppConfig } from '@/hooks/useAppConfig'
@@ -28,7 +28,7 @@ const TIER_COLORS: Record<string, string> = {
 
 export default function MesoClubPage() {
     const { user, isLoading: authLoading, isPermanent } = useAuth()
-    const { canUseRewards } = useMesoClub()
+
     const { points: loyaltyPoints, tier: loyaltyTier, isLoading: loyaltyLoading } = useCustomerLoyalty()
     const { rewards, isLoading: rewardsLoading } = useLoyaltyRewards()
     const { getValue, isLoading: configLoading } = useAppConfig()

@@ -181,6 +181,7 @@ export default function CheckoutPage() {
         }
 
         fetchLocationConfig()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     // Redirect if not logged in (anonymous users cannot checkout)

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+
 import { Checkbox } from '@/components/ui/checkbox'
 import { useCartStore, CartItemAddon } from '@/stores/cartStore'
 import { toast } from 'sonner'

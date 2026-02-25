@@ -68,7 +68,7 @@ export default function ResetPasswordPage() {
       setTimeout(() => {
         router.push('/login')
       }, 3000)
-    } catch (error) {
+    } catch {
       toast.error('Wystąpił błąd. Spróbuj ponownie.')
     } finally {
       setIsSubmitting(false)

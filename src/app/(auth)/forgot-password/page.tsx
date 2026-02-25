@@ -48,7 +48,7 @@ export default function ForgotPasswordPage() {
       setSubmittedEmail(data.email)
       setIsSubmitted(true)
       toast.success('Link do resetu hasła został wysłany!')
-    } catch (error) {
+    } catch {
       toast.error('Wystąpił błąd. Spróbuj ponownie.')
     } finally {
       setIsSubmitting(false)

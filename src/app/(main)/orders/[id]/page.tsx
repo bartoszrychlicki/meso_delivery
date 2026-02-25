@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, MapPin, Phone, Clock, CreditCard, Truck, Store, Radio } from 'lucide-react'
+import { ArrowLeft, MapPin, Phone, Clock, CreditCard, Store, Radio } from 'lucide-react'
 import { useOrderDetails } from '@/hooks/useOrderDetails'
 import { OrderTimeline, OrderStatusBadge, OrderItemsList } from '@/components/orders'
 import { ORDER_STATUS_MESSAGES, formatOrderDate } from '@/types/order'
