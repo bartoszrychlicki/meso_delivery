@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, Suspense, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { CheckCircle2, ChefHat, Package, MapPin, Navigation, Loader2, XCircle, CreditCard, AlertTriangle } from 'lucide-react'
+import { CheckCircle2, ChefHat, Package, MapPin, Navigation, Loader2, XCircle, CreditCard, AlertTriangle, Banknote } from 'lucide-react'
 import { useOrderConfirmationStore } from '@/stores/orderConfirmationStore'
 import { formatPriceExact } from '@/lib/formatters'
 import { createClient } from '@/lib/supabase/client'
@@ -451,6 +451,32 @@ function OrderConfirmationContent() {
                         >
                             Napisz do nas
                         </a>
+                    </div>
+                </motion.div>
+            )}
+
+            {/* Pay on pickup reminder */}
+            {confirmation.paymentMethod === 'pay_on_pickup' && (
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-6 rounded-xl border border-blue-500/30 bg-blue-500/5 p-5"
+                >
+                    <div className="flex items-center gap-3 mb-2">
+                        <CreditCard className="h-5 w-5 text-blue-400 shrink-0" />
+                        <p className="text-sm font-semibold text-blue-400">Płatność przy odbiorze</p>
+                    </div>
+                    <div className="ml-8 space-y-2">
+                        <p className="text-sm text-foreground">
+                            Do zapłaty: <span className="font-bold text-accent text-base">{formatPriceExact(confirmation.total)}</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                            Akceptujemy wyłącznie <span className="font-medium text-foreground">kartę płatniczą</span> lub <span className="font-medium text-foreground">BLIK</span>.
+                        </p>
+                        <div className="flex items-center gap-1.5 text-xs text-red-400">
+                            <Banknote className="h-3.5 w-3.5 shrink-0" />
+                            <span>Nie przyjmujemy płatności gotówką</span>
+                        </div>
                     </div>
                 </motion.div>
             )}
