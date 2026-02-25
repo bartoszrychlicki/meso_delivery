@@ -127,6 +127,7 @@ function OrderConfirmationContent() {
     }, [orderId, router, setConfirmation])
 
     // Supabase Realtime — listen for order updates (status, payment_status)
+    // Plus safety-net polling every 10s while payment is pending
     useEffect(() => {
         if (!orderId) return
 
@@ -172,8 +173,26 @@ function OrderConfirmationContent() {
             )
             .subscribe()
 
+        // Safety-net: poll every 10s while payment is pending
+        const pollId = setInterval(async () => {
+            const { data } = await supabase
+                .from('orders')
+                .select('status, payment_status')
+                .eq('id', orderId)
+                .single()
+            if (data && data.payment_status !== 'pending') {
+                setConfirmation((prev) => prev ? {
+                    ...prev,
+                    orderStatus: data.status,
+                    paymentStatus: data.payment_status,
+                } : prev)
+                clearInterval(pollId)
+            }
+        }, 10_000)
+
         return () => {
             supabase.removeChannel(channel)
+            clearInterval(pollId)
         }
     }, [orderId, setConfirmation])
 

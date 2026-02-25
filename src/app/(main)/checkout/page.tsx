@@ -463,9 +463,11 @@ export default function CheckoutPage() {
                 onClick={handleFinalSubmit}
                 disabled={isSubmitting}
                 className={`w-full rounded-xl py-4 font-display text-sm font-semibold tracking-wider transition-all flex items-center justify-center gap-2 ${
-                    !isSubmitting
-                        ? 'bg-accent text-accent-foreground neon-glow-yellow hover:scale-[1.02]'
-                        : 'bg-secondary text-muted-foreground cursor-not-allowed'
+                    isSubmitting
+                        ? 'bg-secondary text-muted-foreground cursor-not-allowed'
+                        : termsAccepted
+                            ? 'bg-accent text-accent-foreground neon-glow-yellow hover:scale-[1.02]'
+                            : 'bg-secondary text-muted-foreground'
                 }`}
             >
                 {isSubmitting ? (
