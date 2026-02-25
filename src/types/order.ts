@@ -12,7 +12,7 @@ export type OrderStatus =
 
 export type DeliveryType = 'delivery' | 'pickup'
 
-export type PaymentMethod = 'blik' | 'card' | 'cash'
+export type PaymentMethod = 'blik' | 'card' | 'cash' | 'pay_on_pickup'
 
 export interface DeliveryAddress {
   street: string

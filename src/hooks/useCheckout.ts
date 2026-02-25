@@ -12,7 +12,7 @@ export function useCheckout() {
     const router = useRouter()
     const supabase = createClient()
     const { user } = useAuth()
-    const { items, getTotal, getSubtotal, getDeliveryFee, getDiscount, tip, promoDiscount, clearCart } = useCartStore()
+    const { items, getTotal, getSubtotal, getDeliveryFee, getPaymentFee, getDiscount, tip, promoDiscount, clearCart } = useCartStore()
 
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -52,6 +52,7 @@ export function useCheckout() {
 
             const total = getTotal()
             const subtotal = getSubtotal()
+            const isPayOnPickup = paymentData.method === 'pay_on_pickup'
 
             // 2. Create Order
             // Build scheduled_time as a proper TIMESTAMPTZ if provided
@@ -63,19 +64,22 @@ export function useCheckout() {
                 scheduledTimestamp = today.toISOString()
             }
 
+            const now = new Date().toISOString()
+
             const { data: order, error: orderError } = await supabase
                 .from('orders')
                 .insert({
                     customer_id: user.id,
                     location_id: locations.id,
-                    status: 'pending_payment',
+                    status: isPayOnPickup ? 'confirmed' : 'pending_payment',
                     delivery_type: deliveryData.type,
                     delivery_address: addressData, // JSONB (includes phone)
                     scheduled_time: scheduledTimestamp,
                     payment_method: paymentData.method,
-                    payment_status: 'pending',
+                    payment_status: isPayOnPickup ? 'pay_on_pickup' : 'pending',
+                    ...(isPayOnPickup ? { confirmed_at: now } : {}),
                     subtotal,
-                    delivery_fee: getDeliveryFee(),
+                    delivery_fee: getDeliveryFee() + getPaymentFee(),
                     tip,
                     promo_discount: getDiscount(),
                     total,
@@ -128,41 +132,44 @@ export function useCheckout() {
                 throw new Error('Błąd podczas dodawania produktów do zamówienia')
             }
 
-            // 4. Register Payment with P24
-            const controller = new AbortController()
-            const timeoutId = setTimeout(() => controller.abort(), 30_000)
-            const response = await fetch('/api/payments/p24/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderId: order.id }),
-                signal: controller.signal,
-            })
-            clearTimeout(timeoutId)
-
-            let data
-            const contentType = response.headers.get('content-type')
-            if (contentType && contentType.includes('application/json')) {
-                data = await response.json()
-            } else {
-                // If not JSON (e.g. 404 HTML), throw specific error or generic one
-                if (response.status === 404) {
-                    throw new Error('Usługa płatności jest niedostępna (404). Spróbuj ponownie później.')
-                }
-                throw new Error(`Błąd serwera płatności: ${response.status}`)
-            }
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Błąd podczas rejestracji płatności')
-            }
-
-            if (data.url) {
-                // Clear cart before redirecting to P24 — if payment fails,
-                // user can retry from order-confirmation page
+            // 4. Payment flow
+            if (isPayOnPickup) {
+                // Pay on pickup — skip P24, go directly to confirmation
                 clearCart()
-                // Redirect to P24
-                window.location.href = data.url
+                router.push(`/order-confirmation?orderId=${order.id}`)
             } else {
-                throw new Error('Nie otrzymano linku do płatności')
+                // Online payment — register with P24
+                const controller = new AbortController()
+                const timeoutId = setTimeout(() => controller.abort(), 30_000)
+                const response = await fetch('/api/payments/p24/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId: order.id }),
+                    signal: controller.signal,
+                })
+                clearTimeout(timeoutId)
+
+                let data
+                const contentType = response.headers.get('content-type')
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json()
+                } else {
+                    if (response.status === 404) {
+                        throw new Error('Usługa płatności jest niedostępna (404). Spróbuj ponownie później.')
+                    }
+                    throw new Error(`Błąd serwera płatności: ${response.status}`)
+                }
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Błąd podczas rejestracji płatności')
+                }
+
+                if (data.url) {
+                    clearCart()
+                    window.location.href = data.url
+                } else {
+                    throw new Error('Nie otrzymano linku do płatności')
+                }
             }
 
         } catch (err) {

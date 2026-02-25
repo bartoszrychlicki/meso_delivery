@@ -22,10 +22,14 @@ export interface CartItem {
   notes?: string
 }
 
+type PaymentType = 'online' | 'pay_on_pickup'
+
 interface CartState {
   items: CartItem[]
   locationId: string | null
   deliveryType: 'delivery' | 'pickup'
+  paymentType: PaymentType
+  payOnPickupFee: number
   promoCode: string | null
   promoDiscount: number
   promoDiscountType: 'percent' | 'fixed' | 'free_delivery' | null
@@ -40,6 +44,8 @@ interface CartState {
   clearCart: () => void
   setLocation: (locationId: string) => void
   setDeliveryType: (type: 'delivery' | 'pickup') => void
+  setPaymentType: (type: PaymentType) => void
+  setPayOnPickupFee: (fee: number) => void
   setPromoCode: (code: string, discount: number, discountType: 'percent' | 'fixed' | 'free_delivery') => void
   clearPromoCode: () => void
   setTip: (amount: number) => void
@@ -49,6 +55,7 @@ interface CartState {
   getItemCount: () => number
   getSubtotal: () => number
   getDeliveryFee: () => number
+  getPaymentFee: () => number
   getDiscount: () => number
   getTotal: () => number
   canCheckout: () => { allowed: boolean; reason?: string }
@@ -73,6 +80,8 @@ export const useCartStore = create<CartState>()(
       items: [],
       locationId: null,
       deliveryType: 'pickup',
+      paymentType: 'online',
+      payOnPickupFee: 2,
       promoCode: null,
       promoDiscount: 0,
       promoDiscountType: null,
@@ -121,6 +130,7 @@ export const useCartStore = create<CartState>()(
       clearCart: () => {
         set({
           items: [],
+          paymentType: 'online',
           promoCode: null,
           promoDiscount: 0,
           promoDiscountType: null,
@@ -131,6 +141,10 @@ export const useCartStore = create<CartState>()(
       setLocation: (locationId) => set({ locationId }),
 
       setDeliveryType: (type) => set({ deliveryType: type }),
+
+      setPaymentType: (type) => set({ paymentType: type }),
+
+      setPayOnPickupFee: (fee) => set({ payOnPickupFee: fee }),
 
       setPromoCode: (code, discount, discountType) => {
         set({
@@ -167,6 +181,11 @@ export const useCartStore = create<CartState>()(
         return baseDeliveryFee
       },
 
+      getPaymentFee: () => {
+        const { paymentType, payOnPickupFee } = get()
+        return paymentType === 'pay_on_pickup' ? payOnPickupFee : 0
+      },
+
       getDiscount: () => {
         const { promoDiscount, promoDiscountType } = get()
         if (!promoDiscount || !promoDiscountType) return 0
@@ -185,10 +204,11 @@ export const useCartStore = create<CartState>()(
       getTotal: () => {
         const subtotal = get().getSubtotal()
         const deliveryFee = get().getDeliveryFee()
+        const paymentFee = get().getPaymentFee()
         const discount = get().getDiscount()
         const tip = get().tip
 
-        return Math.max(0, subtotal - discount + deliveryFee + tip)
+        return Math.max(0, subtotal - discount + deliveryFee + paymentFee + tip)
       },
 
       canCheckout: () => {
@@ -254,13 +274,17 @@ export const selectDiscount = (s: CartState) => {
   return 0
 }
 
+export const selectPaymentFee = (s: CartState) =>
+  s.paymentType === 'pay_on_pickup' ? s.payOnPickupFee : 0
+
 export const selectTotal = (s: CartState) => {
   const subtotal = computeSubtotal(s.items)
   const deliveryFee = s.deliveryType === 'pickup' ? 0 : s.promoDiscountType === 'free_delivery' ? 0 : s.baseDeliveryFee
+  const paymentFee = s.paymentType === 'pay_on_pickup' ? s.payOnPickupFee : 0
   let discount = 0
   if (s.promoDiscount && s.promoDiscountType) {
     if (s.promoDiscountType === 'percent') discount = subtotal * (s.promoDiscount / 100)
     else if (s.promoDiscountType === 'fixed') discount = s.promoDiscount
   }
-  return Math.max(0, subtotal - discount + deliveryFee + s.tip)
+  return Math.max(0, subtotal - discount + deliveryFee + paymentFee + s.tip)
 }

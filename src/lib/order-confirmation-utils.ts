@@ -25,7 +25,7 @@ export const ACTIVE_STATUSES = new Set([
 export function getPickupStepIndex(orderStatus: string, paymentStatus: string): number {
   if (orderStatus === 'ready' || orderStatus === 'delivered') return 3
   if (orderStatus === 'preparing') return 2
-  if (paymentStatus === 'paid' && (orderStatus === 'confirmed' || orderStatus === 'pending_payment')) return 1
+  if ((paymentStatus === 'paid' || paymentStatus === 'pay_on_pickup') && (orderStatus === 'confirmed' || orderStatus === 'pending_payment')) return 1
   return 0
 }
 
@@ -34,6 +34,7 @@ export function getPickupStepIndex(orderStatus: string, paymentStatus: string): 
  */
 export function isPaymentPending(paymentStatus: string): boolean {
   return paymentStatus !== 'paid'
+    && paymentStatus !== 'pay_on_pickup'
     && paymentStatus !== 'failed'
     && paymentStatus !== 'cancelled'
 }

@@ -26,7 +26,7 @@ import type { ContactFormData, DeliveryFormData, PaymentFormData } from '@/lib/v
 
 export default function CheckoutPage() {
     const router = useRouter()
-    const { items, getTotal, getSubtotal, getDeliveryFee, getDiscount, tip, setDeliveryType } = useCartStore()
+    const { items, getTotal, getSubtotal, getDeliveryFee, getPaymentFee, getDiscount, tip, setDeliveryType, paymentType, setPaymentType, setPayOnPickupFee } = useCartStore()
     const { user, isLoading: authLoading, isPermanent } = useAuth()
     const { submitOrder, isLoading: isSubmitting } = useCheckout()
 
@@ -52,6 +52,12 @@ export default function CheckoutPage() {
     })
 
     const [pickupEstimate, setPickupEstimate] = useState('~20')
+
+    // Payment on pickup config
+    const [payOnPickupConfig, setPayOnPickupConfig] = useState({
+        fee: 2,
+        maxOrder: 100,
+    })
 
     // Pickup time
     const [pickupTime, setPickupTime] = useState<'asap' | string>('asap')
@@ -128,6 +134,8 @@ export default function CheckoutPage() {
                         'pickup_buffer_before_close',
                         'pickup_time_min',
                         'pickup_time_max',
+                        'pay_on_pickup_fee',
+                        'pay_on_pickup_max_order',
                     ]),
             ])
 
@@ -163,6 +171,12 @@ export default function CheckoutPage() {
                 if (min && max) {
                     setPickupEstimate(`~${min}-${max}`)
                 }
+
+                // Payment on pickup config
+                const fee = configMap.pay_on_pickup_fee ? Number(configMap.pay_on_pickup_fee) : 2
+                const maxOrder = configMap.pay_on_pickup_max_order ? Number(configMap.pay_on_pickup_max_order) : 100
+                setPayOnPickupConfig({ fee, maxOrder })
+                setPayOnPickupFee(fee)
             }
         }
 
@@ -297,13 +311,16 @@ export default function CheckoutPage() {
             scheduledTime: pickupTime !== 'asap' ? pickupTime : undefined,
         }
 
-        const paymentData: PaymentFormData = { method: 'blik' }
+        const paymentData: PaymentFormData = {
+            method: paymentType === 'pay_on_pickup' ? 'pay_on_pickup' : 'blik',
+        }
 
         await submitOrder(finalDeliveryData, addressData, paymentData, savePhoneToProfile)
     }
 
     const subtotal = getSubtotal()
     const deliveryFee = getDeliveryFee()
+    const paymentFee = getPaymentFee()
     const discount = getDiscount()
     const total = getTotal()
 
@@ -413,9 +430,15 @@ export default function CheckoutPage() {
                 />
             </section>
 
-            {/* Section 5: Payment info */}
+            {/* Section 5: Payment method selection */}
             <section className="mb-4 rounded-xl border border-border bg-card p-4">
-                <PaymentMethod />
+                <PaymentMethod
+                    selected={paymentType}
+                    onChange={setPaymentType}
+                    payOnPickupFee={payOnPickupConfig.fee}
+                    payOnPickupMaxOrder={payOnPickupConfig.maxOrder}
+                    orderSubtotal={subtotal}
+                />
             </section>
 
             {/* Section 6: Promo code */}
@@ -438,6 +461,12 @@ export default function CheckoutPage() {
                     <div className="flex justify-between text-muted-foreground">
                         <span>Dostawa</span>
                         <span>{formatPriceExact(deliveryFee)}</span>
+                    </div>
+                )}
+                {paymentFee > 0 && (
+                    <div className="flex justify-between text-muted-foreground">
+                        <span>Płatność przy odbiorze</span>
+                        <span>{formatPriceExact(paymentFee)}</span>
                     </div>
                 )}
                 {tip > 0 && (

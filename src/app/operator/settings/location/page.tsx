@@ -38,6 +38,8 @@ export default function LocationSettingsPage() {
   })
   const [pickupBufferAfterOpen, setPickupBufferAfterOpen] = useState(30)
   const [pickupBufferBeforeClose, setPickupBufferBeforeClose] = useState(30)
+  const [payOnPickupFee, setPayOnPickupFee] = useState(2)
+  const [payOnPickupMaxOrder, setPayOnPickupMaxOrder] = useState(100)
 
   useEffect(() => {
     fetchLocation()
@@ -89,6 +91,10 @@ export default function LocationSettingsPage() {
         const beforeClose = configArr.find((c) => c.key === 'pickup_buffer_before_close')
         if (afterOpen) setPickupBufferAfterOpen(parseInt(afterOpen.value) || 30)
         if (beforeClose) setPickupBufferBeforeClose(parseInt(beforeClose.value) || 30)
+        const pickupFee = configArr.find((c) => c.key === 'pay_on_pickup_fee')
+        const pickupMax = configArr.find((c) => c.key === 'pay_on_pickup_max_order')
+        if (pickupFee) setPayOnPickupFee(parseFloat(pickupFee.value) || 2)
+        if (pickupMax) setPayOnPickupMaxOrder(parseFloat(pickupMax.value) || 100)
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Błąd pobierania danych')
@@ -120,6 +126,8 @@ export default function LocationSettingsPage() {
           body: JSON.stringify([
             { key: 'pickup_buffer_after_open', value: String(pickupBufferAfterOpen) },
             { key: 'pickup_buffer_before_close', value: String(pickupBufferBeforeClose) },
+            { key: 'pay_on_pickup_fee', value: String(payOnPickupFee) },
+            { key: 'pay_on_pickup_max_order', value: String(payOnPickupMaxOrder) },
           ]),
         }),
       ])
@@ -326,6 +334,43 @@ export default function LocationSettingsPage() {
                 />
                 <p className="text-xs text-white/40 mt-1">
                   Czas przed zamknięciem, od którego odbiór osobisty nie jest już dostępny
+                </p>
+              </div>
+            </div>
+
+            {/* Payment on pickup */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm text-white/60">
+                  Opłata za płatność przy odbiorze (PLN)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={payOnPickupFee}
+                  onChange={(e) => setPayOnPickupFee(parseFloat(e.target.value) || 0)}
+                  className="w-full h-12 px-4 text-white bg-meso-dark-900 border border-white/10 rounded-xl focus:border-meso-red-500 focus:outline-none"
+                />
+                <p className="text-xs text-white/40 mt-1">
+                  Dodatkowa opłata gdy klient płaci kartą/BLIK na miejscu
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm text-white/60">
+                  Maks. zamówienie — płatność przy odbiorze (PLN)
+                </label>
+                <input
+                  type="number"
+                  step="1"
+                  min="0"
+                  value={payOnPickupMaxOrder}
+                  onChange={(e) => setPayOnPickupMaxOrder(parseFloat(e.target.value) || 0)}
+                  className="w-full h-12 px-4 text-white bg-meso-dark-900 border border-white/10 rounded-xl focus:border-meso-red-500 focus:outline-none"
+                />
+                <p className="text-xs text-white/40 mt-1">
+                  Powyżej tej kwoty płatność przy odbiorze jest niedostępna
                 </p>
               </div>
             </div>

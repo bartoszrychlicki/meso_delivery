@@ -34,7 +34,7 @@ export const deliverySchema = z.object({
 export type DeliveryFormData = z.infer<typeof deliverySchema>
 
 export const paymentSchema = z.object({
-    method: z.enum(['blik', 'card', 'google_pay', 'apple_pay', 'cash']),
+    method: z.enum(['blik', 'card', 'google_pay', 'apple_pay', 'cash', 'pay_on_pickup']),
 })
 
 export type PaymentFormData = z.infer<typeof paymentSchema>
