@@ -127,10 +127,11 @@ function OrderConfirmationContent() {
     }, [orderId, router, setConfirmation])
 
     // Supabase Realtime — listen for order updates (status, payment_status)
-    // Plus safety-net polling every 10s while payment is pending
+    // Plus safety-net polling every 10s until order reaches a terminal state
     useEffect(() => {
         if (!orderId) return
 
+        const terminalStatuses = ['delivered', 'cancelled']
         const supabase = createClient()
 
         const channel = supabase
@@ -171,22 +172,32 @@ function OrderConfirmationContent() {
                     }
                 }
             )
-            .subscribe()
+            .subscribe((status) => {
+                console.log('[Realtime] Channel status:', status)
+            })
 
-        // Safety-net: poll every 10s while payment is pending
+        // Safety-net polling: re-fetch order every 10s until terminal status
         const pollId = setInterval(async () => {
             const { data } = await supabase
                 .from('orders')
                 .select('status, payment_status')
                 .eq('id', orderId)
                 .single()
-            if (data && data.payment_status !== 'pending') {
-                setConfirmation((prev) => prev ? {
-                    ...prev,
-                    orderStatus: data.status,
-                    paymentStatus: data.payment_status,
-                } : prev)
-                clearInterval(pollId)
+            if (data) {
+                setConfirmation((prev) => {
+                    if (!prev) return prev
+                    if (prev.orderStatus === data.status && prev.paymentStatus === data.payment_status) {
+                        return prev // no change
+                    }
+                    return {
+                        ...prev,
+                        orderStatus: data.status,
+                        paymentStatus: data.payment_status,
+                    }
+                })
+                if (terminalStatuses.includes(data.status)) {
+                    clearInterval(pollId)
+                }
             }
         }, 10_000)
 
