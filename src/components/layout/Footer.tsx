@@ -101,9 +101,9 @@ export function Footer() {
                 {/* Company Info */}
                 <div className="text-center text-white/40 text-xs space-y-1">
                     <p>
-                        <strong className="text-white/60">Rychlicki Holding Sp. z o.o.</strong>
+                        <strong className="text-white/60">MESO FOOD Sp. z o.o.</strong>
                     </p>
-                    <p>ul. Leśna 8/8, 80-322 Gdańsk | NIP: 9571130261</p>
+                    <p>NIP: 5892109794</p>
                     <p>
                         <a href="mailto:kontakt@mesofood.pl" className="hover:text-white transition-colors">
                             kontakt@mesofood.pl
