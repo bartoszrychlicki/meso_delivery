@@ -106,22 +106,19 @@ export default function UpgradeAccountPage() {
       }
 
       // Upgrade the customer record from anonymous → permanent.
-      // After updateUser(), the JWT still has the old anonymous user's ID,
-      // so client-side DB calls fail RLS checks. We use a server endpoint
-      // with admin privileges instead, passing the verified user info.
-      const { data: { user: upgradedUser } } = await supabase.auth.getUser()
-      if (upgradedUser) {
-        await fetch('/api/auth/upgrade-customer', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: upgradedUser.id,
-            email: upgradedUser.email,
-            name: data.name,
-            marketingConsent: data.marketingConsent,
-          }),
-        })
-      }
+      // The primary upgrade is handled by the AFTER UPDATE trigger on
+      // auth.users (fires when Supabase sets the email). This endpoint
+      // is a backup that uses the email from the form to find the auth
+      // user, since getUser() returns the old anonymous user (stale JWT).
+      await fetch('/api/auth/upgrade-customer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: data.email,
+          name: data.name,
+          marketingConsent: data.marketingConsent,
+        }),
+      })
 
       // Apply referral if phone was provided
       if (referralPhone.trim()) {

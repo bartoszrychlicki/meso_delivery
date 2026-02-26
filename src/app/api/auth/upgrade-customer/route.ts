@@ -3,20 +3,24 @@ import { createClient } from '@supabase/supabase-js'
 
 /**
  * POST /api/auth/upgrade-customer
- * Called after supabase.auth.updateUser() upgrades an anonymous user.
+ * Backup endpoint called after supabase.auth.updateUser() upgrades an anonymous user.
  * Updates the customer record: sets email/name, adds registration bonus,
  * generates referral code, logs to loyalty_history.
  *
- * Uses service-role admin client because after updateUser() the client JWT
- * still has the old anonymous user's ID, making RLS-based approaches fail.
- * Verifies the user exists in auth before upgrading.
+ * The primary upgrade path is the AFTER UPDATE trigger on auth.users
+ * (see 20260231_upgrade_on_email_update.sql). This endpoint is a fallback
+ * in case the trigger hasn't fired yet (e.g., email not yet set on auth user).
+ *
+ * Accepts email from form data and looks up the auth user by email using
+ * an RPC function, because after updateUser() the client JWT still has
+ * the old anonymous user's ID.
  */
 export async function POST(request: NextRequest) {
   try {
-    const { userId, email, name, marketingConsent } = await request.json()
+    const { email, name, marketingConsent } = await request.json()
 
-    if (!userId || !email) {
-      return NextResponse.json({ error: 'Missing userId or email' }, { status: 400 })
+    if (!email) {
+      return NextResponse.json({ error: 'Missing email' }, { status: 400 })
     }
 
     const admin = createClient(
@@ -24,10 +28,16 @@ export async function POST(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    // Verify this is a real auth user with a matching email
-    const { data: { user: authUser }, error: authError } = await admin.auth.admin.getUserById(userId)
-    if (authError || !authUser || authUser.email !== email) {
-      return NextResponse.json({ error: 'Invalid user' }, { status: 403 })
+    // Find the auth user by email using RPC (efficient single query)
+    const { data: userId, error: rpcError } = await admin.rpc(
+      'get_auth_user_id_by_email',
+      { lookup_email: email }
+    )
+
+    if (rpcError || !userId) {
+      // User may not exist yet (email not confirmed). That's OK —
+      // the AFTER UPDATE trigger will handle it when the email is set.
+      return NextResponse.json({ ok: true, message: 'Deferred to trigger' })
     }
 
     // Check if customer exists and is anonymous
@@ -42,6 +52,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!customer.is_anonymous) {
+      // Already upgraded (trigger may have handled it)
       return NextResponse.json({ ok: true, message: 'Already permanent' })
     }
 
