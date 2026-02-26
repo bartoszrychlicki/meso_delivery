@@ -182,28 +182,49 @@ test.describe.serial('Password Reset Flow', () => {
     expect(session.access_token).toBeTruthy()
     expect(session.refresh_token).toBeTruthy()
 
-    // Navigate to a page first to set up the origin for localStorage
+    // Inject session into cookies (createBrowserClient from @supabase/ssr uses cookies, not localStorage)
+    const projectRef = new URL(supabaseUrl).hostname.split('.')[0]
+    const cookieName = `sb-${projectRef}-auth-token`
+    const sessionJson = JSON.stringify({
+      access_token: session.access_token,
+      token_type: 'bearer',
+      expires_in: session.expires_in,
+      expires_at: Math.floor(Date.now() / 1000) + session.expires_in,
+      refresh_token: session.refresh_token,
+      user: session.user,
+    })
+
+    // Navigate to the app first so we're on the right origin for cookies
     await bypassGate(page)
     await page.goto('/login')
     await page.waitForLoadState('domcontentloaded')
 
-    // Inject session into localStorage
-    const projectRef = new URL(supabaseUrl).hostname.split('.')[0]
-    const storageKey = `sb-${projectRef}-auth-token`
+    // Set session cookie via document.cookie (matching @supabase/ssr's CookieStorage format)
+    await page.evaluate(({ name, value }: { name: string; value: string }) => {
+      // Clear any existing session cookies
+      document.cookie.split(';').forEach(c => {
+        const cName = c.trim().split('=')[0]
+        if (cName === name || cName.startsWith(`${name}.`)) {
+          document.cookie = `${cName}=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT`
+        }
+      })
 
-    await page.evaluate(({ key, value }: { key: string; value: string }) => {
-      localStorage.setItem(key, value)
-    }, {
-      key: storageKey,
-      value: JSON.stringify({
-        access_token: session.access_token,
-        token_type: 'bearer',
-        expires_in: session.expires_in,
-        expires_at: Math.floor(Date.now() / 1000) + session.expires_in,
-        refresh_token: session.refresh_token,
-        user: session.user,
-      }),
-    })
+      // Chunk the value (@supabase/ssr uses 3180 char chunks on the raw string)
+      const CHUNK_SIZE = 3180
+      const chunks: string[] = []
+      for (let i = 0; i < value.length; i += CHUNK_SIZE) {
+        chunks.push(value.slice(i, i + CHUNK_SIZE))
+      }
+
+      // Write cookie(s) with URL encoding (matching @supabase/ssr serialize)
+      if (chunks.length === 1) {
+        document.cookie = `${name}=${encodeURIComponent(chunks[0])}; path=/; max-age=3600; SameSite=Lax`
+      } else {
+        chunks.forEach((chunk, i) => {
+          document.cookie = `${name}.${i}=${encodeURIComponent(chunk)}; path=/; max-age=3600; SameSite=Lax`
+        })
+      }
+    }, { name: cookieName, value: sessionJson })
 
     // Navigate to the reset password page
     await page.goto('/reset-password')
