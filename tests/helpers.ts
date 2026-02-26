@@ -47,17 +47,24 @@ export async function loginTestUser(page: Page) {
       password: TEST_PASSWORD,
       email_confirm: true,
     })
-    if (error) throw new Error(`Failed to create test user: ${error.message}`)
 
-    // Ensure customers record
-    await admin.from('customers').upsert({
-      id: data.user.id,
-      email: TEST_EMAIL,
-      name: 'E2E Test',
-      phone: '+48500100200',
-      loyalty_points: 0,
-      loyalty_tier: 'bronze',
-    }, { onConflict: 'id' })
+    if (error) {
+      // User may exist but wasn't in the first page of listUsers() (paginated).
+      // If "already registered", that's fine — we just need to log in.
+      if (!error.message.includes('already been registered')) {
+        throw new Error(`Failed to create test user: ${error.message}`)
+      }
+    } else {
+      // Ensure customers record for newly created user
+      await admin.from('customers').upsert({
+        id: data.user.id,
+        email: TEST_EMAIL,
+        name: 'E2E Test',
+        phone: '+48500100200',
+        loyalty_points: 0,
+        loyalty_tier: 'bronze',
+      }, { onConflict: 'id' })
+    }
   }
 
   // Bypass gate and log in via the login page
