@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -25,12 +25,10 @@ type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>
 
 export default function ResetPasswordPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [isValidSession, setIsValidSession] = useState<boolean | null>(null)
   const supabase = createClient()
-  const isRecoveryFlow = searchParams.get('recovery') === '1'
 
   const {
     register,
@@ -43,6 +41,8 @@ export default function ResetPasswordPage() {
   // Check if we have a valid recovery session
   useEffect(() => {
     const checkSession = async () => {
+      const isRecoveryFlow = new URLSearchParams(window.location.search).get('recovery') === '1'
+
       if (!isRecoveryFlow) {
         setIsValidSession(false)
         return
@@ -58,7 +58,7 @@ export default function ResetPasswordPage() {
       setIsValidSession(!!session && !isAnonymous)
     }
     checkSession()
-  }, [isRecoveryFlow, supabase])
+  }, [supabase])
 
   const onSubmit = async (data: ResetPasswordFormData) => {
     setIsSubmitting(true)
