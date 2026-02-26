@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { Trophy, Gift, Truck, Percent, UtensilsCrossed, ArrowLeft, Loader2, CircleHelp, Lock, AlertCircle } from 'lucide-react'
+import { Gift, Truck, Percent, UtensilsCrossed, ArrowLeft, Loader2, CircleHelp, Lock, AlertCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
@@ -12,6 +12,7 @@ import { useCustomerLoyalty } from '@/hooks/useCustomerLoyalty'
 import { useLoyaltyRewards, type LoyaltyRewardRow } from '@/hooks/useLoyaltyRewards'
 import { useAppConfig } from '@/hooks/useAppConfig'
 import { toast } from 'sonner'
+import { TierEmblem } from '@/components/loyalty/TierEmblem'
 import type { LoyaltyTier } from '@/types/customer'
 
 interface LoyaltyHistoryEntry {
@@ -189,17 +190,11 @@ export default function LoyaltyPage() {
       >
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
-              <Trophy className="h-6 w-6 text-white" />
-            </div>
             <div>
               <p className="text-sm text-white/70">MESO Club</p>
               <p className="font-display text-3xl font-bold text-white">{points.toLocaleString('pl-PL')}</p>
               <p className="text-xs text-white/55">Aktualnie dostępne punkty</p>
             </div>
-            <span className="ml-auto rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white">
-              punktów
-            </span>
           </div>
 
           {/* Loyalty level progress (based on total earned points) */}
@@ -244,8 +239,16 @@ export default function LoyaltyPage() {
             </p>
           </div>
         </div>
-        {/* Decorative circle */}
-        <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/5" />
+        {/* Tier emblem — positioned in the top-right corner */}
+        <motion.div
+          key={currentTier}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, ease: 'easeOut', delay: 0.3 }}
+          className="absolute -right-2 -top-2 h-32 w-32 pointer-events-none"
+        >
+          <TierEmblem tier={currentTier} className="h-full w-full" />
+        </motion.div>
       </motion.div>
 
       {/* Active Coupon Banner */}
