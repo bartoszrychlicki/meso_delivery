@@ -3,6 +3,7 @@ import { Inter, Orbitron, Noto_Sans_JP } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 const inter = Inter({
@@ -63,6 +64,7 @@ export default function RootLayout({
           }}
         />
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
