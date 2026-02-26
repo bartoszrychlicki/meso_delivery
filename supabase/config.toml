@@ -19,11 +19,11 @@ port = 54323
 enabled = true
 site_url = "https://order.mesofood.pl"
 additional_redirect_urls = [
-  "http://localhost:3000",
-  "http://localhost:3003",
-  "https://meso-delivery.vercel.app",
-  "https://mesofood.pl",
-  "https://order.mesofood.pl",
+  "http://localhost:3000/**",
+  "http://localhost:3003/**",
+  "https://meso-delivery.vercel.app/**",
+  "https://mesofood.pl/**",
+  "https://order.mesofood.pl/**",
 ]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
