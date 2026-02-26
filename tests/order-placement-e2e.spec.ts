@@ -31,6 +31,7 @@ import {
 // ──────────────────────────────────────────────────────────
 
 const TEST_EMAIL = 'e2e-test@meso.dev'
+const PAY_ON_PICKUP_MAX = 100 // PLN — pay_on_pickup disabled above this
 
 // ──────────────────────────────────────────────────────────
 // Helpers
@@ -128,29 +129,46 @@ test.describe.serial('Order Placement Flow', () => {
       if (customer) testUserId = customer.id
     }
 
-    // 2. Clear cart to start fresh (prevents exceeding pay_on_pickup max of 100 PLN)
+    // 2. Clear cart to start fresh
     await page.evaluate(() => localStorage.removeItem('meso-cart'))
 
-    // 3. Add product to cart
-    await addFirstProductToCart(page)
+    // 3. Find a product in the right price range (≥35 PLN min order, <100 PLN pay_on_pickup max)
+    const { data: suitableProduct } = await admin
+      .from('products')
+      .select('id, price')
+      .eq('is_available', true)
+      .gte('price', 35)
+      .lt('price', PAY_ON_PICKUP_MAX)
+      .limit(1)
+      .single()
 
-    // 4. Ensure cart meets minimum order (35 PLN)
-    await ensureCheckoutIsAvailable(page)
+    if (suitableProduct) {
+      // Navigate directly to this product page
+      await page.goto(`/product/${suitableProduct.id}`)
+      const addBtn = page.getByTestId('product-detail-add-to-cart')
+      await expect(addBtn).toBeVisible({ timeout: 15_000 })
+      await addBtn.click()
+      await page.waitForURL((url) => !url.pathname.includes('/product/'), { timeout: 15_000 })
+    } else {
+      // Fallback: use the generic helper
+      await addFirstProductToCart(page)
+      await ensureCheckoutIsAvailable(page)
+    }
 
-    // 5. Navigate to checkout
+    // 4. Navigate to checkout
     await page.goto('/checkout')
     await expect(page.getByRole('heading', { name: /PODSUMOWANIE/i })).toBeVisible({ timeout: 15_000 })
 
-    // 6. Wait for contact form to auto-fill (profile data loads async)
+    // 5. Wait for contact form to auto-fill (profile data loads async)
     await page.waitForFunction(() => {
       const el = document.getElementById('firstName') as HTMLInputElement
       return el && el.value.length > 0
     }, { timeout: 10_000 })
 
-    // 7. Fill contact form
+    // 6. Fill contact form
     await fillCheckoutContactForm(page)
 
-    // 8. Select "Platnosc przy odbiorze" (only if not disabled — subtotal must be ≤100 PLN)
+    // 7. Select "Platnosc przy odbiorze"
     const payOnPickupButton = page.locator('button').filter({ hasText: 'Płatność przy odbiorze' })
     await expect(payOnPickupButton).toBeVisible()
     await expect(payOnPickupButton).toBeEnabled({ timeout: 5_000 })
@@ -221,16 +239,12 @@ test.describe.serial('Order Placement Flow', () => {
     // 1. Login (session may have been lost between tests)
     await loginTestUser(page)
 
-    // 2. Clear cart to start fresh
+    // 2. Clear cart and add product
     await page.evaluate(() => localStorage.removeItem('meso-cart'))
-
-    // 3. Add product to cart
     await addFirstProductToCart(page)
-
-    // 4. Ensure cart meets minimum order
     await ensureCheckoutIsAvailable(page)
 
-    // 4. Navigate to checkout
+    // 3. Navigate to checkout
     await page.goto('/checkout')
     await expect(page.getByRole('heading', { name: /PODSUMOWANIE/i })).toBeVisible({ timeout: 15_000 })
 
