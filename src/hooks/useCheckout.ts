@@ -8,6 +8,33 @@ import { useCartStore } from '@/stores/cartStore'
 import { useAuth } from '@/hooks/useAuth'
 import type { AddressFormData, DeliveryFormData, PaymentFormData } from '@/lib/validators/checkout'
 
+type CheckoutProfileUpdate = {
+    name?: string | null
+    phone?: string | null
+}
+
+export function buildCheckoutProfileUpdate(
+    addressData: Pick<AddressFormData, 'firstName' | 'lastName' | 'phone'>,
+    savePhoneToProfile?: boolean
+): CheckoutProfileUpdate {
+    const fullName = [addressData.firstName, addressData.lastName]
+        .map((part) => part?.trim())
+        .filter(Boolean)
+        .join(' ')
+
+    const profileUpdate: CheckoutProfileUpdate = {}
+
+    if (fullName) {
+        profileUpdate.name = fullName
+    }
+
+    if (savePhoneToProfile && addressData.phone) {
+        profileUpdate.phone = addressData.phone
+    }
+
+    return profileUpdate
+}
+
 export function useCheckout() {
     const router = useRouter()
     const supabase = createClient()
@@ -96,20 +123,7 @@ export function useCheckout() {
             }
 
             // 2b. Save customer profile fields from checkout (name always, phone optionally)
-            const fullName = [addressData.firstName, addressData.lastName]
-                .map((part) => part?.trim())
-                .filter(Boolean)
-                .join(' ')
-
-            const profileUpdate: { name?: string | null; phone?: string | null } = {}
-
-            if (fullName) {
-                profileUpdate.name = fullName
-            }
-
-            if (savePhoneToProfile && addressData.phone) {
-                profileUpdate.phone = addressData.phone
-            }
+            const profileUpdate = buildCheckoutProfileUpdate(addressData, savePhoneToProfile)
 
             if (Object.keys(profileUpdate).length > 0) {
                 await supabase

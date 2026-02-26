@@ -509,6 +509,109 @@ describe('GET /api/loyalty/history', () => {
     expect(json.hasMore).toBe(false)
     expect(json.page).toBe(0)
   })
+
+  it('prepends temporary pending points for paid but not delivered orders on page 0', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } } })
+
+    mockAuthFrom.mockImplementation((table: string) => {
+      if (table === 'loyalty_history') {
+        return chain({
+          data: [
+            {
+              id: 'h1',
+              label: 'Zamowienie #1001',
+              points: 42,
+              type: 'earned',
+              created_at: '2026-02-20T12:00:00Z',
+              order_id: 1001,
+            },
+          ],
+          error: null,
+          count: 1,
+        })
+      }
+
+      if (table === 'orders') {
+        return chain({
+          data: [
+            {
+              id: 2002,
+              status: 'confirmed',
+              payment_status: 'paid',
+              loyalty_points_earned: 67,
+              created_at: '2026-02-21T12:00:00Z',
+              paid_at: '2026-02-21T12:05:00Z',
+              confirmed_at: '2026-02-21T12:06:00Z',
+            },
+          ],
+          error: null,
+        })
+      }
+
+      return chain({ data: null, error: null })
+    })
+
+    const res = await GET(makeRequest('GET'))
+    expect(res.status).toBe(200)
+
+    const json = await res.json()
+    expect(json.history).toHaveLength(2)
+    expect(json.history[0].id).toBe('pending-order-2002')
+    expect(json.history[0].points).toBe(67)
+    expect(json.history[0].is_pending_confirmation).toBe(true)
+    expect(json.history[0].pending_message).toContain('Punkty w trakcie potwierdzania')
+    expect(json.history[1].id).toBe('h1')
+  })
+
+  it('does not add temporary entry when order is already delivered', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } } })
+
+    mockAuthFrom.mockImplementation((table: string) => {
+      if (table === 'loyalty_history') {
+        return chain({
+          data: [
+            {
+              id: 'h-delivered',
+              label: 'Zamowienie #3003',
+              points: 80,
+              type: 'earned',
+              created_at: '2026-02-22T12:00:00Z',
+              order_id: 3003,
+            },
+          ],
+          error: null,
+          count: 1,
+        })
+      }
+
+      if (table === 'orders') {
+        return chain({
+          data: [
+            {
+              id: 3003,
+              status: 'delivered',
+              payment_status: 'paid',
+              loyalty_points_earned: 80,
+              created_at: '2026-02-22T11:00:00Z',
+              paid_at: '2026-02-22T11:05:00Z',
+              confirmed_at: '2026-02-22T11:06:00Z',
+            },
+          ],
+          error: null,
+        })
+      }
+
+      return chain({ data: null, error: null })
+    })
+
+    const res = await GET(makeRequest('GET'))
+    expect(res.status).toBe(200)
+
+    const json = await res.json()
+    expect(json.history).toHaveLength(1)
+    expect(json.history[0].id).toBe('h-delivered')
+    expect(json.history.find((row: { id: string }) => row.id.startsWith('pending-order-'))).toBeUndefined()
+  })
 })
 
 // ===========================================================================

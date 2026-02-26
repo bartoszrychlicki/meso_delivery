@@ -19,6 +19,8 @@ interface LoyaltyHistoryEntry {
   type: string
   created_at: string
   order_id?: number
+  is_pending_confirmation?: boolean
+  pending_message?: string
 }
 
 const REWARD_ICONS: Record<string, typeof Gift> = {
@@ -298,19 +300,52 @@ export default function LoyaltyPage() {
             </div>
           ) : (
             <div className="space-y-0">
-              {history.map((entry) => (
-                <div key={entry.id} className="flex items-center justify-between py-3 border-b border-white/5">
-                  <div>
-                    <p className="text-sm font-medium">{entry.label}</p>
-                    <p className="text-xs text-white/40">
-                      {new Date(entry.created_at).toLocaleDateString('pl-PL')}
-                    </p>
+              {history.map((entry) => {
+                const isPendingConfirmation = entry.is_pending_confirmation || entry.type === 'pending_confirmation'
+
+                return (
+                  <div
+                    key={entry.id}
+                    className={cn(
+                      'flex items-center justify-between py-3 border-b',
+                      isPendingConfirmation ? 'border-white/10 bg-white/[0.02]' : 'border-white/5'
+                    )}
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className={cn('text-sm font-medium', isPendingConfirmation && 'text-white/70')}>
+                          {entry.label}
+                        </p>
+                        {isPendingConfirmation && (
+                          <span className="rounded-full border border-white/15 bg-white/5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white/55">
+                            Tymczasowe
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-white/40">
+                        {new Date(entry.created_at).toLocaleDateString('pl-PL')}
+                      </p>
+                      {isPendingConfirmation && (
+                        <p className="mt-1 text-xs text-white/50">
+                          {entry.pending_message || 'Punkty w trakcie potwierdzania. Po odbiorze zamówienia naliczymy je automatycznie.'}
+                        </p>
+                      )}
+                    </div>
+                    <span
+                      className={cn(
+                        'text-sm font-bold',
+                        isPendingConfirmation
+                          ? 'text-white/50'
+                          : entry.points > 0
+                            ? 'text-green-400'
+                            : 'text-red-400'
+                      )}
+                    >
+                      {entry.points > 0 ? '+' : ''}{entry.points} pkt
+                    </span>
                   </div>
-                  <span className={`text-sm font-bold ${entry.points > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {entry.points > 0 ? '+' : ''}{entry.points} pkt
-                  </span>
-                </div>
-              ))}
+                )
+              })}
               {hasMore && (
                 <button
                   onClick={() => loadHistory(historyPage + 1)}
