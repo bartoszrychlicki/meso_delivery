@@ -347,12 +347,16 @@ export default function LoyaltyPage() {
                     </div>
                     <p className="text-xs text-muted-foreground truncate">{reward.description}</p>
                   </div>
-                  <div className="flex-shrink-0 text-right">
-                    {tierLocked ? (
-                      <span className="text-sm text-muted-foreground">
-                        {reward.points_cost} pkt
-                      </span>
-                    ) : canActivate ? (
+                  <div className="flex-shrink-0 text-right space-y-1">
+                    <p className={cn(
+                      'text-sm font-bold',
+                      tierLocked
+                        ? 'text-muted-foreground'
+                        : canActivate ? 'text-accent' : 'text-muted-foreground'
+                    )}>
+                      {reward.points_cost} pkt
+                    </p>
+                    {tierLocked ? null : canActivate ? (
                       <Button
                         size="sm"
                         onClick={() => setConfirmReward(reward)}
@@ -365,14 +369,10 @@ export default function LoyaltyPage() {
                           <>Aktywuj</>
                         )}
                       </Button>
-                    ) : hasActiveCoupon ? (
-                      <span className="text-sm text-muted-foreground">
-                        {reward.points_cost} pkt
-                      </span>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">
-                        Brakuje {reward.points_cost - points} pkt
-                      </span>
+                    ) : hasActiveCoupon ? null : (
+                      <p className="text-xs text-muted-foreground">
+                        Brakuje {reward.points_cost - points}
+                      </p>
                     )}
                   </div>
                 </motion.div>
