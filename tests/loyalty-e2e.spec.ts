@@ -8,6 +8,9 @@
  * - Loyalty history tab
  * - Registration referral field
  * - Coupon sync on cart page load
+ * - Used coupon lazy cleanup (full lifecycle)
+ * - Points cost visibility on reward cards
+ * - Tier emblem rendering
  *
  * URUCHOMIENIE:
  *   npx playwright test loyalty-e2e --headed
@@ -451,5 +454,173 @@ test.describe('Loyalty Program', () => {
     await expect(couponDisplay).toBeVisible({ timeout: 15_000 })
 
     console.log(`Coupon ${coupon!.code} correctly synced from DB to cart`)
+  })
+
+  // ──────────────────────────────────────────────────────
+  // TEST 7: Used coupon is cleared — activation unblocked after order uses coupon
+  // Covers: full coupon lifecycle (active → used via order → lazy cleanup)
+  // ──────────────────────────────────────────────────────
+  test('used coupon is cleared and new activation is unblocked', async ({ page }) => {
+    const couponCode = 'MESO-LIFECYCLE1'
+
+    // 1. Set up: user has an "active" coupon, but a paid order already used its code
+    //    This simulates the RLS bug where checkout couldn't update coupon status
+    await admin.from('loyalty_coupons').delete().eq('customer_id', testUserId)
+    await admin.from('customers').update({
+      loyalty_points: 500,
+      loyalty_tier: 'silver',
+    }).eq('id', testUserId)
+
+    // Create coupon with status still 'active' (mimicking the RLS failure)
+    await admin.from('loyalty_coupons').insert({
+      customer_id: testUserId,
+      reward_id: availableRewards[0].id,
+      code: couponCode,
+      coupon_type: availableRewards[0].reward_type,
+      discount_value: availableRewards[0].reward_type === 'discount' ? 10 : null,
+      status: 'active',
+      points_spent: availableRewards[0].points_cost,
+      source: 'reward',
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    })
+
+    // Get a location for the order
+    const { data: location } = await admin
+      .from('locations')
+      .select('id')
+      .eq('is_active', true)
+      .limit(1)
+      .single()
+
+    // Create an order that used this coupon code (paid, delivered)
+    await admin.from('orders').insert({
+      customer_id: testUserId,
+      location_id: location!.id,
+      status: 'delivered',
+      delivery_type: 'delivery',
+      delivery_address: { street: 'Test', building_number: '1', city: 'Gdańsk', postal_code: '80-001' },
+      payment_method: 'blik',
+      payment_status: 'paid',
+      subtotal: 50,
+      delivery_fee: 0,
+      promo_discount: 0,
+      tip: 0,
+      total: 50,
+      promo_code: couponCode,
+      loyalty_points_earned: 50,
+      loyalty_points_used: 0,
+      paid_at: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+      delivered_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+      created_at: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+    })
+
+    // 2. Go to loyalty page — the lazy cleanup should detect the used coupon
+    await loginLoyaltyUser(page)
+    await page.goto('/loyalty')
+
+    // Wait for rewards tab to load
+    await expect(page.getByRole('button', { name: 'Nagrody' })).toBeVisible({ timeout: 15_000 })
+
+    // 3. Verify the "active coupon" banner is NOT shown (lazy cleanup marked it as used)
+    await expect(page.getByText('Masz aktywny kupon')).not.toBeVisible({ timeout: 5_000 })
+
+    // 4. Verify "Aktywuj" buttons are available again
+    const activateButton = page.getByRole('button', { name: 'Aktywuj' }).first()
+    await expect(activateButton).toBeVisible({ timeout: 10_000 })
+
+    // 5. Verify the coupon in DB was updated to 'used'
+    const { data: updatedCoupon } = await admin
+      .from('loyalty_coupons')
+      .select('status')
+      .eq('customer_id', testUserId)
+      .eq('code', couponCode)
+      .single()
+    expect(updatedCoupon!.status).toBe('used')
+
+    // Cleanup: delete the test order
+    await admin.from('orders').delete().eq('customer_id', testUserId).eq('promo_code', couponCode)
+
+    console.log('Used coupon correctly cleared, activation unblocked')
+  })
+
+  // ──────────────────────────────────────────────────────
+  // TEST 8: Reward cards show points cost alongside action buttons
+  // Covers: every reward state shows its cost in points
+  // ──────────────────────────────────────────────────────
+  test('reward cards always show points cost', async ({ page }) => {
+    // Set up: enough points to afford at least some rewards, no active coupon
+    await admin.from('loyalty_coupons').delete().eq('customer_id', testUserId)
+    await admin.from('customers').update({
+      loyalty_points: 500,
+      loyalty_tier: 'silver',
+    }).eq('id', testUserId)
+
+    await loginLoyaltyUser(page)
+    await page.goto('/loyalty')
+
+    // Wait for rewards to load
+    await expect(page.getByRole('button', { name: 'Nagrody' })).toBeVisible({ timeout: 15_000 })
+    const firstReward = page.locator('.space-y-3 > div').first()
+    await expect(firstReward).toBeVisible({ timeout: 10_000 })
+
+    // Every reward card should display its cost in "X pkt" format
+    // Check that each reward card's right side shows points cost
+    const rewardCards = page.locator('.space-y-3 > div')
+    const cardCount = await rewardCards.count()
+    expect(cardCount).toBeGreaterThan(0)
+
+    for (let i = 0; i < cardCount; i++) {
+      const card = rewardCards.nth(i)
+      // The points cost text should be visible in the flex-shrink-0 column (right side)
+      const costText = card.locator('.flex-shrink-0 .font-bold')
+      await expect(costText).toBeVisible()
+      await expect(costText).toHaveText(/\d+ pkt/)
+    }
+
+    // Specifically: a card with "Aktywuj" button should ALSO show points cost
+    const activateButton = page.getByRole('button', { name: 'Aktywuj' }).first()
+    if (await activateButton.isVisible()) {
+      // The button's parent container (.flex-shrink-0) should also have a cost label
+      const buttonParent = activateButton.locator('..')
+      const costInSameContainer = buttonParent.locator('.font-bold')
+      await expect(costInSameContainer).toBeVisible()
+      await expect(costInSameContainer).toHaveText(/\d+ pkt/)
+    }
+
+    console.log(`Verified ${cardCount} reward cards all show points cost`)
+  })
+
+  // ──────────────────────────────────────────────────────
+  // TEST 9: Tier emblem renders for current tier
+  // Covers: cyberpunk SVG emblem is visible on the loyalty card
+  // ──────────────────────────────────────────────────────
+  test('tier emblem is visible on loyalty card', async ({ page }) => {
+    await admin.from('loyalty_coupons').delete().eq('customer_id', testUserId)
+    await admin.from('customers').update({
+      loyalty_points: 500,
+      loyalty_tier: 'silver',
+      lifetime_points: 500,
+    }).eq('id', testUserId)
+
+    await loginLoyaltyUser(page)
+    await page.goto('/loyalty')
+
+    // Wait for card to render
+    await expect(page.getByText('Aktualnie dostępne punkty')).toBeVisible({ timeout: 15_000 })
+
+    // Verify the SVG emblem is present in the points card (the neon-glow card)
+    const pointsCard = page.locator('.neon-glow').first()
+    await expect(pointsCard).toBeVisible()
+
+    const emblemSvg = pointsCard.locator('svg')
+    await expect(emblemSvg).toBeVisible()
+
+    // The SVG should have tier-specific content (silver uses octagon = 10-point polygon)
+    // Verify it's not empty — has child elements
+    const svgChildren = emblemSvg.locator('polygon, circle, ellipse, path, line')
+    const childCount = await svgChildren.count()
+    expect(childCount).toBeGreaterThan(5)
+
+    console.log(`Tier emblem rendered with ${childCount} SVG elements`)
   })
 })

@@ -378,10 +378,19 @@ describe('GET /api/loyalty/active-coupon', () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } } })
 
     let callN = 0
-    mockAdminFrom.mockImplementation(() => {
+    mockAdminFrom.mockImplementation((table: string) => {
       callN++
       if (callN === 1) return chain({ data: null, error: null }) // expire stale
       if (callN === 2) {
+        // Select active coupons for used-order cleanup
+        return chain({ data: [{ id: 'c1', code: 'MESO-XYZ' }], error: null })
+      }
+      if (callN === 3 && table === 'orders') {
+        // Check if coupon code was used in an order — not used
+        return chain({ data: null, error: null })
+      }
+      if (callN === 4) {
+        // Final fetch of active coupon
         return chain({
           data: {
             id: 'c1',
@@ -412,8 +421,9 @@ describe('GET /api/loyalty/active-coupon', () => {
     let callN = 0
     mockAdminFrom.mockImplementation(() => {
       callN++
-      if (callN === 1) return chain({ data: null, error: null })
-      if (callN === 2) return chain({ data: null, error: null }) // no active coupon
+      if (callN === 1) return chain({ data: null, error: null }) // expire stale
+      if (callN === 2) return chain({ data: null, error: null }) // select active for cleanup — none found
+      if (callN === 3) return chain({ data: null, error: null }) // final fetch — no active coupon
       return chain({ data: null, error: null })
     })
 
@@ -422,7 +432,28 @@ describe('GET /api/loyalty/active-coupon', () => {
     expect(json.coupon).toBeNull()
   })
 
-  it('expires stale coupons before checking', async () => {
+  it('expires stale coupons and runs used-order cleanup before fetching', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } } })
+
+    const fromCalls: string[] = []
+    mockAdminFrom.mockImplementation((table: string) => {
+      fromCalls.push(table)
+      return chain({ data: null, error: null })
+    })
+
+    await GET()
+
+    // Call 1: expire stale coupons (loyalty_coupons)
+    expect(fromCalls[0]).toBe('loyalty_coupons')
+    // Call 2: select active coupons for used-order cleanup (loyalty_coupons)
+    expect(fromCalls[1]).toBe('loyalty_coupons')
+    // Call 3: final fetch of active coupon (loyalty_coupons)
+    expect(fromCalls[2]).toBe('loyalty_coupons')
+    // No active coupons found → no orders check → 3 calls total
+    expect(fromCalls.length).toBe(3)
+  })
+
+  it('marks coupon as used when matching paid order found', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } } })
 
     const fromCalls: string[] = []
@@ -430,17 +461,39 @@ describe('GET /api/loyalty/active-coupon', () => {
     mockAdminFrom.mockImplementation((table: string) => {
       fromCalls.push(table)
       callN++
+      if (callN === 1) return chain({ data: null, error: null }) // expire stale
+      if (callN === 2) {
+        // Select active coupons — one found
+        return chain({ data: [{ id: 'c1', code: 'MESO-USED1' }], error: null })
+      }
+      if (callN === 3 && table === 'orders') {
+        // Order found that used this coupon code
+        return chain({ data: { id: 999 }, error: null })
+      }
+      if (callN === 4 && table === 'loyalty_coupons') {
+        // Update coupon to 'used'
+        return chain({ data: null, error: null })
+      }
+      if (callN === 5) {
+        // Final fetch — no more active coupons (it was marked used)
+        return chain({ data: null, error: null })
+      }
       return chain({ data: null, error: null })
     })
 
-    await GET()
+    const res = await GET()
+    const json = await res.json()
 
-    // First call should be the expire-stale update on loyalty_coupons
-    expect(fromCalls[0]).toBe('loyalty_coupons')
-    // Second call should also be loyalty_coupons (fetching active)
-    expect(fromCalls[1]).toBe('loyalty_coupons')
-    // Expire call happens before fetch call
-    expect(fromCalls.length).toBe(2)
+    // Coupon was used, so none returned
+    expect(json.coupon).toBeNull()
+    // Verify the sequence: expire, select-active, check-orders, update-used, final-fetch
+    expect(fromCalls).toEqual([
+      'loyalty_coupons', // expire stale
+      'loyalty_coupons', // select active for cleanup
+      'orders',          // check if coupon code used in order
+      'loyalty_coupons', // mark as used
+      'loyalty_coupons', // final fetch
+    ])
   })
 })
 
