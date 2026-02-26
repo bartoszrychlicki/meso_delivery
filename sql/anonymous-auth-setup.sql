@@ -198,5 +198,5 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- 1. Authentication → Providers → Włącz "Allow anonymous sign-ins"
 -- 2. Authentication → URL Configuration:
 --    - Site URL: http://localhost:3000
---    - Redirect URLs: http://localhost:3000/auth/callback
+--    - Redirect URLs: http://localhost:3000/callback
 -- 3. (Opcjonalnie) Authentication → Settings → Włącz CAPTCHA
