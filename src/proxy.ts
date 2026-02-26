@@ -6,9 +6,14 @@ const ACCESS_PASSWORD = 'TuJestMeso2026'
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Password gate: skip for gate page, webhook endpoints, and static assets
+  // Password gate: skip for gate page, webhook endpoints, auth flows, and static assets
   const isPublicPath =
     pathname === '/gate' ||
+    pathname === '/callback' ||
+    pathname === '/reset-password' ||
+    pathname === '/forgot-password' ||
+    pathname === '/login' ||
+    pathname === '/register' ||
     pathname.startsWith('/api/gate') ||
     pathname.startsWith('/api/payments/') ||
     pathname.startsWith('/_next/') ||

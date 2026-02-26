@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -8,58 +8,60 @@ export async function GET(request: NextRequest) {
   const type = requestUrl.searchParams.get('type')
   const next = requestUrl.searchParams.get('next') || '/'
 
-  if (code) {
-    const supabase = await createClient()
-
-    // Exchange the code for a session
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-
-    if (error) {
-      console.error('Auth callback error:', error)
-      // Redirect to error page or login with error
-      return NextResponse.redirect(
-        new URL('/login?error=auth_callback_error', requestUrl.origin)
-      )
-    }
-
-    // Handle different callback types
-    if (type === 'recovery') {
-      // Password recovery - redirect to reset password page
-      return NextResponse.redirect(
-        new URL('/reset-password', requestUrl.origin)
-      )
-    }
-
-    if (type === 'signup' || type === 'email_change') {
-      // Email verification for signup or email change
-      const user = data.user
-
-      if (user && !user.is_anonymous) {
-        // User confirmed email - this converts anonymous to permanent
-        // The trigger should handle the customer table update
-
-        // Call the conversion function to add bonus points
-        // This is a backup in case the user was anonymous before
-        try {
-          await supabase.rpc('convert_anonymous_to_permanent', {
-            p_user_id: user.id,
-            p_email: user.email,
-          })
-        } catch (e) {
-          // Function might not exist yet or user was already permanent
-          console.log('Conversion RPC call (might be expected to fail):', e)
-        }
-
-        return NextResponse.redirect(
-          new URL('/?welcome=true', requestUrl.origin)
-        )
-      }
-    }
-
-    // Default: redirect to the next page or menu
-    return NextResponse.redirect(new URL(next, requestUrl.origin))
+  if (!code) {
+    return NextResponse.redirect(new URL('/', requestUrl.origin))
   }
 
-  // No code provided - redirect to home
-  return NextResponse.redirect(new URL('/', requestUrl.origin))
+  // Collect cookies set by Supabase during code exchange
+  const cookiesToSet: Array<{ name: string; value: string; options: Record<string, unknown> }> = []
+
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    anonKey,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookies) {
+          cookiesToSet.push(...cookies)
+        },
+      },
+    }
+  )
+
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+
+  // Determine redirect destination
+  let redirectTo: URL
+
+  if (error) {
+    console.error('Auth callback error:', error)
+    redirectTo = new URL('/login?error=auth_callback_error', requestUrl.origin)
+  } else if (type === 'recovery') {
+    redirectTo = new URL('/reset-password', requestUrl.origin)
+  } else if ((type === 'signup' || type === 'email_change') && data.user && !data.user.is_anonymous) {
+    try {
+      await supabase.rpc('convert_anonymous_to_permanent', {
+        p_user_id: data.user.id,
+        p_email: data.user.email,
+      })
+    } catch (e) {
+      console.log('Conversion RPC call (might be expected to fail):', e)
+    }
+    redirectTo = new URL('/?welcome=true', requestUrl.origin)
+  } else {
+    redirectTo = new URL(next, requestUrl.origin)
+  }
+
+  // Create redirect response and set all session cookies on it
+  const response = NextResponse.redirect(redirectTo)
+  cookiesToSet.forEach(({ name, value, options }) => {
+    response.cookies.set(name, value, options)
+  })
+
+  return response
 }
