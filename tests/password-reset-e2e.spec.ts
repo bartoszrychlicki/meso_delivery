@@ -138,7 +138,7 @@ test.describe.serial('Password Reset Flow', () => {
   // ──────────────────────────────────────────────────────
   test('reset password page shows expired message without session', async ({ page }) => {
     await bypassGate(page)
-    await page.goto('/reset-password')
+    await page.goto('/reset-password?recovery=1')
 
     // Wait for session check to complete and show the expired link message
     await expect(page.getByText('Link wygasł')).toBeVisible({ timeout: 15_000 })
@@ -227,7 +227,7 @@ test.describe.serial('Password Reset Flow', () => {
     }, { name: cookieName, value: sessionJson })
 
     // Navigate to reset password page
-    await page.goto('/reset-password')
+    await page.goto('/reset-password?recovery=1')
 
     // Verify the form shows (session detected) — NOT the "expired" message
     await expect(page.getByText('Ustaw nowe hasło')).toBeVisible({ timeout: 15_000 })

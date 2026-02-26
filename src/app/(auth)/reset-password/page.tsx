@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -25,10 +25,12 @@ type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>
 
 export default function ResetPasswordPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [isValidSession, setIsValidSession] = useState<boolean | null>(null)
   const supabase = createClient()
+  const isRecoveryFlow = searchParams.get('recovery') === '1'
 
   const {
     register,
@@ -41,12 +43,22 @@ export default function ResetPasswordPage() {
   // Check if we have a valid recovery session
   useEffect(() => {
     const checkSession = async () => {
+      if (!isRecoveryFlow) {
+        setIsValidSession(false)
+        return
+      }
+
       const { data: { session } } = await supabase.auth.getSession()
-      // Recovery sessions have a specific type
-      setIsValidSession(!!session)
+
+      const isAnonymous = session?.user?.is_anonymous
+        ?? session?.user?.app_metadata?.is_anonymous
+        ?? (!session?.user?.email)
+
+      // Reset password requires a non-anonymous session coming from recovery callback.
+      setIsValidSession(!!session && !isAnonymous)
     }
     checkSession()
-  }, [supabase])
+  }, [isRecoveryFlow, supabase])
 
   const onSubmit = async (data: ResetPasswordFormData) => {
     setIsSubmitting(true)
@@ -57,6 +69,7 @@ export default function ResetPasswordPage() {
       })
 
       if (error) {
+        console.error('Reset password updateUser error:', error)
         toast.error(error.message)
         return
       }
@@ -68,7 +81,8 @@ export default function ResetPasswordPage() {
       setTimeout(() => {
         router.push('/login')
       }, 3000)
-    } catch {
+    } catch (error) {
+      console.error('Reset password submit failed:', error)
       toast.error('Wystąpił błąd. Spróbuj ponownie.')
     } finally {
       setIsSubmitting(false)

@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     console.error('Auth callback error:', error)
     redirectTo = new URL('/login?error=auth_callback_error', requestUrl.origin)
   } else if (type === 'recovery') {
-    redirectTo = new URL('/reset-password', requestUrl.origin)
+    redirectTo = new URL('/reset-password?recovery=1', requestUrl.origin)
   } else if ((type === 'signup' || type === 'email_change') && data.user && !data.user.is_anonymous) {
     try {
       await supabase.rpc('convert_anonymous_to_permanent', {

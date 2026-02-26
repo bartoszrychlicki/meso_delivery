@@ -77,8 +77,8 @@ describe('GET /callback', () => {
     expect(location.pathname).toBe('/')
   })
 
-  // ---- Recovery type → redirect to /reset-password with cookies ----
-  it('redirects to /reset-password for recovery type with session cookies on response', async () => {
+  // ---- Recovery type → redirect to /reset-password?recovery=1 with cookies ----
+  it('redirects to /reset-password?recovery=1 for recovery type with session cookies on response', async () => {
     mockExchangeCodeForSession.mockImplementation(async () => {
       simulateSessionCookies()
       return {
@@ -96,6 +96,7 @@ describe('GET /callback', () => {
     expect(res.status).toBe(307)
     const location = new URL(res.headers.get('location')!)
     expect(location.pathname).toBe('/reset-password')
+    expect(location.searchParams.get('recovery')).toBe('1')
 
     // CRITICAL: Verify session cookies are set on the redirect response
     const setCookieHeaders = res.headers.getSetCookie()
