@@ -1,0 +1,255 @@
+/**
+ * E2E Test: Password Reset Flow
+ *
+ * Tests the full password reset flow:
+ * 1. Forgot password page sends reset email
+ * 2. Reset password page shows expired message without session
+ * 3. Full password reset via recovery OTP + session injection
+ * 4. Login with new password
+ *
+ * URUCHOMIENIE:
+ *   npx playwright test password-reset-e2e --headed
+ *
+ * WYMAGANIA:
+ *   - .env.local z NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+ *   - Działający serwer dev (uruchamiany automatycznie przez playwright.config.ts)
+ */
+
+import { test, expect } from '@playwright/test'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { bypassGate } from './helpers'
+
+// ──────────────────────────────────────────────────────────
+// Constants
+// ──────────────────────────────────────────────────────────
+
+const UNIQUE_SUFFIX = Date.now()
+const TEST_EMAIL = `e2e-pwreset-${UNIQUE_SUFFIX}@meso.dev`
+const INITIAL_PASSWORD = 'InitialPass123!'
+const NEW_PASSWORD = 'NewSecurePass456!'
+
+// ──────────────────────────────────────────────────────────
+// Helpers
+// ──────────────────────────────────────────────────────────
+
+function getAdminClient(): SupabaseClient {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) {
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local')
+  }
+  return createClient(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+}
+
+function getAnonKey(): string {
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY
+  if (!key) {
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY')
+  }
+  return key
+}
+
+function getSupabaseUrl(): string {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (!url) {
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL')
+  }
+  return url
+}
+
+// ──────────────────────────────────────────────────────────
+// Tests (serial — tests depend on each other)
+// ──────────────────────────────────────────────────────────
+
+test.describe.serial('Password Reset Flow', () => {
+  let admin: SupabaseClient
+
+  test.beforeAll(async () => {
+    admin = getAdminClient()
+
+    // Pre-cleanup: remove any leftover test users from previous runs
+    const { data: { users } } = await admin.auth.admin.listUsers()
+    const staleUsers = users?.filter(u => u.email?.includes('e2e-pwreset-')) || []
+    for (const u of staleUsers) {
+      await admin.from('customers').delete().eq('id', u.id)
+      await admin.auth.admin.deleteUser(u.id)
+    }
+
+    // Create test user with confirmed email
+    const { error } = await admin.auth.admin.createUser({
+      email: TEST_EMAIL,
+      password: INITIAL_PASSWORD,
+      email_confirm: true,
+    })
+    if (error) {
+      throw new Error(`Failed to create test user: ${error.message}`)
+    }
+
+    console.log(`Created test user: ${TEST_EMAIL}`)
+  })
+
+  test.afterAll(async () => {
+    // Cleanup all test users created during this run
+    const { data: { users } } = await admin.auth.admin.listUsers()
+    const testUsers = users?.filter(u => u.email?.includes('e2e-pwreset-')) || []
+    for (const u of testUsers) {
+      await admin.from('customers').delete().eq('id', u.id)
+      await admin.auth.admin.deleteUser(u.id)
+    }
+    console.log(`Cleaned up ${testUsers.length} test user(s)`)
+  })
+
+  // ──────────────────────────────────────────────────────
+  // TEST 1: Forgot password page sends email
+  // ──────────────────────────────────────────────────────
+  test('forgot password page sends reset email and shows success UI', async ({ page }) => {
+    await bypassGate(page)
+    await page.goto('/forgot-password')
+
+    // Verify the page renders correctly
+    await expect(page.getByText('Zapomniałeś hasła?')).toBeVisible({ timeout: 15_000 })
+
+    // Fill in the email
+    const emailInput = page.locator('#email')
+    await expect(emailInput).toBeVisible()
+    await emailInput.fill(TEST_EMAIL)
+
+    // Submit the form
+    await page.getByRole('button', { name: 'Wyślij link resetujący' }).click()
+
+    // Verify success UI shows
+    await expect(page.getByText('Sprawdź email')).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText(TEST_EMAIL)).toBeVisible()
+
+    console.log('Forgot password page sent reset email successfully')
+  })
+
+  // ──────────────────────────────────────────────────────
+  // TEST 2: Reset password page shows expired link without session
+  // ──────────────────────────────────────────────────────
+  test('reset password page shows expired message without session', async ({ page }) => {
+    await bypassGate(page)
+    await page.goto('/reset-password')
+
+    // Wait for session check to complete and show the expired link message
+    await expect(page.getByText('Link wygasł')).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText('Ten link do resetu hasła jest nieważny lub wygasł.')).toBeVisible()
+
+    // Verify there's a link to request a new one
+    await expect(page.getByRole('button', { name: 'Wyślij nowy link' })).toBeVisible()
+
+    console.log('Reset password page correctly shows expired link without session')
+  })
+
+  // ──────────────────────────────────────────────────────
+  // TEST 3: Full password reset flow via recovery OTP
+  // ──────────────────────────────────────────────────────
+  test('full password reset flow via recovery OTP and session injection', async ({ page }) => {
+    const supabaseUrl = getSupabaseUrl()
+    const anonKey = getAnonKey()
+
+    // Generate recovery OTP via admin API
+    const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+      type: 'recovery',
+      email: TEST_EMAIL,
+    })
+
+    expect(linkError).toBeNull()
+    expect(linkData).not.toBeNull()
+
+    if (!linkData || !linkData.properties) throw new Error('generateLink returned null data or properties')
+    const otp = linkData.properties.email_otp
+
+    // Exchange OTP for a session via Supabase verify endpoint
+    const verifyRes = await fetch(`${supabaseUrl}/auth/v1/verify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': anonKey,
+      },
+      body: JSON.stringify({
+        type: 'recovery',
+        token: otp,
+        email: TEST_EMAIL,
+      }),
+    })
+
+    expect(verifyRes.ok).toBe(true)
+    const session = await verifyRes.json()
+    expect(session.access_token).toBeTruthy()
+    expect(session.refresh_token).toBeTruthy()
+
+    // Navigate to a page first to set up the origin for localStorage
+    await bypassGate(page)
+    await page.goto('/login')
+    await page.waitForLoadState('domcontentloaded')
+
+    // Inject session into localStorage
+    const projectRef = new URL(supabaseUrl).hostname.split('.')[0]
+    const storageKey = `sb-${projectRef}-auth-token`
+
+    await page.evaluate(({ key, value }: { key: string; value: string }) => {
+      localStorage.setItem(key, value)
+    }, {
+      key: storageKey,
+      value: JSON.stringify({
+        access_token: session.access_token,
+        token_type: 'bearer',
+        expires_in: session.expires_in,
+        expires_at: Math.floor(Date.now() / 1000) + session.expires_in,
+        refresh_token: session.refresh_token,
+        user: session.user,
+      }),
+    })
+
+    // Navigate to the reset password page
+    await page.goto('/reset-password')
+
+    // Verify the form shows (not the "expired" message)
+    await expect(page.getByText('Ustaw nowe hasło')).toBeVisible({ timeout: 15_000 })
+
+    // Fill in new password
+    const passwordInput = page.locator('#password')
+    const confirmPasswordInput = page.locator('#confirmPassword')
+
+    await expect(passwordInput).toBeVisible()
+    await expect(confirmPasswordInput).toBeVisible()
+
+    await passwordInput.fill(NEW_PASSWORD)
+    await confirmPasswordInput.fill(NEW_PASSWORD)
+
+    // Submit the form
+    await page.getByRole('button', { name: 'Zmień hasło' }).click()
+
+    // Verify success message
+    await expect(page.getByText('Hasło zmienione!')).toBeVisible({ timeout: 15_000 })
+
+    console.log('Password reset completed successfully')
+  })
+
+  // ──────────────────────────────────────────────────────
+  // TEST 4: Login with new password
+  // ──────────────────────────────────────────────────────
+  test('login with new password succeeds', async ({ page }) => {
+    await bypassGate(page)
+    await page.goto('/login')
+
+    // Wait for the login form to be ready
+    await expect(page.locator('input[type="email"]')).toBeVisible({ timeout: 15_000 })
+
+    // Fill in credentials with the NEW password
+    await page.locator('input[type="email"]').fill(TEST_EMAIL)
+    await page.locator('input[type="password"]').fill(NEW_PASSWORD)
+
+    // Submit
+    await page.locator('button[type="submit"]').click()
+
+    // Verify redirect away from /login (successful login)
+    await page.waitForURL(url => !url.pathname.includes('/login'), { timeout: 15_000 })
+
+    console.log(`Login with new password successful for ${TEST_EMAIL}`)
+  })
+})

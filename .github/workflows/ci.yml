@@ -58,7 +58,7 @@ jobs:
         run: npx playwright install chromium --with-deps
 
       - name: Run E2E tests
-        run: npx playwright test registration-e2e order-placement-e2e --project=chromium
+        run: npx playwright test registration-e2e order-placement-e2e password-reset-e2e --project=chromium
 
       - name: Upload Playwright report
         if: failure()
