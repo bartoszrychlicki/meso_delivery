@@ -342,11 +342,18 @@ test.describe('Loyalty Program', () => {
     await page.goto('/loyalty')
 
     // Wait for page to load
-    await expect(page.getByText('MESO Club').or(page.getByText('MESO POINTS'))).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText('Aktualnie dostępne punkty')).toBeVisible({ timeout: 15_000 })
 
-    // Verify loyalty level info is visible on the points page (regression: tiers disappeared)
+    // Verify loyalty summary is visible on the points page (regression: tiers disappeared / confusing labels)
     await expect(page.getByText(/Poziom:\s*Srebrny/i)).toBeVisible({ timeout: 10_000 })
-    await expect(page.getByText(/Łącznie zebrane:\s*500 pkt/i)).toBeVisible()
+    await expect(page.getByText('Aktualnie dostępne punkty')).toBeVisible()
+    await expect(page.getByText(/Do poziomu liczymy łącznie zdobyte punkty:\s*500 pkt/i)).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Informacja o poziomach MESO Club' })).toBeVisible()
+
+    // Regression: rewards CTA on /loyalty must be a working link (not a dead button)
+    const redeemInClubLink = page.getByRole('link', { name: /Odbierz w MESO Club/i }).first()
+    await expect(redeemInClubLink).toBeVisible()
+    await expect(redeemInClubLink).toHaveAttribute('href', '/account/club')
 
     // Switch to history tab
     const historyTab = page.getByRole('button', { name: 'Historia' })

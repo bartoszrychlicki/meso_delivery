@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { Trophy, Gift, Truck, Percent, UtensilsCrossed, ArrowLeft, Loader2 } from 'lucide-react'
+import { Trophy, Gift, Truck, Percent, UtensilsCrossed, ArrowLeft, Loader2, CircleHelp } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { LoginPrompt } from '@/components/auth'
@@ -43,9 +43,18 @@ const TIER_LABELS: Record<LoyaltyTier, string> = {
 
 const TIER_ORDER: LoyaltyTier[] = ['bronze', 'silver', 'gold']
 
+function getTierFromLifetimePoints(
+  lifetimePoints: number,
+  thresholds: Record<LoyaltyTier, number>
+): LoyaltyTier {
+  if (lifetimePoints >= (thresholds.gold ?? 1500)) return 'gold'
+  if (lifetimePoints >= (thresholds.silver ?? 500)) return 'silver'
+  return 'bronze'
+}
+
 export default function LoyaltyPage() {
   const { isPermanent, isLoading: authLoading } = useAuth()
-  const { points, tier, lifetimePoints, isLoading: loyaltyLoading } = useCustomerLoyalty()
+  const { points, lifetimePoints, isLoading: loyaltyLoading } = useCustomerLoyalty()
   const { rewards, isLoading: rewardsLoading } = useLoyaltyRewards()
   const { getValue, isLoading: configLoading } = useAppConfig()
   const [activeTab, setActiveTab] = useState<'rewards' | 'history'>('rewards')
@@ -95,7 +104,9 @@ export default function LoyaltyPage() {
 
   const tierThresholds = getValue<Record<LoyaltyTier, number>>('loyalty_tier_thresholds', DEFAULT_TIER_THRESHOLDS)
 
-  const currentTier = TIER_ORDER.includes(tier) ? tier : 'bronze'
+  const derivedTier = getTierFromLifetimePoints(lifetimePoints, tierThresholds)
+
+  const currentTier = derivedTier
   const currentTierIdx = TIER_ORDER.indexOf(currentTier)
   const nextTier = currentTierIdx < TIER_ORDER.length - 1 ? TIER_ORDER[currentTierIdx + 1] : null
   const currentTierFloor = tierThresholds[currentTier] ?? 0
@@ -107,11 +118,6 @@ export default function LoyaltyPage() {
       100
     )
     : 100
-
-  const nextReward = rewards.find((r) => r.points_cost > points) ?? null
-  const topReward = rewards.length > 0 ? rewards[rewards.length - 1] : null
-  const rewardProgressBase = nextReward?.points_cost ?? topReward?.points_cost ?? 1
-  const rewardProgress = Math.min((points / Math.max(rewardProgressBase, 1)) * 100, 100)
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6 space-y-6">
@@ -134,21 +140,36 @@ export default function LoyaltyPage() {
             </div>
             <div>
               <p className="text-sm text-white/70">MESO Club</p>
-              <p className="font-display text-3xl font-bold text-white">{points}</p>
+              <p className="font-display text-3xl font-bold text-white">{points.toLocaleString('pl-PL')}</p>
+              <p className="text-xs text-white/55">Aktualnie dostępne punkty</p>
             </div>
             <span className="ml-auto rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white">
               punktów
             </span>
           </div>
 
-          {/* Loyalty level */}
+          {/* Loyalty level progress (based on total earned points) */}
           <div className="mb-4 space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-white/70">
               <div className="flex items-center gap-2">
                 <span className="rounded-full bg-white/20 px-2.5 py-1 font-medium text-white">
                   Poziom: {TIER_LABELS[currentTier]}
                 </span>
-                <span>Łącznie zebrane: {lifetimePoints} pkt</span>
+                <div className="relative group">
+                  <button
+                    type="button"
+                    aria-label="Informacja o poziomach MESO Club"
+                    className="inline-flex h-5 w-5 items-center justify-center rounded-full text-white/70 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/30"
+                  >
+                    <CircleHelp className="h-3.5 w-3.5" />
+                  </button>
+                  <div
+                    role="tooltip"
+                    className="pointer-events-none absolute left-0 top-6 z-10 w-72 rounded-lg border border-white/10 bg-background/95 p-2.5 text-[11px] leading-relaxed text-white/75 opacity-0 shadow-xl transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
+                  >
+                    Wyższy poziom odblokowuje nowe rodzaje nagród do wyboru. Postęp poziomu liczymy na podstawie łącznej liczby zdobytych punktów (także już wykorzystanych).
+                  </div>
+                </div>
               </div>
               <span>
                 {nextTier
@@ -164,34 +185,10 @@ export default function LoyaltyPage() {
                 className="h-full rounded-full bg-white/80"
               />
             </div>
+            <p className="text-[11px] text-white/55">
+              Do poziomu liczymy łącznie zdobyte punkty: {lifetimePoints.toLocaleString('pl-PL')} pkt
+            </p>
           </div>
-
-          {/* Progress bar */}
-          {topReward && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs text-white/60">
-                {nextReward ? (
-                  <>
-                    <span>Następna nagroda: {nextReward.name}</span>
-                    <span>{Math.max(0, nextReward.points_cost - points)} pkt</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Masz wystarczająco punktów na wszystkie dostępne nagrody</span>
-                    <span>{points} pkt</span>
-                  </>
-                )}
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-white/20">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${rewardProgress}%` }}
-                  transition={{ duration: 1.2, ease: 'easeOut', delay: 0.3 }}
-                  className="h-full rounded-full bg-accent"
-                />
-              </div>
-            </div>
-          )}
         </div>
         {/* Decorative circle */}
         <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/5" />
@@ -271,9 +268,12 @@ export default function LoyaltyPage() {
                       {reward.points_cost} pkt
                     </p>
                     {canRedeem && (
-                      <button className="mt-1 text-xs font-medium text-accent hover:underline">
-                        Odbierz
-                      </button>
+                      <Link
+                        href="/account/club"
+                        className="mt-1 inline-block text-xs font-medium text-accent hover:underline"
+                      >
+                        Odbierz w MESO Club
+                      </Link>
                     )}
                   </div>
                 </motion.div>

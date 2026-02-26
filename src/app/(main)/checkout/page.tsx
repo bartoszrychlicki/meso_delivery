@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Loader2, Store, User, Check, Clock } from 'lucide-react'
+import { ArrowLeft, Loader2, Store, User, Check, Clock, Star, CircleHelp } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useCartStore } from '@/stores/cartStore'
 import { useAuth } from '@/hooks/useAuth'
@@ -322,6 +322,7 @@ export default function CheckoutPage() {
     const paymentFee = getPaymentFee()
     const discount = getDiscount()
     const total = getTotal()
+    const loyaltyPointsToEarn = Math.max(0, Math.floor(total))
 
     return (
         <div className="mx-auto max-w-2xl px-4 py-4 pb-8">
@@ -495,6 +496,44 @@ export default function CheckoutPage() {
                 <div className="border-t border-border pt-2 flex justify-between font-display text-base font-bold">
                     <span>Razem</span>
                     <span>{formatPriceExact(total)}</span>
+                </div>
+            </section>
+
+            {/* Section 7b: Loyalty points preview */}
+            <section className="mb-4 rounded-xl border border-meso-gold-400/20 bg-meso-gold-400/5 p-4">
+                <div className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-meso-gold-400/15">
+                        <Star className="h-4 w-4 text-meso-gold-400" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                            <p className="font-display text-xs font-semibold uppercase tracking-wider text-meso-gold-400">
+                                MESO Club
+                            </p>
+                            <div className="relative group">
+                                <button
+                                    type="button"
+                                    aria-label="Informacja o naliczaniu punktów MESO Club"
+                                    className="inline-flex h-5 w-5 items-center justify-center rounded-full text-meso-gold-400/80 hover:text-meso-gold-400 focus:outline-none focus:ring-2 focus:ring-meso-gold-400/40"
+                                >
+                                    <CircleHelp className="h-3.5 w-3.5" />
+                                </button>
+                                <div
+                                    role="tooltip"
+                                    className="pointer-events-none absolute left-0 top-6 z-10 w-64 rounded-lg border border-white/10 bg-background/95 p-2.5 text-[11px] leading-relaxed text-white/75 opacity-0 shadow-xl transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
+                                >
+                                    Punkty naliczamy po odebraniu zamówienia (po potwierdzeniu realizacji).
+                                </div>
+                            </div>
+                        </div>
+                        <p className="mt-1 text-sm text-foreground">
+                            Za to zamówienie otrzymasz{' '}
+                            <span className="font-semibold text-meso-gold-400">+{loyaltyPointsToEarn} pkt</span>
+                        </p>
+                        <p className="mt-1 text-xs text-white/45">
+                            Punkty pojawią się w historii jako oczekujące do potwierdzenia.
+                        </p>
+                    </div>
                 </div>
             </section>
 
