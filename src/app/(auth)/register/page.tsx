@@ -106,40 +106,21 @@ export default function UpgradeAccountPage() {
       }
 
       // Upgrade the customer record from anonymous → permanent.
-      // Done client-side because server cookies aren't updated yet after updateUser().
+      // After updateUser(), the JWT still has the old anonymous user's ID,
+      // so client-side DB calls fail RLS checks. We use a server endpoint
+      // with admin privileges instead, passing the verified user info.
       const { data: { user: upgradedUser } } = await supabase.auth.getUser()
       if (upgradedUser) {
-        const referralCode = (data.name || 'MESO').substring(0, 3).toUpperCase()
-          + Math.random().toString(36).substring(2, 7).toUpperCase()
-
-        // Get current customer to add bonus on top of existing points
-        const { data: currentCustomer } = await supabase
-          .from('customers')
-          .select('loyalty_points, lifetime_points, is_anonymous')
-          .eq('id', upgradedUser.id)
-          .single()
-
-        if (currentCustomer?.is_anonymous) {
-          await supabase
-            .from('customers')
-            .update({
-              email: upgradedUser.email,
-              name: data.name || upgradedUser.email?.split('@')[0],
-              is_anonymous: false,
-              marketing_consent: data.marketingConsent,
-              loyalty_points: (currentCustomer.loyalty_points || 0) + 50,
-              lifetime_points: (currentCustomer.lifetime_points || 0) + 50,
-              referral_code: referralCode,
-            })
-            .eq('id', upgradedUser.id)
-
-          await supabase.from('loyalty_history').insert({
-            customer_id: upgradedUser.id,
-            label: 'Bonus rejestracyjny',
-            points: 50,
-            type: 'bonus',
-          })
-        }
+        await fetch('/api/auth/upgrade-customer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: upgradedUser.id,
+            email: upgradedUser.email,
+            name: data.name,
+            marketingConsent: data.marketingConsent,
+          }),
+        })
       }
 
       // Apply referral if phone was provided

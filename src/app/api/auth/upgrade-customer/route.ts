@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
 
 /**
@@ -8,48 +7,28 @@ import { createClient } from '@supabase/supabase-js'
  * Updates the customer record: sets email/name, adds registration bonus,
  * generates referral code, logs to loyalty_history.
  *
- * Uses the access_token from the request body for auth verification
- * because cookies may not be updated yet after updateUser().
+ * Uses service-role admin client because after updateUser() the client JWT
+ * still has the old anonymous user's ID, making RLS-based approaches fail.
+ * Verifies the user exists in auth before upgrading.
  */
 export async function POST(request: NextRequest) {
   try {
-    const { name, marketingConsent, accessToken } = await request.json()
+    const { userId, email, name, marketingConsent } = await request.json()
 
-    // Verify the user via access token (passed from client after updateUser)
-    // Fall back to cookie-based auth if no token provided
-    let userId: string
-    let userEmail: string | undefined
-
-    if (accessToken) {
-      // Create a client authenticated with the user's access token
-      const userClient = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-          || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!,
-        { global: { headers: { Authorization: `Bearer ${accessToken}` } } }
-      )
-      const { data: { user }, error } = await userClient.auth.getUser()
-      if (error || !user) {
-        return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
-      }
-      userId = user.id
-      userEmail = user.email ?? undefined
-    } else {
-      // Fallback: cookie-based auth
-      const supabase = await createServerClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-      }
-      userId = user.id
-      userEmail = user.email ?? undefined
+    if (!userId || !email) {
+      return NextResponse.json({ error: 'Missing userId or email' }, { status: 400 })
     }
 
-    // Use admin client for DB operations (bypasses RLS)
     const admin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
+
+    // Verify this is a real auth user with a matching email
+    const { data: { user: authUser }, error: authError } = await admin.auth.admin.getUserById(userId)
+    if (authError || !authUser || authUser.email !== email) {
+      return NextResponse.json({ error: 'Invalid user' }, { status: 403 })
+    }
 
     // Check if customer exists and is anonymous
     const { data: customer } = await admin
@@ -62,7 +41,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
     }
 
-    // Only upgrade if currently anonymous
     if (!customer.is_anonymous) {
       return NextResponse.json({ ok: true, message: 'Already permanent' })
     }
@@ -70,12 +48,11 @@ export async function POST(request: NextRequest) {
     const referralCode = (name || 'MESO').substring(0, 3).toUpperCase()
       + Math.random().toString(36).substring(2, 7).toUpperCase()
 
-    // Update customer record with registration bonus (+50 points)
     const { error: updateError } = await admin
       .from('customers')
       .update({
-        email: userEmail,
-        name: name || userEmail?.split('@')[0],
+        email,
+        name: name || email.split('@')[0],
         is_anonymous: false,
         marketing_consent: !!marketingConsent,
         loyalty_points: customer.loyalty_points + 50,
@@ -89,7 +66,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to upgrade' }, { status: 500 })
     }
 
-    // Log registration bonus to history
     await admin.from('loyalty_history').insert({
       customer_id: userId,
       label: 'Bonus rejestracyjny',
