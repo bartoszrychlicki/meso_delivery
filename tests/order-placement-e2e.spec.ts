@@ -129,33 +129,43 @@ test.describe.serial('Order Placement Flow', () => {
       if (customer) testUserId = customer.id
     }
 
-    // 2. Clear cart to start fresh
-    await page.evaluate(() => localStorage.removeItem('meso-cart'))
-
-    // 3. Find a product in the right price range (≥35 PLN min order, <100 PLN pay_on_pickup max)
-    const { data: suitableProduct } = await admin
+    // 2. Find a cheap product and inject cart state directly into localStorage.
+    //    This bypasses the product detail page which may auto-select expensive variants,
+    //    pushing the subtotal above the pay_on_pickup limit.
+    const { data: cheapProduct, error: productError } = await admin
       .from('products')
-      .select('id, price')
+      .select('id, name, price')
       .eq('is_available', true)
       .gte('price', 35)
-      .lt('price', PAY_ON_PICKUP_MAX)
+      .lt('price', 80) // Leave margin well below pay_on_pickup max (100)
+      .order('price', { ascending: true })
       .limit(1)
       .single()
 
-    if (suitableProduct) {
-      // Navigate directly to this product page
-      await page.goto(`/product/${suitableProduct.id}`)
-      const addBtn = page.getByTestId('product-detail-add-to-cart')
-      await expect(addBtn).toBeVisible({ timeout: 15_000 })
-      await addBtn.click()
-      await page.waitForURL((url) => !url.pathname.includes('/product/'), { timeout: 15_000 })
-    } else {
-      // Fallback: use the generic helper
-      await addFirstProductToCart(page)
-      await ensureCheckoutIsAvailable(page)
-    }
+    expect(productError, `No suitable product found (35-80 PLN): ${productError?.message}`).toBeNull()
+    expect(cheapProduct, 'Must find a product in 35-80 PLN range').toBeTruthy()
 
-    // 4. Navigate to checkout
+    console.log(`[TEST] Using product "${cheapProduct!.name}" at ${cheapProduct!.price} PLN (id: ${cheapProduct!.id})`)
+
+    // Inject cart state directly — guarantees subtotal = product.price (no variant/addon surprises)
+    const cartState = JSON.stringify({
+      state: {
+        items: [{
+          id: `${cheapProduct!.id}-base-0-[]-${Date.now()}`,
+          productId: cheapProduct!.id,
+          name: cheapProduct!.name,
+          price: cheapProduct!.price,
+          quantity: 1,
+          addons: [],
+        }],
+        locationId: null,
+        deliveryType: 'pickup',
+      },
+      version: 0,
+    })
+    await page.evaluate((json) => localStorage.setItem('meso-cart', json), cartState)
+
+    // 3. Navigate to checkout
     await page.goto('/checkout')
     await expect(page.getByRole('heading', { name: /PODSUMOWANIE/i })).toBeVisible({ timeout: 15_000 })
 
@@ -169,6 +179,10 @@ test.describe.serial('Order Placement Flow', () => {
     await fillCheckoutContactForm(page)
 
     // 7. Select "Platnosc przy odbiorze"
+    // First, log the actual subtotal shown on the page for diagnostics
+    const subtotalText = await page.locator('text=Produkty').locator('..').locator('span').last().textContent()
+    console.log(`[TEST] Checkout subtotal displayed: ${subtotalText}`)
+
     const payOnPickupButton = page.locator('button').filter({ hasText: 'Płatność przy odbiorze' })
     await expect(payOnPickupButton).toBeVisible()
     await expect(payOnPickupButton).toBeEnabled({ timeout: 5_000 })
