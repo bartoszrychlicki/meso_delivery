@@ -93,18 +93,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Handle specific events
         if (event === 'SIGNED_OUT') {
-          // Create new anonymous session after sign out
-          const { data } = await supabase.auth.signInAnonymously()
-          if (data.session) {
-            setSession(data.session)
-            setUser(data.user)
-          }
+          // Do not await Supabase auth calls inside onAuthStateChange callback.
+          // Supabase awaits subscribers internally, which can deadlock if we call
+          // another auth method here (e.g. signInAnonymously / refreshSession).
+          setTimeout(() => {
+            void (async () => {
+              const { data } = await supabase.auth.signInAnonymously()
+              if (data.session) {
+                setSession(data.session)
+                setUser(data.user)
+              }
+            })()
+          }, 0)
         }
 
         if (event === 'USER_UPDATED') {
-          // User was updated (e.g., anonymous → permanent conversion)
-          // Refresh to get latest user data
-          await refreshSession()
+          // `newSession` already contains the updated user.
+          // Avoid calling refreshSession() here to prevent auth callback deadlocks.
         }
       }
     )
@@ -112,7 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe()
     }
-  }, [initAuth, refreshSession, supabase])
+  }, [initAuth, supabase])
 
   return (
     <AuthContext.Provider
