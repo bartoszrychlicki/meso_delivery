@@ -48,12 +48,17 @@ jobs:
           echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env.local
           echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env.local
           echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> .env.local
+          echo "P24_MERCHANT_ID=${{ secrets.P24_MERCHANT_ID }}" >> .env.local
+          echo "P24_POS_ID=${{ secrets.P24_POS_ID }}" >> .env.local
+          echo "P24_CRC_KEY=${{ secrets.P24_CRC_KEY }}" >> .env.local
+          echo "P24_API_KEY=${{ secrets.P24_API_KEY }}" >> .env.local
+          echo "P24_MODE=sandbox" >> .env.local
 
       - name: Install Playwright Chromium
         run: npx playwright install chromium --with-deps
 
-      - name: Run critical E2E tests
-        run: npx playwright test registration-e2e --project=chromium
+      - name: Run E2E tests
+        run: npx playwright test registration-e2e order-placement-e2e --project=chromium
 
       - name: Upload Playwright report
         if: failure()
