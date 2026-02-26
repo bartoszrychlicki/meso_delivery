@@ -19,6 +19,7 @@
 import { test, expect } from '@playwright/test'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import {
+  bypassGate,
   loginTestUser,
   addFirstProductToCart,
   ensureCheckoutIsAvailable,
@@ -401,6 +402,9 @@ test.describe.serial('Order Placement Flow', () => {
   // ──────────────────────────────────────────────────────
   test('operator API transitions order through preparing -> ready -> delivered', async ({ page, baseURL }) => {
     expect(onlinePaymentOrderId, 'onlinePaymentOrderId must be set from Test 2').toBeTruthy()
+
+    // Set meso_access cookie so API requests bypass the password gate middleware
+    await bypassGate(page)
 
     const apiUrl = `${baseURL}/api/operator/orders`
     const operatorPin = process.env.OPERATOR_PIN || '0000'
