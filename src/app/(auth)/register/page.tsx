@@ -105,6 +105,17 @@ export default function UpgradeAccountPage() {
         return
       }
 
+      // Upgrade the customer record from anonymous → permanent
+      // (the INSERT trigger doesn't fire on updateUser, so we do it here)
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      if (currentUser) {
+        await fetch('/api/auth/upgrade-customer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: data.name, marketingConsent: data.marketingConsent }),
+        })
+      }
+
       // Apply referral if phone was provided
       if (referralPhone.trim()) {
         try {
