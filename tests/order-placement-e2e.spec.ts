@@ -135,7 +135,7 @@ test.describe.serial('Order Placement Flow', () => {
     const { data: cheapProduct, error: productError } = await admin
       .from('products')
       .select('id, name, price')
-      .eq('is_available', true)
+      .eq('is_active', true)
       .gte('price', 35)
       .lt('price', 80) // Leave margin well below pay_on_pickup max (100)
       .order('price', { ascending: true })
