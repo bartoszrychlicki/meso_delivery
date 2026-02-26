@@ -95,11 +95,26 @@ export function useCheckout() {
                 throw new Error('Błąd podczas tworzenia zamówienia')
             }
 
-            // 2b. Save phone to customer profile if requested
+            // 2b. Save customer profile fields from checkout (name always, phone optionally)
+            const fullName = [addressData.firstName, addressData.lastName]
+                .map((part) => part?.trim())
+                .filter(Boolean)
+                .join(' ')
+
+            const profileUpdate: { name?: string | null; phone?: string | null } = {}
+
+            if (fullName) {
+                profileUpdate.name = fullName
+            }
+
             if (savePhoneToProfile && addressData.phone) {
+                profileUpdate.phone = addressData.phone
+            }
+
+            if (Object.keys(profileUpdate).length > 0) {
                 await supabase
                     .from('customers')
-                    .update({ phone: addressData.phone })
+                    .update(profileUpdate)
                     .eq('id', user.id)
             }
 

@@ -31,7 +31,13 @@ const TIER_ORDER = ['bronze', 'silver', 'gold']
 export default function MesoClubPage() {
     const { user, isLoading: authLoading, isPermanent } = useAuth()
 
-    const { points: loyaltyPoints, tier: loyaltyTier, isLoading: loyaltyLoading, refresh: refreshLoyalty } = useCustomerLoyalty()
+    const {
+        points: loyaltyPoints,
+        tier: loyaltyTier,
+        lifetimePoints,
+        isLoading: loyaltyLoading,
+        refresh: refreshLoyalty,
+    } = useCustomerLoyalty()
     const { rewards, isLoading: rewardsLoading } = useLoyaltyRewards()
     const { getValue, isLoading: configLoading } = useAppConfig()
     const [redeemingReward, setRedeemingReward] = useState<string | null>(null)
@@ -106,7 +112,7 @@ export default function MesoClubPage() {
     }
 
     const nextTier = loyaltyTier === 'bronze' ? 'silver' : loyaltyTier === 'silver' ? 'gold' : null
-    const pointsToNextTier = nextTier ? (tierThresholds[nextTier] ?? 0) - loyaltyPoints : 0
+    const pointsToNextTier = nextTier ? Math.max(0, (tierThresholds[nextTier] ?? 0) - lifetimePoints) : 0
     const customerTierIdx = TIER_ORDER.indexOf(loyaltyTier || 'bronze')
 
     return (
@@ -148,7 +154,7 @@ export default function MesoClubPage() {
                         </span>
                         {nextTier && pointsToNextTier > 0 && (
                             <span className="text-white/60 text-sm">
-                                {pointsToNextTier} pkt do {TIER_LABELS[nextTier]}
+                                {pointsToNextTier} pkt do {TIER_LABELS[nextTier]} (łącznie)
                             </span>
                         )}
                     </div>

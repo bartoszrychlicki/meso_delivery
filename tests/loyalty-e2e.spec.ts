@@ -344,6 +344,10 @@ test.describe('Loyalty Program', () => {
     // Wait for page to load
     await expect(page.getByText('MESO Club').or(page.getByText('MESO POINTS'))).toBeVisible({ timeout: 15_000 })
 
+    // Verify loyalty level info is visible on the points page (regression: tiers disappeared)
+    await expect(page.getByText(/Poziom:\s*Srebrny/i)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/Łącznie zebrane:\s*500 pkt/i)).toBeVisible()
+
     // Switch to history tab
     const historyTab = page.getByRole('button', { name: 'Historia' })
     await expect(historyTab).toBeVisible()

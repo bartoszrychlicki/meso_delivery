@@ -37,7 +37,7 @@ function resolveMetadataName(meta: Record<string, unknown> | undefined): string 
 /**
  * Hook for getting user display info
  * Returns appropriate display name for anonymous vs permanent users
- * Prefers full_name / first_name+last_name from customers table and user metadata
+ * Prefers customers.name, then user metadata, then email prefix
  */
 export function useUserDisplay() {
   const { user, isAnonymous, isPermanent } = useAuthBase()
@@ -49,14 +49,13 @@ export function useUserDisplay() {
     const supabase = createClient()
     supabase
       .from('customers')
-      .select('first_name, last_name')
-      .eq('auth_id', user.id)
+      .select('name')
+      .eq('id', user.id)
       .single()
       .then(({ data }) => {
-        if (data) {
-          const first = data.first_name?.trim() ?? ''
-          const last = data.last_name?.trim() ?? ''
-          if (first || last) setCustomerName(`${first} ${last}`.trim())
+        if (data?.name && typeof data.name === 'string') {
+          const normalized = data.name.trim()
+          if (normalized) setCustomerName(normalized)
         }
       })
   }, [user, isPermanent])

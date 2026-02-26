@@ -340,6 +340,7 @@ function OrderConfirmationContent() {
     }
 
     const steps = pickupSteps
+    const loyaltyPointsAlreadyCredited = confirmation.orderStatus === 'delivered'
 
     return (
         <div className="mx-auto max-w-2xl px-4 py-8 pb-32">
@@ -612,9 +613,16 @@ function OrderConfirmationContent() {
                     <div className="flex items-center gap-2">
                         <Star className="h-5 w-5 text-meso-gold-400" />
                         <p className="text-sm font-semibold text-meso-gold-400">
-                            +{confirmation.loyaltyPointsEarned} punktów MESO Club
+                            {loyaltyPointsAlreadyCredited
+                                ? `Przyznano +${confirmation.loyaltyPointsEarned} punktów MESO Club`
+                                : `Otrzymasz +${confirmation.loyaltyPointsEarned} punktów MESO Club`}
                         </p>
                     </div>
+                    {!loyaltyPointsAlreadyCredited && (
+                        <p className="mt-2 text-xs text-meso-gold-400/80">
+                            Punkty naliczają się po realizacji zamówienia.
+                        </p>
+                    )}
                 </motion.div>
             )}
 
