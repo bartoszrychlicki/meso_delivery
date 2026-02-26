@@ -62,11 +62,15 @@ test.describe.serial('Order Placement Flow', () => {
   test.beforeAll(async () => {
     admin = getAdminClient()
 
-    // Find the test user
-    const { data: { users } } = await admin.auth.admin.listUsers()
-    const existing = users?.find(u => u.email === TEST_EMAIL)
-    if (existing) {
-      testUserId = existing.id
+    // Find the test user by email in the customers table (avoids listUsers pagination issues)
+    const { data: customer } = await admin
+      .from('customers')
+      .select('id')
+      .eq('email', TEST_EMAIL)
+      .maybeSingle()
+
+    if (customer) {
+      testUserId = customer.id
     }
 
     // Clean up any test orders from previous runs
@@ -116,33 +120,40 @@ test.describe.serial('Order Placement Flow', () => {
 
     // Store the test user ID if we didn't have it yet
     if (!testUserId) {
-      const { data: { users } } = await admin.auth.admin.listUsers()
-      const user = users?.find(u => u.email === TEST_EMAIL)
-      if (user) testUserId = user.id
+      const { data: customer } = await admin
+        .from('customers')
+        .select('id')
+        .eq('email', TEST_EMAIL)
+        .maybeSingle()
+      if (customer) testUserId = customer.id
     }
 
-    // 2. Add product to cart
+    // 2. Clear cart to start fresh (prevents exceeding pay_on_pickup max of 100 PLN)
+    await page.evaluate(() => localStorage.removeItem('meso-cart'))
+
+    // 3. Add product to cart
     await addFirstProductToCart(page)
 
-    // 3. Ensure cart meets minimum order (35 PLN)
+    // 4. Ensure cart meets minimum order (35 PLN)
     await ensureCheckoutIsAvailable(page)
 
-    // 4. Navigate to checkout
+    // 5. Navigate to checkout
     await page.goto('/checkout')
     await expect(page.getByRole('heading', { name: /PODSUMOWANIE/i })).toBeVisible({ timeout: 15_000 })
 
-    // 5. Wait for contact form to auto-fill (profile data loads async)
+    // 6. Wait for contact form to auto-fill (profile data loads async)
     await page.waitForFunction(() => {
       const el = document.getElementById('firstName') as HTMLInputElement
       return el && el.value.length > 0
     }, { timeout: 10_000 })
 
-    // 6. Fill contact form
+    // 7. Fill contact form
     await fillCheckoutContactForm(page)
 
-    // 7. Select "Platnosc przy odbiorze"
+    // 8. Select "Platnosc przy odbiorze" (only if not disabled — subtotal must be ≤100 PLN)
     const payOnPickupButton = page.locator('button').filter({ hasText: 'Płatność przy odbiorze' })
     await expect(payOnPickupButton).toBeVisible()
+    await expect(payOnPickupButton).toBeEnabled({ timeout: 5_000 })
     await payOnPickupButton.click()
 
     // 8. Accept terms
@@ -210,10 +221,13 @@ test.describe.serial('Order Placement Flow', () => {
     // 1. Login (session may have been lost between tests)
     await loginTestUser(page)
 
-    // 2. Add product to cart
+    // 2. Clear cart to start fresh
+    await page.evaluate(() => localStorage.removeItem('meso-cart'))
+
+    // 3. Add product to cart
     await addFirstProductToCart(page)
 
-    // 3. Ensure cart meets minimum order
+    // 4. Ensure cart meets minimum order
     await ensureCheckoutIsAvailable(page)
 
     // 4. Navigate to checkout
