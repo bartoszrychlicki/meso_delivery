@@ -111,7 +111,7 @@ export function useCheckout() {
                     promo_code: promoCode || loyaltyCoupon?.code || null,
                     promo_discount: getDiscount(),
                     total,
-                    loyalty_points_earned: Math.floor(total), // 1 pkt = 1 PLN
+                    loyalty_points_earned: Math.floor(Math.max(0, subtotal - getDiscount())), // 1 pkt = 1 PLN (food value only, excludes delivery fee & tip)
                     notes: addressData.notes
                 })
                 .select()

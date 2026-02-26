@@ -125,7 +125,7 @@ export function LoyaltyBox() {
 
           {!loyaltyCoupon && points > 0 && (
             <Link
-              href="/account/club"
+              href="/loyalty"
               className="flex items-center gap-2 rounded-xl bg-meso-gold-400/10 border border-meso-gold-400/20 px-4 py-3 mt-3"
             >
               <Gift className="h-4 w-4 text-meso-gold-400" />

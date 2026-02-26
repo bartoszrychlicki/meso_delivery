@@ -72,11 +72,35 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Reconciliation check: compare sum of history with actual balance
+    let balanceMismatch = false
+    if (page === 0) {
+      const { data: sumResult } = await supabase
+        .from('loyalty_history')
+        .select('points')
+        .eq('customer_id', user.id)
+
+      if (sumResult) {
+        const historySum = sumResult.reduce((acc, row) => acc + (row.points ?? 0), 0)
+
+        const { data: customer } = await supabase
+          .from('customers')
+          .select('loyalty_points')
+          .eq('id', user.id)
+          .single()
+
+        if (customer && historySum !== customer.loyalty_points) {
+          balanceMismatch = true
+        }
+      }
+    }
+
     return NextResponse.json({
       history: mergedHistory,
       total: count || 0,
       page,
       hasMore: (count || 0) > offset + limit,
+      ...(balanceMismatch ? { balance_mismatch: true } : {}),
     })
 
   } catch {

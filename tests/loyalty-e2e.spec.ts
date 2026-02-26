@@ -164,10 +164,10 @@ test.describe('Loyalty Program', () => {
     }).eq('id', testUserId)
 
     await loginLoyaltyUser(page)
-    await page.goto('/account/club')
+    await page.goto('/loyalty')
 
-    // Verify rewards list is visible (wait for data to load)
-    await expect(page.getByText('Dostępne nagrody')).toBeVisible({ timeout: 15_000 })
+    // Verify rewards tab is visible (wait for data to load)
+    await expect(page.getByRole('button', { name: 'Nagrody' })).toBeVisible({ timeout: 15_000 })
 
     // Should show at least one reward
     const rewardCards = page.locator('.space-y-3 > div')
@@ -224,10 +224,10 @@ test.describe('Loyalty Program', () => {
     })
 
     await loginLoyaltyUser(page)
-    await page.goto('/account/club')
+    await page.goto('/loyalty')
 
     // Wait for page to load
-    await expect(page.getByText('Dostępne nagrody')).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByRole('button', { name: 'Nagrody' })).toBeVisible({ timeout: 15_000 })
 
     // Verify info banner about active coupon is shown
     await expect(page.getByText('Masz aktywny kupon')).toBeVisible({ timeout: 10_000 })
@@ -350,10 +350,9 @@ test.describe('Loyalty Program', () => {
     await expect(page.getByText(/Do poziomu liczymy łącznie zdobyte punkty:\s*500 pkt/i)).toBeVisible()
     await expect(page.getByRole('button', { name: 'Informacja o poziomach MESO Club' })).toBeVisible()
 
-    // Regression: rewards CTA on /loyalty must be a working link (not a dead button)
-    const redeemInClubLink = page.getByRole('link', { name: /Odbierz w MESO Club/i }).first()
-    await expect(redeemInClubLink).toBeVisible()
-    await expect(redeemInClubLink).toHaveAttribute('href', '/account/club')
+    // Rewards CTA on /loyalty must have direct "Aktywuj" button (consolidated from /account/club)
+    const activateButton = page.getByRole('button', { name: 'Aktywuj' }).first()
+    await expect(activateButton).toBeVisible()
 
     // Switch to history tab
     const historyTab = page.getByRole('button', { name: 'Historia' })
