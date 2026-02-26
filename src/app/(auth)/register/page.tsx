@@ -106,13 +106,17 @@ export default function UpgradeAccountPage() {
       }
 
       // Upgrade the customer record from anonymous → permanent
-      // (the INSERT trigger doesn't fire on updateUser, so we do it here)
-      const { data: { user: currentUser } } = await supabase.auth.getUser()
-      if (currentUser) {
+      // Pass the access token directly because cookies may not be updated yet
+      const { data: { session: updatedSession } } = await supabase.auth.getSession()
+      if (updatedSession) {
         await fetch('/api/auth/upgrade-customer', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: data.name, marketingConsent: data.marketingConsent }),
+          body: JSON.stringify({
+            name: data.name,
+            marketingConsent: data.marketingConsent,
+            accessToken: updatedSession.access_token,
+          }),
         })
       }
 
