@@ -8,15 +8,15 @@ import { createClient } from '@/lib/supabase/client'
 
 /**
  * Hook for checking if user can access MESO Club features
- * Only permanent (non-anonymous) users can use loyalty features
+ * Only authenticated (registered) users can use loyalty features
  */
 export function useMesoClub() {
-  const { isPermanent, isLoading } = useAuthBase()
+  const { isAuthenticated, isLoading } = useAuthBase()
 
   return {
-    canUseRewards: isPermanent,
-    canEarnPoints: isPermanent,
-    canUseReferralCode: isPermanent,
+    canUseRewards: isAuthenticated,
+    canEarnPoints: isAuthenticated,
+    canUseReferralCode: isAuthenticated,
     isLoading,
   }
 }
@@ -36,15 +36,15 @@ function resolveMetadataName(meta: Record<string, unknown> | undefined): string 
 
 /**
  * Hook for getting user display info
- * Returns appropriate display name for anonymous vs permanent users
- * Prefers customers.name, then user metadata, then email prefix
+ * Returns appropriate display name for authenticated users
+ * Prefers crm_customers name, then user metadata, then email prefix
  */
 export function useUserDisplay() {
-  const { user, isAnonymous, isPermanent } = useAuthBase()
+  const { user, isAuthenticated } = useAuthBase()
   const [customerName, setCustomerName] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!user || !isPermanent) return
+    if (!user || !isAuthenticated) return
 
     const supabase = createClient()
     supabase
@@ -60,23 +60,22 @@ export function useUserDisplay() {
           if (fullName) setCustomerName(fullName)
         }
       })
-  }, [user, isPermanent])
+  }, [user, isAuthenticated])
 
   const metadataName = resolveMetadataName(user?.user_metadata)
 
-  const displayName = isPermanent
+  const displayName = isAuthenticated
     ? customerName || metadataName || user?.email?.split('@')[0] || 'Użytkownik'
     : 'Gość'
 
-  const avatarInitial = isPermanent
+  const avatarInitial = isAuthenticated
     ? (customerName?.[0] || metadataName?.[0] || user?.email?.[0] || 'U').toUpperCase()
     : 'G'
 
   return {
     displayName,
     avatarInitial,
-    email: isPermanent ? user?.email : null,
-    isAnonymous,
-    isPermanent,
+    email: isAuthenticated ? user?.email : null,
+    isAuthenticated,
   }
 }

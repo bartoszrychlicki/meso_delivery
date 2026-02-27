@@ -12,10 +12,10 @@ interface AnonymousBannerProps {
 }
 
 export function AnonymousBanner({ variant = 'default', className }: AnonymousBannerProps) {
-  const { isAnonymous, isLoading } = useAuth()
+  const { isAuthenticated, isLoading } = useAuth()
 
-  // Don't show for permanent users or while loading
-  if (!isAnonymous || isLoading) {
+  // Only show for unauthenticated users (guests)
+  if (isAuthenticated || isLoading) {
     return null
   }
 

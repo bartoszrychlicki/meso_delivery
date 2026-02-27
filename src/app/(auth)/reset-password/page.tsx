@@ -50,12 +50,8 @@ export default function ResetPasswordPage() {
 
       const { data: { session } } = await supabase.auth.getSession()
 
-      const isAnonymous = session?.user?.is_anonymous
-        ?? session?.user?.app_metadata?.is_anonymous
-        ?? (!session?.user?.email)
-
-      // Reset password requires a non-anonymous session coming from recovery callback.
-      setIsValidSession(!!session && !isAnonymous)
+      // Reset password requires an authenticated session from recovery callback
+      setIsValidSession(!!session && !!session.user?.email)
     }
     checkSession()
   }, [supabase])

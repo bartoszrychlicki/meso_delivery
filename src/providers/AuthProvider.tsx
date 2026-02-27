@@ -8,8 +8,7 @@ interface AuthContextType {
   user: User | null
   session: Session | null
   isLoading: boolean
-  isAnonymous: boolean    // kept for backward compat — always false now
-  isPermanent: boolean    // kept for backward compat — true when authenticated
+  isPermanent: boolean    // alias for isAuthenticated (backward compat)
   isAuthenticated: boolean
   signOut: () => Promise<void>
   refreshSession: () => Promise<void>
@@ -25,8 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Use state to ensure single instance across renders
   const [supabase] = useState(() => createClient())
 
-  // No more anonymous users — all users must be registered
-  const isAnonymous = false
+  // All users must be registered — no anonymous flow
   const isPermanent = !!user
   const isAuthenticated = !!user
 
@@ -92,7 +90,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         session,
         isLoading,
-        isAnonymous,
         isPermanent,
         isAuthenticated,
         signOut,

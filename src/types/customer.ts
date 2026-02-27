@@ -2,16 +2,20 @@ export type LoyaltyTier = 'bronze' | 'silver' | 'gold'
 
 export interface Customer {
   id: string
-  name?: string
-  email?: string | null  // NULL for anonymous users
+  first_name: string
+  last_name: string
+  email: string
   phone?: string
-  birthday?: string
+  contact_phone?: string
+  birth_date?: string
   loyalty_points: number
+  lifetime_points: number
   loyalty_tier: LoyaltyTier
-  referral_code?: string | null  // NULL for anonymous users
+  referral_code?: string | null
   referred_by?: string
   marketing_consent: boolean
-  is_anonymous: boolean  // true for anonymous users
+  sms_consent: boolean
+  is_active: boolean
   created_at: string
 }
 
@@ -80,8 +84,8 @@ export interface LoyaltyHistoryEntry {
   id: string
   customer_id: string
   label: string
-  points: number
-  type: 'earned' | 'spent' | 'bonus' | 'expired'
-  order_id: number | null
+  amount: number
+  reason: 'earned' | 'spent' | 'bonus' | 'expired' | 'registration_bonus'
+  related_order_id: string | null
   created_at: string
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
@@ -15,8 +15,9 @@ import { Separator } from '@/components/ui/separator'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 
-const upgradeSchema = z.object({
-  name: z.string().min(2, 'Imię musi mieć minimum 2 znaki'),
+const registerSchema = z.object({
+  firstName: z.string().min(2, 'Imię musi mieć minimum 2 znaki'),
+  lastName: z.string().min(2, 'Nazwisko musi mieć minimum 2 znaki'),
   email: z.string().email('Nieprawidłowy adres email'),
   password: z.string().min(8, 'Hasło musi mieć minimum 8 znaków'),
   confirmPassword: z.string(),
@@ -26,29 +27,16 @@ const upgradeSchema = z.object({
   path: ['confirmPassword'],
 })
 
-type UpgradeFormData = z.infer<typeof upgradeSchema>
+type RegisterFormData = z.infer<typeof registerSchema>
 
-export default function UpgradeAccountPage() {
+export default function RegisterPage() {
   const router = useRouter()
-  const { isPermanent, isLoading: authLoading, session } = useAuth()
+  const { isPermanent, isLoading: authLoading } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPass, setShowPass] = useState(false)
   const [showConfirmPass, setShowConfirmPass] = useState(false)
-  const [sessionError, setSessionError] = useState(false)
   const [referralPhone, setReferralPhone] = useState('')
   const supabase = createClient()
-
-  useEffect(() => {
-    const ensureSession = async () => {
-      if (!authLoading && !session) {
-        const { error } = await supabase.auth.signInAnonymously()
-        if (error) {
-          setSessionError(true)
-        }
-      }
-    }
-    ensureSession()
-  }, [authLoading, session, supabase])
 
   const {
     register,
@@ -56,8 +44,8 @@ export default function UpgradeAccountPage() {
     setValue,
     watch,
     formState: { errors },
-  } = useForm<UpgradeFormData>({
-    resolver: zodResolver(upgradeSchema),
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
     defaultValues: {
       marketingConsent: false,
     },
@@ -70,55 +58,32 @@ export default function UpgradeAccountPage() {
     return null
   }
 
-  const onSubmit = async (data: UpgradeFormData) => {
+  const onSubmit = async (data: RegisterFormData) => {
     setIsSubmitting(true)
 
     try {
-      const { data: { session: currentSession } } = await supabase.auth.getSession()
-
-      if (!currentSession) {
-        const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously()
-        if (anonError || !anonData.session) {
-          toast.error('Nie udało się nawiązać połączenia. Odśwież stronę i spróbuj ponownie.')
-          return
-        }
-      }
-
-      const { error } = await supabase.auth.updateUser({
+      const { error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
-        data: {
-          name: data.name,
-          marketing_consent: data.marketingConsent,
+        options: {
+          data: {
+            app_role: 'customer',
+            first_name: data.firstName,
+            last_name: data.lastName,
+            marketing_consent: data.marketingConsent,
+          },
+          emailRedirectTo: `${window.location.origin}/callback?type=signup`,
         },
       })
 
       if (error) {
-        if (error.message.includes('already registered')) {
+        if (error.message.includes('already registered') || error.message.includes('User already registered')) {
           toast.error('Ten email jest już zarejestrowany. Spróbuj się zalogować.')
-        } else if (error.message.includes('Auth session missing')) {
-          toast.error('Sesja wygasła. Odśwież stronę i spróbuj ponownie.')
-          await supabase.auth.signInAnonymously()
         } else {
           toast.error(error.message)
         }
         return
       }
-
-      // Upgrade the customer record from anonymous → permanent.
-      // The primary upgrade is handled by the AFTER UPDATE trigger on
-      // auth.users (fires when Supabase sets the email). This endpoint
-      // is a backup that uses the email from the form to find the auth
-      // user, since getUser() returns the old anonymous user (stale JWT).
-      await fetch('/api/auth/upgrade-customer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: data.email,
-          name: data.name,
-          marketingConsent: data.marketingConsent,
-        }),
-      })
 
       // Apply referral if phone was provided
       if (referralPhone.trim()) {
@@ -126,7 +91,10 @@ export default function UpgradeAccountPage() {
           await fetch('/api/loyalty/apply-referral', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ referral_phone: referralPhone.trim() }),
+            body: JSON.stringify({
+              referral_phone: referralPhone.trim(),
+              email: data.email,
+            }),
           })
         } catch {
           // Referral is optional — don't block registration on failure
@@ -141,7 +109,7 @@ export default function UpgradeAccountPage() {
         }
       )
 
-      router.push('/?upgrade=pending')
+      router.push('/?registered=pending')
     } catch {
       toast.error('Wystąpił błąd. Spróbuj ponownie.')
     } finally {
@@ -153,22 +121,6 @@ export default function UpgradeAccountPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    )
-  }
-
-  if (sessionError) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 px-4">
-        <p className="text-muted-foreground text-center">
-          Nie udało się nawiązać połączenia z serwerem.
-        </p>
-        <button
-          onClick={() => window.location.reload()}
-          className="rounded-xl border border-border px-4 py-2 text-sm text-primary hover:bg-secondary"
-        >
-          Odśwież stronę
-        </button>
       </div>
     )
   }
@@ -191,19 +143,35 @@ export default function UpgradeAccountPage() {
       </h2>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Name */}
+        {/* First Name */}
         <div>
           <div className="relative">
             <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               placeholder="Imię"
-              autoComplete="name"
-              {...register('name')}
+              autoComplete="given-name"
+              {...register('firstName')}
               className={`${inputCls} pl-10 pr-4`}
             />
           </div>
-          {errors.name && (
-            <p className="text-red-400 text-xs mt-1">{errors.name.message}</p>
+          {errors.firstName && (
+            <p className="text-red-400 text-xs mt-1">{errors.firstName.message}</p>
+          )}
+        </div>
+
+        {/* Last Name */}
+        <div>
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              placeholder="Nazwisko"
+              autoComplete="family-name"
+              {...register('lastName')}
+              className={`${inputCls} pl-10 pr-4`}
+            />
+          </div>
+          {errors.lastName && (
+            <p className="text-red-400 text-xs mt-1">{errors.lastName.message}</p>
           )}
         </div>
 
