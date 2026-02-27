@@ -248,12 +248,12 @@ describe('POST /api/loyalty/activate-coupon', () => {
     expect(json.error).toContain('gold')
   })
 
-  // ---- 200: success ----
+  // ---- 200: success (free_product with dynamic price lookup) ----
   it('returns 200 and creates coupon on success', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } } })
 
     let callN = 0
-    mockAdminFrom.mockImplementation(() => {
+    mockAdminFrom.mockImplementation((table: string) => {
       callN++
       if (callN <= 1) return chain({ data: null, error: null }) // expire stale
       if (callN === 2) return chain({ data: null, error: null }) // no active coupon
@@ -275,18 +275,25 @@ describe('POST /api/loyalty/activate-coupon', () => {
         // code uniqueness check
         return chain({ data: null, error: null })
       }
-      if (callN === 6) {
+      // free_product with null discount_value triggers category + product lookup
+      if (callN === 6 && table === 'categories') {
+        return chain({ data: [{ id: 'cat-gyoza', slug: 'gyoza' }], error: null })
+      }
+      if (callN === 7 && table === 'products') {
+        return chain({ data: { price: 22.90 }, error: null })
+      }
+      if (callN === 8) {
         // deduct points
         return chain({ data: null, error: null })
       }
-      if (callN === 7) {
+      if (callN === 9) {
         // insert coupon
         return chain({
           data: {
             id: 'coupon-new',
             code: 'MESO-ABCDE',
             coupon_type: 'free_product',
-            discount_value: null,
+            discount_value: 22.90,
             free_product_name: 'Gyoza (6 szt)',
             expires_at: '2026-02-26T00:00:00.000Z',
           },
@@ -304,6 +311,7 @@ describe('POST /api/loyalty/activate-coupon', () => {
     expect(json.coupon).toBeDefined()
     expect(json.coupon.code).toBe('MESO-ABCDE')
     expect(json.coupon.coupon_type).toBe('free_product')
+    expect(json.coupon.discount_value).toBe(22.90)
     expect(json.coupon.free_product_name).toBe('Gyoza (6 szt)')
   })
 

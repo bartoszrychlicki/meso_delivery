@@ -103,6 +103,37 @@ export async function POST(request: NextRequest) {
 
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
 
+    // For free_product rewards, compute discount_value as cheapest product price in matching category
+    let computedDiscountValue = reward.discount_value
+    if (reward.reward_type === 'free_product' && !reward.discount_value) {
+      const rewardNameLower = (reward.name as string).toLowerCase()
+      const { data: categories } = await admin.from('categories').select('id, slug')
+
+      let categoryId: string | null = null
+      if (categories) {
+        for (const cat of categories) {
+          if (rewardNameLower.includes(cat.slug)) {
+            categoryId = cat.id
+            break
+          }
+        }
+      }
+
+      if (categoryId) {
+        const { data: cheapest } = await admin
+          .from('products')
+          .select('price')
+          .eq('category_id', categoryId)
+          .order('price', { ascending: true })
+          .limit(1)
+          .single()
+
+        if (cheapest) {
+          computedDiscountValue = cheapest.price
+        }
+      }
+    }
+
     // Deduct points
     const { error: pointsError } = await admin
       .from('customers')
@@ -121,7 +152,7 @@ export async function POST(request: NextRequest) {
         reward_id: reward.id,
         code,
         coupon_type: reward.reward_type,
-        discount_value: reward.discount_value,
+        discount_value: computedDiscountValue,
         free_product_name: reward.reward_type === 'free_product' ? reward.name : null,
         status: 'active',
         points_spent: reward.points_cost,

@@ -162,10 +162,20 @@ describe('Discount calculations with coupons', () => {
     expect(useCartStore.getState().getDiscount()).toBe(0)
   })
 
-  it('getDiscount returns 0 for free_product coupon', () => {
+  it('getDiscount returns 0 for free_product coupon with null discount_value', () => {
     useCartStore.setState({ items: sampleItems, loyaltyCoupon: sampleFreeProductCoupon })
 
     expect(useCartStore.getState().getDiscount()).toBe(0)
+  })
+
+  it('getDiscount returns discount_value for free_product coupon with computed price', () => {
+    const couponWithPrice: LoyaltyCoupon = {
+      ...sampleFreeProductCoupon,
+      discount_value: 22.90,
+    }
+    useCartStore.setState({ items: sampleItems, loyaltyCoupon: couponWithPrice })
+
+    expect(useCartStore.getState().getDiscount()).toBe(22.90)
   })
 
   it('promo code discount takes priority (promo code set = no coupon)', () => {

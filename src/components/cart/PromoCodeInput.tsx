@@ -9,6 +9,8 @@ import { toast } from 'sonner'
 export function PromoCodeInput() {
   const [code, setCode] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
+  const [isRemoving, setIsRemoving] = useState(false)
 
   const promoCode = useCartStore((state) => state.promoCode)
   const promoDiscount = useCartStore((state) => state.promoDiscount)
@@ -66,6 +68,35 @@ export function PromoCodeInput() {
     }
   }
 
+  const handleRemoveCoupon = async () => {
+    setIsRemoving(true)
+    try {
+      // Deactivate in DB (fire-and-forget OK, but we await for UX)
+      await fetch('/api/loyalty/deactivate-coupon', { method: 'POST' })
+    } catch {
+      // Non-critical — coupon will expire naturally
+    }
+    clearLoyaltyCoupon()
+    setShowRemoveConfirm(false)
+    setIsRemoving(false)
+    toast('Kupon usunięty. Punkty nie zostały zwrócone.')
+  }
+
+  const getCouponDescription = () => {
+    if (!loyaltyCoupon) return null
+    if (loyaltyCoupon.coupon_type === 'free_delivery') return 'Darmowa dostawa'
+    if (loyaltyCoupon.coupon_type === 'discount' && loyaltyCoupon.discount_value) {
+      return `Rabat ${loyaltyCoupon.discount_value} zł`
+    }
+    if (loyaltyCoupon.coupon_type === 'free_product') {
+      const name = loyaltyCoupon.free_product_name || 'Darmowy produkt'
+      return loyaltyCoupon.discount_value
+        ? `${name} (rabat ${loyaltyCoupon.discount_value} zł)`
+        : name
+    }
+    return null
+  }
+
   const getPromoDescription = () => {
     if (!promoCode) return null
 
@@ -80,28 +111,54 @@ export function PromoCodeInput() {
 
   if (loyaltyCoupon) {
     return (
-      <div className="flex items-center justify-between rounded-xl border border-meso-gold-400/30 bg-meso-gold-400/5 px-4 py-3">
-        <div className="flex items-center gap-2">
-          <Tag className="h-4 w-4 text-meso-gold-400" />
-          <div>
-            <p className="text-sm font-medium text-meso-gold-400">Kupon: {loyaltyCoupon.code}</p>
-            <p className="text-xs text-white/50">
-              {loyaltyCoupon.coupon_type === 'free_delivery' && 'Darmowa dostawa'}
-              {loyaltyCoupon.coupon_type === 'discount' && `Rabat ${loyaltyCoupon.discount_value} zł`}
-              {loyaltyCoupon.coupon_type === 'free_product' && loyaltyCoupon.free_product_name}
-            </p>
+      <>
+        <div className="flex items-center justify-between rounded-xl border border-meso-gold-400/30 bg-meso-gold-400/5 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <Tag className="h-4 w-4 text-meso-gold-400" />
+            <div>
+              <p className="text-sm font-medium text-meso-gold-400">Kupon: {loyaltyCoupon.code}</p>
+              <p className="text-xs text-white/50">{getCouponDescription()}</p>
+            </div>
           </div>
+          <button
+            onClick={() => setShowRemoveConfirm(true)}
+            className="p-1 text-white/40 hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
-        <button
-          onClick={() => {
-            clearLoyaltyCoupon()
-            toast('Kupon usunięty z koszyka. Punkty nie wracają.')
-          }}
-          className="p-1 text-white/40 hover:text-white"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
+
+        {/* Confirm removal dialog */}
+        {showRemoveConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+            <div className="w-full max-w-sm rounded-2xl bg-meso-dark-800 p-6 space-y-4">
+              <h3 className="text-lg font-bold">Usunąć kupon?</h3>
+              <p className="text-sm text-white/70">
+                Kupon <span className="font-medium text-meso-gold-400">{loyaltyCoupon.code}</span> zostanie dezaktywowany.
+              </p>
+              <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3">
+                <p className="text-xs text-red-400">Wydane punkty nie zostaną zwrócone.</p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowRemoveConfirm(false)}
+                  disabled={isRemoving}
+                  className="flex-1 rounded-xl bg-white/10 py-3 text-sm font-medium"
+                >
+                  Anuluj
+                </button>
+                <button
+                  onClick={handleRemoveCoupon}
+                  disabled={isRemoving}
+                  className="flex-1 rounded-xl bg-meso-red-500 py-3 text-sm font-bold"
+                >
+                  {isRemoving ? 'Usuwanie...' : 'Tak, usuń kupon'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
     )
   }
 

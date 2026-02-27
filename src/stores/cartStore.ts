@@ -230,8 +230,8 @@ export const useCartStore = create<CartState>()(
           return 0 // free_delivery is handled in getDeliveryFee
         }
 
-        // Loyalty coupon discount
-        if (loyaltyCoupon?.coupon_type === 'discount' && loyaltyCoupon.discount_value) {
+        // Loyalty coupon discount (discount or free_product with computed value)
+        if ((loyaltyCoupon?.coupon_type === 'discount' || loyaltyCoupon?.coupon_type === 'free_product') && loyaltyCoupon.discount_value) {
           return loyaltyCoupon.discount_value
         }
 
@@ -311,7 +311,7 @@ export const selectDiscount = (s: CartState) => {
     if (s.promoDiscountType === 'fixed') return s.promoDiscount
     return 0
   }
-  if (s.loyaltyCoupon?.coupon_type === 'discount' && s.loyaltyCoupon.discount_value) {
+  if ((s.loyaltyCoupon?.coupon_type === 'discount' || s.loyaltyCoupon?.coupon_type === 'free_product') && s.loyaltyCoupon.discount_value) {
     return s.loyaltyCoupon.discount_value
   }
   return 0
@@ -331,7 +331,7 @@ export const selectTotal = (s: CartState) => {
   if (s.promoDiscount && s.promoDiscountType) {
     if (s.promoDiscountType === 'percent') discount = subtotal * (s.promoDiscount / 100)
     else if (s.promoDiscountType === 'fixed') discount = s.promoDiscount
-  } else if (s.loyaltyCoupon?.coupon_type === 'discount' && s.loyaltyCoupon.discount_value) {
+  } else if ((s.loyaltyCoupon?.coupon_type === 'discount' || s.loyaltyCoupon?.coupon_type === 'free_product') && s.loyaltyCoupon.discount_value) {
     discount = s.loyaltyCoupon.discount_value
   }
   return Math.max(0, subtotal - discount + deliveryFee + paymentFee + s.tip)

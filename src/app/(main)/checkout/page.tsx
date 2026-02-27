@@ -482,8 +482,9 @@ export default function CheckoutPage() {
                         </span>
                         <span className="text-green-400">
                             {loyaltyCoupon?.coupon_type === 'free_delivery' ? 'Darmowa dostawa' :
-                             loyaltyCoupon?.coupon_type === 'free_product' ? loyaltyCoupon.free_product_name :
-                             discount > 0 ? `-${formatPriceExact(discount)}` : null}
+                             loyaltyCoupon?.coupon_type === 'free_product' && loyaltyCoupon.discount_value
+                               ? `${loyaltyCoupon.free_product_name} (-${formatPriceExact(loyaltyCoupon.discount_value)})`
+                               : discount > 0 ? `-${formatPriceExact(discount)}` : null}
                         </span>
                     </div>
                 )}
