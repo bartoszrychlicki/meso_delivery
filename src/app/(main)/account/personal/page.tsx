@@ -11,7 +11,8 @@ import { LoginPrompt } from '@/components/auth'
 import { toast } from 'sonner'
 
 interface PersonalData {
-  name: string
+  firstName: string
+  lastName: string
   email: string
   phone: string
   birthday: string
@@ -20,7 +21,8 @@ interface PersonalData {
 export default function PersonalPage() {
   const { user, isPermanent, isLoading: authLoading } = useAuth()
   const [form, setForm] = useState<PersonalData>({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phone: '',
     birthday: '',
@@ -45,8 +47,11 @@ export default function PersonalPage() {
         .single()
 
       if (data) {
+        const fullName = data.name ?? ''
+        const spaceIndex = fullName.indexOf(' ')
         setForm({
-          name: data.name ?? '',
+          firstName: spaceIndex > -1 ? fullName.slice(0, spaceIndex) : fullName,
+          lastName: spaceIndex > -1 ? fullName.slice(spaceIndex + 1) : '',
           email: data.email ?? user!.email ?? '',
           phone: data.phone ?? '',
           birthday: data.birthday ?? '',
@@ -74,10 +79,11 @@ export default function PersonalPage() {
     setSaved(false)
 
     const supabase = createClient()
+    const fullName = [form.firstName.trim(), form.lastName.trim()].filter(Boolean).join(' ')
     await supabase
       .from('customers')
       .update({
-        name: form.name || null,
+        name: fullName || null,
         phone: form.phone || null,
         birthday: form.birthday || null,
       })
@@ -121,15 +127,28 @@ export default function PersonalPage() {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-4"
       >
-        {/* Name */}
+        {/* First name */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-muted-foreground">Imię i nazwisko</label>
+          <label className="text-xs font-medium text-muted-foreground">Imię</label>
           <input
             type="text"
-            autoComplete="name"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder="Jan Kowalski"
+            autoComplete="given-name"
+            value={form.firstName}
+            onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+            placeholder="Jan"
+            className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+          />
+        </div>
+
+        {/* Last name */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground">Nazwisko</label>
+          <input
+            type="text"
+            autoComplete="family-name"
+            value={form.lastName}
+            onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+            placeholder="Kowalski"
             className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
         </div>
