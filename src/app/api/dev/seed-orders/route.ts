@@ -162,8 +162,12 @@ export async function GET() {
       postal_code: '80-001',
     }
 
+    const seedOrderNumber = (idx: number) => `SEED-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(idx).padStart(3,'0')}`
+
     const ordersToInsert = [
       {
+        order_number: seedOrderNumber(1),
+        channel: 'web',
         customer_id: customerId,
         location_id: location.id,
         status: 'confirmed',
@@ -184,6 +188,8 @@ export async function GET() {
         created_at: minutesAgo(8),
       },
       {
+        order_number: seedOrderNumber(2),
+        channel: 'web',
         customer_id: customerId,
         location_id: location.id,
         status: 'preparing',
@@ -204,6 +210,8 @@ export async function GET() {
         created_at: minutesAgo(15),
       },
       {
+        order_number: seedOrderNumber(3),
+        channel: 'web',
         customer_id: customerId,
         location_id: location.id,
         status: 'ready',
@@ -224,6 +232,8 @@ export async function GET() {
         created_at: minutesAgo(25),
       },
       {
+        order_number: seedOrderNumber(4),
+        channel: 'web',
         customer_id: customerId,
         location_id: location.id,
         status: 'in_delivery',
@@ -246,6 +256,8 @@ export async function GET() {
         created_at: minutesAgo(35),
       },
       {
+        order_number: seedOrderNumber(5),
+        channel: 'web',
         customer_id: customerId,
         location_id: location.id,
         status: 'delivered',

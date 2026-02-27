@@ -81,6 +81,11 @@ export function useCheckout() {
             const subtotal = getSubtotal()
             const isPayOnPickup = paymentData.method === 'pay_on_pickup'
 
+            // Generate order number: WEB-YYYYMMDD-HHMMSS-RRR
+            const d = new Date()
+            const pad = (n: number) => String(n).padStart(2, '0')
+            const orderNumber = `WEB-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`
+
             // 2. Create Order
             // Build scheduled_time as a proper TIMESTAMPTZ if provided
             let scheduledTimestamp: string | null = null
@@ -96,6 +101,8 @@ export function useCheckout() {
             const { data: order, error: orderError } = await supabase
                 .from('orders_orders')
                 .insert({
+                    order_number: orderNumber,
+                    channel: 'web',
                     customer_id: user.id,
                     location_id: locations.id,
                     status: isPayOnPickup ? 'confirmed' : 'pending_payment',
