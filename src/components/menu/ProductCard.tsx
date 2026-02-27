@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/formatters'
-import { getProductImageUrl, PRODUCT_BLUR_PLACEHOLDER } from '@/lib/product-image'
+import { getProductImageUrl, PRODUCT_BLUR_PLACEHOLDER, ProductImage } from '@/lib/product-image'
 import { useCartStore } from '@/stores/cartStore'
 import { toast } from 'sonner'
 
@@ -18,7 +18,7 @@ interface Product {
   price: number
   original_price?: number
   image_url?: string
-  images?: any[]
+  images?: ProductImage[]
   is_spicy?: boolean
   spice_level?: 1 | 2 | 3
   is_vegetarian?: boolean

@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { Check, Info, Loader2, Minus, Plus } from 'lucide-react'
+import { Loader2, Minus, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useCartStore, CartItemAddon } from '@/stores/cartStore'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/formatters'
-import { getProductImageUrl, PRODUCT_BLUR_PLACEHOLDER } from '@/lib/product-image'
+import { getProductImageUrl, PRODUCT_BLUR_PLACEHOLDER, ProductImage } from '@/lib/product-image'
 import { createClient } from '@/lib/supabase/client'
 import { ALLERGENS, type AllergenKey } from '@/types/menu'
 
@@ -39,7 +39,7 @@ export interface Product {
     price: number
     original_price?: number
     image_url?: string
-    images?: any[]
+    images?: ProductImage[]
     is_spicy?: boolean
     spice_level?: 1 | 2 | 3
     is_vegetarian?: boolean
