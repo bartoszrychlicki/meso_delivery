@@ -27,9 +27,14 @@ function buildConfirmation(order: Record<string, any>, waitMinutes = 20): OrderC
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const location = order.location as Record<string, any>
 
+    // POS stores location address as JSONB; extract city/street
+    const locAddr = location && typeof location.address === 'object' && location.address
+        ? (location.address as Record<string, string>)
+        : null
+
     return {
         orderId: order.id.toString(),
-        orderNumber: order.id.toString().slice(-6).toUpperCase(),
+        orderNumber: order.order_number || order.id.toString().slice(-8).toUpperCase(),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         items: order.items.map((item: any) => ({
             id: item.id,
@@ -56,8 +61,8 @@ function buildConfirmation(order: Record<string, any>, waitMinutes = 20): OrderC
         } : null,
         pickupLocation: location ? {
             name: location.name || 'MESO',
-            address: location.address || '',
-            city: location.city || '',
+            address: locAddr?.street || String(location.address || ''),
+            city: locAddr?.city || '',
         } : null,
         subtotal: order.subtotal,
         deliveryFee: order.delivery_fee,
@@ -101,7 +106,7 @@ function OrderConfirmationContent() {
                         .from('orders_orders')
                         .select(`
                             *,
-                            location:users_locations(name, address, city, delivery_time_min, delivery_time_max),
+                            location:users_locations(name, address, phone),
                             items:orders_order_items(
                                 *,
                                 product:menu_products(*)
