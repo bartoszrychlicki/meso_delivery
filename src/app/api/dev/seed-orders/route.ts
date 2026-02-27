@@ -76,7 +76,8 @@ export async function GET() {
     const { data: location, error: locError } = await supabase
       .from('users_locations')
       .select('id')
-      .eq('is_default', true)
+      .eq('is_active', true)
+      .limit(1)
       .single()
 
     if (locError || !location) {

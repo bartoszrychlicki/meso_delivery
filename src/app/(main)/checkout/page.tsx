@@ -123,8 +123,9 @@ export default function CheckoutPage() {
             const [locationRes, configRes] = await Promise.all([
                 supabase
                     .from('users_locations')
-                    .select('name, address, city, open_time, close_time')
-                    .eq('is_default', true)
+                    .select('name, address, phone, is_active')
+                    .eq('is_active', true)
+                    .limit(1)
                     .single(),
                 supabase
                     .from('app_config')
@@ -139,14 +140,18 @@ export default function CheckoutPage() {
             ])
 
             if (locationRes.data) {
+                // POS stores address as JSONB; extract city/street from it
+                const addr = typeof locationRes.data.address === 'object' && locationRes.data.address
+                    ? (locationRes.data.address as Record<string, string>)
+                    : null
                 setLocationHours({
-                    open_time: locationRes.data.open_time,
-                    close_time: locationRes.data.close_time,
+                    open_time: (locationRes.data as Record<string, unknown>).open_time as string || '11:00',
+                    close_time: (locationRes.data as Record<string, unknown>).close_time as string || '22:00',
                 })
                 setPickupLocation({
                     name: locationRes.data.name,
-                    address: locationRes.data.address,
-                    city: locationRes.data.city,
+                    address: addr?.street || String(locationRes.data.address || ''),
+                    city: addr?.city || '',
                 })
             }
 

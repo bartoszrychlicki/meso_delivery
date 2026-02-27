@@ -53,12 +53,24 @@ export default function LocationsPage() {
     const supabase = createClient()
     supabase
       .from('users_locations')
-      .select('id, name, address, city, open_time, close_time, type, is_active')
+      .select('id, name, address, phone, type, is_active')
       .eq('is_active', true)
       .order('name')
       .then(({ data, error }) => {
         if (!error && data) {
-          setLocations(data)
+          // POS stores address as JSONB; normalize for display
+          setLocations(data.map((loc) => {
+            const addr = typeof loc.address === 'object' && loc.address
+              ? (loc.address as Record<string, string>)
+              : null
+            return {
+              ...loc,
+              address: addr?.street || String(loc.address || ''),
+              city: addr?.city || '',
+              open_time: '11:00:00',
+              close_time: '22:00:00',
+            } as LocationData
+          }))
         }
         setIsLoading(false)
       })

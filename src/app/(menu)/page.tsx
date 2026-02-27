@@ -43,7 +43,8 @@ async function getMenuData() {
     supabase
       .from('users_locations')
       .select('*')
-      .eq('is_default', true)
+      .eq('is_active', true)
+      .limit(1)
       .single(),
     supabase
       .from('promo_banners')

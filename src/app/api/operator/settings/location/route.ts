@@ -20,7 +20,8 @@ export async function GET(request: NextRequest) {
   const { data, error } = await supabase
     .from('users_locations')
     .select('*')
-    .eq('is_default', true)
+    .eq('is_active', true)
+    .limit(1)
     .single()
 
   if (error) {
@@ -68,7 +69,7 @@ export async function PATCH(request: NextRequest) {
     const { data, error } = await supabase
       .from('users_locations')
       .update(updateData)
-      .eq('is_default', true)
+      .eq('is_active', true)
       .select()
       .single()
 
