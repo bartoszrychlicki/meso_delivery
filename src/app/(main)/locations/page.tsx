@@ -52,7 +52,7 @@ export default function LocationsPage() {
   useEffect(() => {
     const supabase = createClient()
     supabase
-      .from('locations')
+      .from('users_locations')
       .select('id, name, address, city, open_time, close_time, type, is_active')
       .eq('is_active', true)
       .order('name')

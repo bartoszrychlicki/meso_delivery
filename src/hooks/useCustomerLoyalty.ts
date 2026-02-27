@@ -35,7 +35,7 @@ export function useCustomerLoyalty(): CustomerLoyalty {
 
     const supabase = createClient()
     supabase
-      .from('customers')
+      .from('crm_customers')
       .select('loyalty_points, loyalty_tier, lifetime_points')
       .eq('id', user.id)
       .single()

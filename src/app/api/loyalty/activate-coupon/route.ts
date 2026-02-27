@@ -27,14 +27,14 @@ export async function POST(request: NextRequest) {
 
     // Check for existing active coupon (expire stale ones first)
     await admin
-      .from('loyalty_coupons')
+      .from('crm_customer_coupons')
       .update({ status: 'expired' })
       .eq('customer_id', user.id)
       .eq('status', 'active')
       .lt('expires_at', new Date().toISOString())
 
     const { data: activeCoupon } = await admin
-      .from('loyalty_coupons')
+      .from('crm_customer_coupons')
       .select('id')
       .eq('customer_id', user.id)
       .eq('status', 'active')
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
     // Fetch reward
     const { data: reward, error: rewardError } = await admin
-      .from('loyalty_rewards')
+      .from('crm_loyalty_rewards')
       .select('*')
       .eq('id', reward_id)
       .eq('is_active', true)
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     // Fetch customer
     const { data: customer, error: customerError } = await admin
-      .from('customers')
+      .from('crm_customers')
       .select('loyalty_points, loyalty_tier')
       .eq('id', user.id)
       .single()
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
     let code = generateCouponCode()
     for (let i = 0; i < 5; i++) {
       const { data } = await admin
-        .from('loyalty_coupons')
+        .from('crm_customer_coupons')
         .select('id')
         .eq('code', code)
         .maybeSingle()
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     let computedDiscountValue = reward.discount_value
     if (reward.reward_type === 'free_product' && !reward.discount_value) {
       const rewardNameLower = (reward.name as string).toLowerCase()
-      const { data: categories } = await admin.from('categories').select('id, slug')
+      const { data: categories } = await admin.from('menu_categories').select('id, slug')
 
       let categoryId: string | null = null
       if (categories) {
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
 
       if (categoryId) {
         const { data: cheapest } = await admin
-          .from('products')
+          .from('menu_products')
           .select('price')
           .eq('category_id', categoryId)
           .order('price', { ascending: true })
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
 
     // Deduct points
     const { error: pointsError } = await admin
-      .from('customers')
+      .from('crm_customers')
       .update({ loyalty_points: customer.loyalty_points - reward.points_cost })
       .eq('id', user.id)
 
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
 
     // Create coupon
     const { data: coupon, error: couponError } = await admin
-      .from('loyalty_coupons')
+      .from('crm_customer_coupons')
       .insert({
         customer_id: user.id,
         reward_id: reward.id,
@@ -165,20 +165,20 @@ export async function POST(request: NextRequest) {
     if (couponError) {
       // Rollback points
       await admin
-        .from('customers')
+        .from('crm_customers')
         .update({ loyalty_points: customer.loyalty_points })
         .eq('id', user.id)
       return NextResponse.json({ error: 'Błąd przy tworzeniu kuponu' }, { status: 500 })
     }
 
-    // Log to loyalty_history
+    // Log to crm_loyalty_transactions (formerly loyalty_history)
     await admin
-      .from('loyalty_history')
+      .from('crm_loyalty_transactions')
       .insert({
         customer_id: user.id,
         label: `Kupon: ${reward.name}`,
-        points: -reward.points_cost,
-        type: 'spent',
+        amount: -reward.points_cost,
+        reason: 'spent',
       })
 
     return NextResponse.json({

@@ -35,7 +35,7 @@ export default function SettingsPage() {
 
             const supabase = createClient()
             const { data, error } = await supabase
-                .from('customers')
+                .from('crm_customers')
                 .select('marketing_consent')
                 .eq('id', user.id)
                 .single()
@@ -60,7 +60,7 @@ export default function SettingsPage() {
 
         const supabase = createClient()
         const { error } = await supabase
-            .from('customers')
+            .from('crm_customers')
             .update({ marketing_consent: checked })
             .eq('id', user.id)
 

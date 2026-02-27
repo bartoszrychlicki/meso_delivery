@@ -11,10 +11,10 @@ export default async function ProductPage({ params }: PageProps) {
   const supabase = await createClient()
 
   const { data: product } = await supabase
-    .from('products')
+    .from('menu_products')
     .select(`
       *,
-      category:categories(id, name, slug, icon),
+      category:menu_categories(id, name, slug, icon),
       variants:product_variants(*),
       addons:product_addons(*)
     `)

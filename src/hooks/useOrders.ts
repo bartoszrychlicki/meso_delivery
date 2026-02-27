@@ -38,14 +38,14 @@ export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
             const supabase = createClient()
 
             let query = supabase
-                .from('orders')
+                .from('orders_orders')
                 .select(`
           *,
-          items:order_items(
+          items:orders_order_items(
             *,
-            product:products(id, name, image_url)
+            product:menu_products(id, name, image_url)
           ),
-          location:locations(name, address, phone)
+          location:users_locations(name, address, phone)
         `)
                 .eq('customer_id', user.id)
                 .order('created_at', { ascending: false })

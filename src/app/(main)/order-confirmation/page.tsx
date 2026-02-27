@@ -97,13 +97,13 @@ function OrderConfirmationContent() {
 
                 const [orderRes, configRes] = await Promise.all([
                     supabase
-                        .from('orders')
+                        .from('orders_orders')
                         .select(`
                             *,
-                            location:locations(name, address, city, delivery_time_min, delivery_time_max),
-                            items:order_items(
+                            location:users_locations(name, address, city, delivery_time_min, delivery_time_max),
+                            items:orders_order_items(
                                 *,
-                                product:products(*)
+                                product:menu_products(*)
                             )
                         `)
                         .eq('id', orderId)
@@ -149,7 +149,7 @@ function OrderConfirmationContent() {
                 {
                     event: 'UPDATE',
                     schema: 'public',
-                    table: 'orders',
+                    table: 'orders_orders',
                     filter: `id=eq.${orderId}`,
                 },
                 (payload) => {
@@ -187,7 +187,7 @@ function OrderConfirmationContent() {
         // Safety-net polling: re-fetch order every 10s until terminal status
         const pollId = setInterval(async () => {
             const { data } = await supabase
-                .from('orders')
+                .from('orders_orders')
                 .select('status, payment_status')
                 .eq('id', orderId)
                 .single()

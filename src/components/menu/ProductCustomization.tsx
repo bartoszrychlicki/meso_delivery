@@ -83,7 +83,7 @@ export function ProductCustomization({
 
                 // Fetch product with variants
                 const { data: productData, error } = await supabase
-                    .from('products')
+                    .from('menu_products')
                     .select(`
             *,
             variants:product_variants(id, name, price_modifier, is_default, sort_order)

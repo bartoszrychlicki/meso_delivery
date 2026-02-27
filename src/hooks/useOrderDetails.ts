@@ -30,14 +30,14 @@ export function useOrderDetails(orderId: number | string): UseOrderDetailsReturn
             const supabase = createClient()
 
             const { data, error: fetchError } = await supabase
-                .from('orders')
+                .from('orders_orders')
                 .select(`
           *,
-          items:order_items(
+          items:orders_order_items(
             *,
-            product:products(id, name, image_url)
+            product:menu_products(id, name, image_url)
           ),
-          location:locations(name, address, phone)
+          location:users_locations(name, address, phone)
         `)
                 .eq('id', orderId)
                 .single()
@@ -75,7 +75,7 @@ export function useOrderDetails(orderId: number | string): UseOrderDetailsReturn
                 {
                     event: 'UPDATE',
                     schema: 'public',
-                    table: 'orders',
+                    table: 'orders_orders',
                     filter: `id=eq.${orderId}`,
                 },
                 (payload) => {

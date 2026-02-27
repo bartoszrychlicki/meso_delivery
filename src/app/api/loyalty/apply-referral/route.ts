@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     // Check if customer already has a referrer
     const { data: currentCustomer } = await admin
-      .from('customers')
+      .from('crm_customers')
       .select('id, referred_by, phone')
       .eq('id', user.id)
       .single()
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
 
     // Find referrer by phone
     const { data: referrer } = await admin
-      .from('customers')
+      .from('crm_customers')
       .select('id, phone')
       .or(`phone.eq.${cleanPhone},phone.eq.+48${cleanPhone},phone.eq.48${cleanPhone}`)
       .neq('id', user.id)
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     // Check referrer has at least 1 delivered order
     const { count: referrerOrders } = await admin
-      .from('orders')
+      .from('orders_orders')
       .select('*', { count: 'exact', head: true })
       .eq('customer_id', referrer.id)
       .eq('status', 'delivered')
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
     startOfMonth.setHours(0, 0, 0, 0)
 
     const { count: monthlyReferrals } = await admin
-      .from('customers')
+      .from('crm_customers')
       .select('*', { count: 'exact', head: true })
       .eq('referred_by', referrer.id)
       .gte('created_at', startOfMonth.toISOString())
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
 
     // Set referrer
     await admin
-      .from('customers')
+      .from('crm_customers')
       .update({ referred_by: referrer.id })
       .eq('id', user.id)
 
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
 
     await admin
-      .from('loyalty_coupons')
+      .from('crm_customer_coupons')
       .insert({
         customer_id: user.id,
         reward_id: null,

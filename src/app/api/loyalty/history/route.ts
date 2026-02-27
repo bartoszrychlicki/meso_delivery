@@ -4,10 +4,10 @@ import { createClient } from '@/lib/supabase/server'
 type LoyaltyHistoryResponseRow = {
   id: string
   label: string
-  points: number
-  type: string
+  amount: number
+  reason: string
   created_at: string
-  order_id?: number | null
+  related_order_id?: number | null
   is_pending_confirmation?: boolean
   pending_message?: string
 }
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const offset = page * limit
 
     const { data: history, error, count } = await supabase
-      .from('loyalty_history')
+      .from('crm_loyalty_transactions')
       .select('*', { count: 'exact' })
       .eq('customer_id', user.id)
       .order('created_at', { ascending: false })
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     // the order-confirmation screen while points are still awarded on delivery.
     if (page === 0) {
       const { data: pendingOrders } = await supabase
-        .from('orders')
+        .from('orders_orders')
         .select('id, status, payment_status, loyalty_points_earned, created_at, paid_at, confirmed_at')
         .eq('customer_id', user.id)
         .eq('payment_status', 'paid')
@@ -57,9 +57,9 @@ export async function GET(request: NextRequest) {
         .map((order) => ({
           id: `pending-order-${order.id}`,
           label: `Zamówienie #${order.id}`,
-          points: order.loyalty_points_earned ?? 0,
-          type: 'pending_confirmation',
-          order_id: order.id,
+          amount: order.loyalty_points_earned ?? 0,
+          reason: 'pending_confirmation',
+          related_order_id: order.id,
           created_at: order.paid_at || order.confirmed_at || order.created_at,
           is_pending_confirmation: true,
           pending_message: 'Punkty w trakcie potwierdzania. Gdy odbierzesz swoje zamówienie, naliczymy Ci punkty.',
@@ -76,15 +76,15 @@ export async function GET(request: NextRequest) {
     let balanceMismatch = false
     if (page === 0) {
       const { data: sumResult } = await supabase
-        .from('loyalty_history')
-        .select('points')
+        .from('crm_loyalty_transactions')
+        .select('amount')
         .eq('customer_id', user.id)
 
       if (sumResult) {
-        const historySum = sumResult.reduce((acc, row) => acc + (row.points ?? 0), 0)
+        const historySum = sumResult.reduce((acc, row) => acc + (row.amount ?? 0), 0)
 
         const { data: customer } = await supabase
-          .from('customers')
+          .from('crm_customers')
           .select('loyalty_points')
           .eq('id', user.id)
           .single()

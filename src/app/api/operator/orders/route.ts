@@ -23,15 +23,14 @@ export async function GET(request: NextRequest) {
   // Single order fetch
   if (orderId) {
     const { data, error } = await supabase
-      .from('orders')
+      .from('orders_orders')
       .select(`
         *,
-        items:order_items(
+        items:orders_order_items(
           *,
-          product:products(id, name, image_url),
-          variant:product_variants(name)
+          product:menu_products(id, name, image_url)
         ),
-        customer:customers(name, phone, email)
+        customer:crm_customers(first_name, last_name, phone, email)
       `)
       .eq('id', orderId)
       .single()
@@ -46,7 +45,7 @@ export async function GET(request: NextRequest) {
       items: data.items?.map((item: any) => ({
         ...item,
         product: item.product,
-        variant_name: item.variant?.name || null,
+        variant_name: item.variant_name || null,
       })) || [],
       customer: data.customer,
     } : null
@@ -58,15 +57,14 @@ export async function GET(request: NextRequest) {
   today.setHours(0, 0, 0, 0)
 
   let query = supabase
-    .from('orders')
+    .from('orders_orders')
     .select(`
       *,
-      items:order_items(
+      items:orders_order_items(
         *,
-        product:products(id, name, image_url),
-        variant:product_variants(name)
+        product:menu_products(id, name, image_url)
       ),
-      customer:customers(name, phone)
+      customer:crm_customers(first_name, last_name, phone)
     `)
     .or(`status.in.(confirmed,preparing,ready,awaiting_courier,in_delivery),and(status.eq.delivered,created_at.gte.${today.toISOString()})`)
     .order('created_at', { ascending: true })
@@ -89,7 +87,7 @@ export async function GET(request: NextRequest) {
     items: order.items?.map((item: any) => ({
       ...item,
       product: item.product,
-      variant_name: item.variant?.name || null,
+      variant_name: item.variant_name || null,
     })) || [],
     customer: order.customer,
   }))
@@ -124,7 +122,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const { error } = await supabase
-      .from('orders')
+      .from('orders_orders')
       .update(updateData)
       .eq('id', orderId)
 

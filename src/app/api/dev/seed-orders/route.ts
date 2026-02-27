@@ -27,7 +27,7 @@ export async function GET() {
 
     // Try to find existing customer first
     const { data: existingCustomer } = await supabase
-      .from('customers')
+      .from('crm_customers')
       .select('id')
       .eq('email', testEmail)
       .single()
@@ -49,10 +49,11 @@ export async function GET() {
         if (existing) {
           customerId = existing.id
           // Ensure customer record exists
-          await supabase.from('customers').upsert({
+          await supabase.from('crm_customers').upsert({
             id: existing.id,
             email: testEmail,
-            name: 'Test Operator',
+            first_name: 'Test',
+            last_name: 'Operator',
             phone: '+48 500 000 000',
             loyalty_points: 50,
             loyalty_tier: 'bronze',
@@ -63,8 +64,9 @@ export async function GET() {
       } else {
         customerId = authData.user.id
         // Update customer name/phone
-        await supabase.from('customers').update({
-          name: 'Test Operator',
+        await supabase.from('crm_customers').update({
+          first_name: 'Test',
+          last_name: 'Operator',
           phone: '+48 500 000 000',
         }).eq('id', customerId)
       }
@@ -72,7 +74,7 @@ export async function GET() {
 
     // 2. Get default location
     const { data: location, error: locError } = await supabase
-      .from('locations')
+      .from('users_locations')
       .select('id')
       .eq('is_default', true)
       .single()
@@ -90,7 +92,7 @@ export async function GET() {
     ]
 
     const { data: products, error: prodError } = await supabase
-      .from('products')
+      .from('menu_products')
       .select('id, slug, name, price')
       .in('slug', slugs)
 
@@ -104,17 +106,19 @@ export async function GET() {
       return p
     }
 
-    // 4. Get "Large" variant for ramens
+    // 4. Get "Large" variant from product variants (stored in menu_products.variants JSONB)
+    // Since product_variants table is removed, we extract from the JSONB field
     const spicyMiso = bySlug('spicy-miso')
-    const { data: largeVariant } = await supabase
-      .from('product_variants')
-      .select('id, name, price_modifier')
-      .eq('product_id', spicyMiso.id)
-      .ilike('name', '%duży%')
+    const { data: productWithVariants } = await supabase
+      .from('menu_products')
+      .select('variants')
+      .eq('id', spicyMiso.id)
       .single()
 
+    const largeVariant = productWithVariants?.variants?.find((v: any) => v.name?.toLowerCase().includes('duży')) || null
+
     // 5. Delete existing seed orders for this customer (idempotent)
-    await supabase.from('orders').delete().eq('customer_id', customerId)
+    await supabase.from('orders_orders').delete().eq('customer_id', customerId)
 
     // 6. Insert orders
     const now = new Date()
@@ -266,7 +270,7 @@ export async function GET() {
     ]
 
     const { data: insertedOrders, error: orderError } = await supabase
-      .from('orders')
+      .from('orders_orders')
       .insert(ordersToInsert)
       .select('id, status')
 
@@ -385,7 +389,7 @@ export async function GET() {
     ]
 
     const { error: itemsError } = await supabase
-      .from('order_items')
+      .from('orders_order_items')
       .insert(orderItems)
 
     if (itemsError) {

@@ -8,8 +8,8 @@ interface AuthContextType {
   user: User | null
   session: Session | null
   isLoading: boolean
-  isAnonymous: boolean
-  isPermanent: boolean
+  isAnonymous: boolean    // kept for backward compat — always false now
+  isPermanent: boolean    // kept for backward compat — true when authenticated
   isAuthenticated: boolean
   signOut: () => Promise<void>
   refreshSession: () => Promise<void>
@@ -25,10 +25,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Use state to ensure single instance across renders
   const [supabase] = useState(() => createClient())
 
-  // Determine if user is anonymous from JWT or user metadata
-  // Check email existence as a fallback - if user has email, they are likely permanent
-  const isAnonymous = user?.is_anonymous ?? user?.app_metadata?.is_anonymous ?? (!user?.email)
-  const isPermanent = !!user && !isAnonymous
+  // No more anonymous users — all users must be registered
+  const isAnonymous = false
+  const isPermanent = !!user
   const isAuthenticated = !!user
 
   const initAuth = useCallback(async () => {
@@ -39,17 +38,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (currentSession) {
         setSession(currentSession)
         setUser(currentSession.user)
-      } else {
-        // No session - sign in anonymously
-        const { data, error } = await supabase.auth.signInAnonymously()
-
-        if (error) {
-          console.error('Anonymous sign-in error:', error)
-        } else if (data.session) {
-          setSession(data.session)
-          setUser(data.user)
-        }
       }
+      // No anonymous fallback — user stays unauthenticated until they log in
     } catch (error) {
       console.error('Auth initialization error:', error)
     } finally {
@@ -61,12 +51,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true)
     try {
       await supabase.auth.signOut()
-      // After sign out, create new anonymous session
-      const { data } = await supabase.auth.signInAnonymously()
-      if (data.session) {
-        setSession(data.session)
-        setUser(data.user)
-      }
+      setSession(null)
+      setUser(null)
     } catch (error) {
       console.error('Sign out error:', error)
     } finally {
@@ -91,26 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(newSession)
         setUser(newSession?.user ?? null)
 
-        // Handle specific events
-        if (event === 'SIGNED_OUT') {
-          // Do not await Supabase auth calls inside onAuthStateChange callback.
-          // Supabase awaits subscribers internally, which can deadlock if we call
-          // another auth method here (e.g. signInAnonymously / refreshSession).
-          setTimeout(() => {
-            void (async () => {
-              const { data } = await supabase.auth.signInAnonymously()
-              if (data.session) {
-                setSession(data.session)
-                setUser(data.user)
-              }
-            })()
-          }, 0)
-        }
-
-        if (event === 'USER_UPDATED') {
-          // `newSession` already contains the updated user.
-          // Avoid calling refreshSession() here to prevent auth callback deadlocks.
-        }
+        // No re-login to anonymous on SIGNED_OUT — user stays logged out
       }
     )
 

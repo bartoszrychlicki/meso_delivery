@@ -11,10 +11,10 @@ async function getProduct(slug: string) {
 
   // Get product with variants and addons
   const { data: product, error: productError } = await supabase
-    .from('products')
+    .from('menu_products')
     .select(`
       *,
-      category:categories(id, name, name_jp, slug),
+      category:menu_categories(id, name, name_jp, slug),
       variants:product_variants(id, name, price_modifier, is_default, sort_order)
     `)
     .eq('slug', slug)

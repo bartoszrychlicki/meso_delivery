@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   const supabase = createAdminClient()
 
   const { data, error } = await supabase
-    .from('locations')
+    .from('users_locations')
     .select('*')
     .eq('is_default', true)
     .single()
@@ -66,7 +66,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const { data, error } = await supabase
-      .from('locations')
+      .from('users_locations')
       .update(updateData)
       .eq('is_default', true)
       .select()

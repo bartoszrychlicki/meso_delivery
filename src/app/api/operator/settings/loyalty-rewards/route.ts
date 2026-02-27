@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   const supabase = createAdminClient()
 
   const { data, error } = await supabase
-    .from('loyalty_rewards')
+    .from('crm_loyalty_rewards')
     .select('*')
     .order('sort_order', { ascending: true })
 
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     if (min_tier !== undefined) insertData.min_tier = min_tier
 
     const { data, error } = await supabase
-      .from('loyalty_rewards')
+      .from('crm_loyalty_rewards')
       .insert(insertData)
       .select()
       .single()
@@ -136,7 +136,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const { data, error } = await supabase
-      .from('loyalty_rewards')
+      .from('crm_loyalty_rewards')
       .update(updateData)
       .eq('id', id)
       .select()
@@ -169,7 +169,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const { error } = await supabase
-      .from('loyalty_rewards')
+      .from('crm_loyalty_rewards')
       .update({ is_active: false })
       .eq('id', id)
 

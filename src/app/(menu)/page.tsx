@@ -8,12 +8,12 @@ async function getMenuData() {
 
   const [categoriesResult, productsResult, locationResult, bannersResult] = await Promise.all([
     supabase
-      .from('categories')
+      .from('menu_categories')
       .select('id, name, name_jp, slug, icon, description')
       .eq('is_active', true)
       .order('sort_order'),
     supabase
-      .from('products')
+      .from('menu_products')
       .select(`
         id,
         category_id,
@@ -40,7 +40,7 @@ async function getMenuData() {
       .eq('is_active', true)
       .order('sort_order'),
     supabase
-      .from('locations')
+      .from('users_locations')
       .select('*')
       .eq('is_default', true)
       .single(),

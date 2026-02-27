@@ -31,7 +31,7 @@ export function useLoyaltyRewards(): UseLoyaltyRewardsResult {
   useEffect(() => {
     const supabase = createClient()
     supabase
-      .from('loyalty_rewards')
+      .from('crm_loyalty_rewards')
       .select('*')
       .eq('is_active', true)
       .order('points_cost', { ascending: true })

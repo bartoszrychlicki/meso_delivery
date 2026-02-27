@@ -5,9 +5,9 @@ import { createClient } from '@/lib/supabase/client'
 export interface LoyaltyHistoryEntry {
   id: string
   label: string
-  points: number
-  type: 'earned' | 'spent' | 'bonus' | 'expired'
-  order_id: number | null
+  amount: number
+  reason: 'earned' | 'spent' | 'bonus' | 'expired'
+  related_order_id: number | null
   created_at: string
 }
 
@@ -33,7 +33,7 @@ export function useLoyaltyHistory(): UseLoyaltyHistoryResult {
 
     const supabase = createClient()
     supabase
-      .from('loyalty_history')
+      .from('crm_loyalty_transactions')
       .select('*')
       .eq('customer_id', user.id)
       .order('created_at', { ascending: false })

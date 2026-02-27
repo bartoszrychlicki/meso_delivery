@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
   // Look up the promo code (case-insensitive)
   const { data: promo, error } = await supabase
-    .from('promo_codes')
+    .from('crm_promotions')
     .select('*')
     .ilike('code', code.trim())
     .single()
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
 
     // Check if the user has any previous completed orders
     const { count } = await supabase
-      .from('orders')
+      .from('orders_orders')
       .select('id', { count: 'exact', head: true })
       .eq('customer_id', user.id)
       .neq('status', 'cancelled')

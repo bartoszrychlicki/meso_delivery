@@ -43,15 +43,9 @@ export async function GET(request: NextRequest) {
     redirectTo = new URL('/login?error=auth_callback_error', requestUrl.origin)
   } else if (type === 'recovery') {
     redirectTo = new URL('/reset-password?recovery=1', requestUrl.origin)
-  } else if ((type === 'signup' || type === 'email_change') && data.user && !data.user.is_anonymous) {
-    try {
-      await supabase.rpc('convert_anonymous_to_permanent', {
-        p_user_id: data.user.id,
-        p_email: data.user.email,
-      })
-    } catch (e) {
-      console.log('Conversion RPC call (might be expected to fail):', e)
-    }
+  } else if (type === 'signup' || type === 'email_change') {
+    // No more anonymous conversion — the handle_new_delivery_customer trigger
+    // in POS database automatically creates crm_customers record on signup
     redirectTo = new URL('/?welcome=true', requestUrl.origin)
   } else {
     redirectTo = new URL(next, requestUrl.origin)

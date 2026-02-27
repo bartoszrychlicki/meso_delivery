@@ -9,7 +9,8 @@ import { useAuth } from '@/hooks/useAuth'
 import type { AddressFormData, DeliveryFormData, PaymentFormData } from '@/lib/validators/checkout'
 
 type CheckoutProfileUpdate = {
-    name?: string | null
+    first_name?: string
+    last_name?: string
     phone?: string | null
 }
 
@@ -17,15 +18,14 @@ export function buildCheckoutProfileUpdate(
     addressData: Pick<AddressFormData, 'firstName' | 'lastName' | 'phone'>,
     savePhoneToProfile?: boolean
 ): CheckoutProfileUpdate {
-    const fullName = [addressData.firstName, addressData.lastName]
-        .map((part) => part?.trim())
-        .filter(Boolean)
-        .join(' ')
-
     const profileUpdate: CheckoutProfileUpdate = {}
 
-    if (fullName) {
-        profileUpdate.name = fullName
+    if (addressData.firstName) {
+        profileUpdate.first_name = addressData.firstName.trim()
+    }
+
+    if (addressData.lastName) {
+        profileUpdate.last_name = addressData.lastName.trim()
     }
 
     if (savePhoneToProfile && addressData.phone) {
@@ -67,7 +67,7 @@ export function useCheckout() {
 
             // 1. Get active location (MVP: just get the first one)
             const { data: locations, error: locationError } = await supabase
-                .from('locations')
+                .from('users_locations')
                 .select('id')
                 .eq('is_active', true)
                 .limit(1)
@@ -94,7 +94,7 @@ export function useCheckout() {
             const now = new Date().toISOString()
 
             const { data: order, error: orderError } = await supabase
-                .from('orders')
+                .from('orders_orders')
                 .insert({
                     customer_id: user.id,
                     location_id: locations.id,
@@ -127,7 +127,7 @@ export function useCheckout() {
 
             if (Object.keys(profileUpdate).length > 0) {
                 await supabase
-                    .from('customers')
+                    .from('crm_customers')
                     .update(profileUpdate)
                     .eq('id', user.id)
             }
@@ -135,7 +135,7 @@ export function useCheckout() {
             // 2c. Mark loyalty coupon as used
             if (loyaltyCoupon) {
                 await supabase
-                    .from('loyalty_coupons')
+                    .from('crm_customer_coupons')
                     .update({
                         status: 'used',
                         used_at: new Date().toISOString(),
@@ -158,7 +158,6 @@ export function useCheckout() {
                     quantity: item.quantity,
                     unit_price: unitPrice, // Storing final unit price including modifiers
                     spice_level: item.spiceLevel,
-                    variant_id: item.variantId,
                     variant_name: item.variantName,
                     addons: item.addons, // JSONB
                     total_price: totalPrice,
@@ -166,7 +165,7 @@ export function useCheckout() {
             })
 
             const { error: itemsError } = await supabase
-                .from('order_items')
+                .from('orders_order_items')
                 .insert(orderItems)
 
             if (itemsError) {

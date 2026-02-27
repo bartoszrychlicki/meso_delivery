@@ -48,14 +48,16 @@ export function useUserDisplay() {
 
     const supabase = createClient()
     supabase
-      .from('customers')
-      .select('name')
+      .from('crm_customers')
+      .select('first_name, last_name')
       .eq('id', user.id)
       .single()
       .then(({ data }) => {
-        if (data?.name && typeof data.name === 'string') {
-          const normalized = data.name.trim()
-          if (normalized) setCustomerName(normalized)
+        if (data) {
+          const first = typeof data.first_name === 'string' ? data.first_name.trim() : ''
+          const last = typeof data.last_name === 'string' ? data.last_name.trim() : ''
+          const fullName = `${first} ${last}`.trim()
+          if (fullName) setCustomerName(fullName)
         }
       })
   }, [user, isPermanent])

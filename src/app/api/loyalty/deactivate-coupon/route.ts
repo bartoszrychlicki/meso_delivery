@@ -15,7 +15,7 @@ export async function POST() {
 
     // Find active coupon
     const { data: coupon } = await admin
-      .from('loyalty_coupons')
+      .from('crm_customer_coupons')
       .select('id')
       .eq('customer_id', user.id)
       .eq('status', 'active')
@@ -28,7 +28,7 @@ export async function POST() {
 
     // Mark as cancelled (points are NOT refunded)
     await admin
-      .from('loyalty_coupons')
+      .from('crm_customer_coupons')
       .update({ status: 'cancelled', used_at: new Date().toISOString() })
       .eq('id', coupon.id)
 

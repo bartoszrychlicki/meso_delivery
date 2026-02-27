@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   const supabase = createAdminClient()
 
   const { data, error } = await supabase
-    .from('promo_codes')
+    .from('crm_promotions')
     .select('*')
     .order('created_at', { ascending: false })
 
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { data, error } = await supabase
-      .from('promo_codes')
+      .from('crm_promotions')
       .insert(insertData)
       .select()
       .single()
@@ -144,7 +144,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const { data, error } = await supabase
-      .from('promo_codes')
+      .from('crm_promotions')
       .update(updateData)
       .eq('id', id)
       .select()
@@ -177,7 +177,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const { error } = await supabase
-      .from('promo_codes')
+      .from('crm_promotions')
       .update({ is_active: false })
       .eq('id', id)
 

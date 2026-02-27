@@ -41,17 +41,15 @@ export default function PersonalPage() {
     async function loadData() {
       const supabase = createClient()
       const { data } = await supabase
-        .from('customers')
-        .select('name, email, phone, birthday')
+        .from('crm_customers')
+        .select('first_name, last_name, email, phone, birthday')
         .eq('id', user!.id)
         .single()
 
       if (data) {
-        const fullName = data.name ?? ''
-        const spaceIndex = fullName.indexOf(' ')
         setForm({
-          firstName: spaceIndex > -1 ? fullName.slice(0, spaceIndex) : fullName,
-          lastName: spaceIndex > -1 ? fullName.slice(spaceIndex + 1) : '',
+          firstName: data.first_name ?? '',
+          lastName: data.last_name ?? '',
           email: data.email ?? user!.email ?? '',
           phone: data.phone ?? '',
           birthday: data.birthday ?? '',
@@ -79,11 +77,11 @@ export default function PersonalPage() {
     setSaved(false)
 
     const supabase = createClient()
-    const fullName = [form.firstName.trim(), form.lastName.trim()].filter(Boolean).join(' ')
     await supabase
-      .from('customers')
+      .from('crm_customers')
       .update({
-        name: fullName || null,
+        first_name: form.firstName || null,
+        last_name: form.lastName || null,
         phone: form.phone || null,
         birthday: form.birthday || null,
       })

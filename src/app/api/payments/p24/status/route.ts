@@ -69,7 +69,7 @@ export async function POST(request: Request) {
 
         // Update order status with Admin/Service Role client
         const { error: updateError, data: updatedOrder } = await supabaseAdmin
-            .from('orders')
+            .from('orders_orders')
             .update({
                 status: 'confirmed',
                 payment_status: 'paid',
@@ -91,15 +91,15 @@ export async function POST(request: Request) {
 
         // Query full order data for confirmation email
         const { data: fullOrder } = await supabaseAdmin
-            .from('orders')
+            .from('orders_orders')
             .select(`
                 *,
-                order_items (
+                order_items:orders_order_items (
                     id, quantity, unit_price, total_price, spice_level, addons,
-                    product:products (name),
-                    variant:product_variants (name)
+                    product:menu_products (name),
+                    variant:menu_products (name)
                 ),
-                location:locations (name, address, city)
+                location:users_locations (name, address, city)
             `)
             .eq('id', paramOrderId)
             .single()

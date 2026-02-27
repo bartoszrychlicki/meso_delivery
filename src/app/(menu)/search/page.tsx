@@ -63,7 +63,7 @@ export default function SearchPage() {
     const supabase = createClient()
     const q = searchQuery.trim()
     const { data, error } = await supabase
-      .from('products')
+      .from('menu_products')
       .select(`${PRODUCT_FIELDS}, categories!inner(name)`)
       .eq('is_active', true)
       .or(`name.ilike.%${q}%,name_jp.ilike.%${q}%,description.ilike.%${q}%,categories.name.ilike.%${q}%`)
@@ -73,7 +73,7 @@ export default function SearchPage() {
       console.error('Search error:', error)
       // Fallback: simpler query without join if the above fails
       const { data: fallback } = await supabase
-        .from('products')
+        .from('menu_products')
         .select(PRODUCT_FIELDS)
         .eq('is_active', true)
         .or(`name.ilike.%${q}%,name_jp.ilike.%${q}%,description.ilike.%${q}%`)

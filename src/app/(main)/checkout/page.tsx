@@ -122,7 +122,7 @@ export default function CheckoutPage() {
 
             const [locationRes, configRes] = await Promise.all([
                 supabase
-                    .from('locations')
+                    .from('users_locations')
                     .select('name, address, city, open_time, close_time')
                     .eq('is_default', true)
                     .single(),
@@ -198,8 +198,8 @@ export default function CheckoutPage() {
                 const supabase = createClient()
 
                 const { data: customer } = await supabase
-                    .from('customers')
-                    .select('name, email, phone')
+                    .from('crm_customers')
+                    .select('first_name, last_name, email, phone')
                     .eq('id', user.id)
                     .single()
 
@@ -207,15 +207,9 @@ export default function CheckoutPage() {
                     setSavedPhone(customer.phone)
                 }
 
-                // Parse name into firstName/lastName
-                const fullName = customer?.name || ''
-                const spaceIndex = fullName.indexOf(' ')
-                const firstName = spaceIndex > -1 ? fullName.slice(0, spaceIndex) : fullName
-                const lastName = spaceIndex > -1 ? fullName.slice(spaceIndex + 1) : ''
-
                 setContactData({
-                    firstName,
-                    lastName,
+                    firstName: customer?.first_name || '',
+                    lastName: customer?.last_name || '',
                     email: customer?.email || user.email || '',
                     phone: customer?.phone || '',
                 })

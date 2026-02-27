@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   toDate.setHours(0, 0, 0, 0)
 
   const { data: orders, error } = await supabase
-    .from('orders')
+    .from('orders_orders')
     .select('id, status, payment_status, total, created_at, confirmed_at, ready_at')
     .gte('created_at', fromDate.toISOString())
     .lt('created_at', toDate.toISOString())

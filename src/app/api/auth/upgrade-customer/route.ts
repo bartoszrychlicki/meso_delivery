@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     // Check if customer exists and is anonymous
     const { data: customer } = await admin
-      .from('customers')
+      .from('crm_customers')
       .select('id, is_anonymous, loyalty_points, lifetime_points')
       .eq('id', userId)
       .single()
@@ -60,10 +60,11 @@ export async function POST(request: NextRequest) {
       + Math.random().toString(36).substring(2, 7).toUpperCase()
 
     const { error: updateError } = await admin
-      .from('customers')
+      .from('crm_customers')
       .update({
         email,
-        name: name || email.split('@')[0],
+        first_name: (name || email.split('@')[0]).split(' ')[0],
+        last_name: (name || email.split('@')[0]).split(' ')[1] || '',
         is_anonymous: false,
         marketing_consent: !!marketingConsent,
         loyalty_points: customer.loyalty_points + 50,
@@ -77,11 +78,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to upgrade' }, { status: 500 })
     }
 
-    await admin.from('loyalty_history').insert({
+    await admin.from('crm_loyalty_transactions').insert({
       customer_id: userId,
       label: 'Bonus rejestracyjny',
-      points: 50,
-      type: 'bonus',
+      amount: 50,
+      reason: 'bonus',
     })
 
     return NextResponse.json({ ok: true, points: customer.loyalty_points + 50 })

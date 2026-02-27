@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 
         const supabaseAdmin = createAdminClient()
         const { data: order, error: orderError } = await supabaseAdmin
-            .from('orders')
+            .from('orders_orders')
             .select('*')
             .eq('id', orderId)
             .single()
