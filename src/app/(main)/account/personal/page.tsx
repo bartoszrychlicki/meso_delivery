@@ -42,7 +42,7 @@ export default function PersonalPage() {
       const supabase = createClient()
       const { data } = await supabase
         .from('crm_customers')
-        .select('first_name, last_name, email, phone, birthday')
+        .select('first_name, last_name, email, phone, birth_date')
         .eq('id', user!.id)
         .single()
 
@@ -52,7 +52,7 @@ export default function PersonalPage() {
           lastName: data.last_name ?? '',
           email: data.email ?? user!.email ?? '',
           phone: data.phone ?? '',
-          birthday: data.birthday ?? '',
+          birthday: data.birth_date ?? '',
         })
       } else {
         setForm((prev) => ({ ...prev, email: user!.email ?? '' }))
@@ -83,7 +83,7 @@ export default function PersonalPage() {
         first_name: form.firstName || null,
         last_name: form.lastName || null,
         phone: form.phone || null,
-        birthday: form.birthday || null,
+        birth_date: form.birthday || null,
       })
       .eq('id', user.id)
 
