@@ -48,21 +48,32 @@ function getAdminClient(): SupabaseClient {
 }
 
 async function ensureLoyaltyTestUser(admin: SupabaseClient): Promise<string> {
-  const { data: { users } } = await admin.auth.admin.listUsers()
-  const existing = users?.find(u => u.email === TEST_EMAIL)
-
   let userId: string
 
-  if (existing) {
-    userId = existing.id
+  // Try to create user first; if already exists, look it up
+  const { data: created, error: createError } = await admin.auth.admin.createUser({
+    email: TEST_EMAIL,
+    password: TEST_PASSWORD,
+    email_confirm: true,
+  })
+
+  if (created?.user) {
+    userId = created.user.id
+  } else if (createError?.message?.includes('already been registered')) {
+    // User exists — find by email (paginate through all users if needed)
+    let page = 1
+    let found: string | null = null
+    while (!found) {
+      const { data: { users } } = await admin.auth.admin.listUsers({ page, perPage: 1000 })
+      const match = users?.find(u => u.email === TEST_EMAIL)
+      if (match) { found = match.id; break }
+      if (!users || users.length < 1000) break
+      page++
+    }
+    if (!found) throw new Error('User exists but could not be found via listUsers')
+    userId = found
   } else {
-    const { data, error } = await admin.auth.admin.createUser({
-      email: TEST_EMAIL,
-      password: TEST_PASSWORD,
-      email_confirm: true,
-    })
-    if (error) throw new Error(`Failed to create test user: ${error.message}`)
-    userId = data.user.id
+    throw new Error(`Failed to create test user: ${createError?.message}`)
   }
 
   // Set up customer with loyalty points
@@ -622,5 +633,66 @@ test.describe('Loyalty Program', () => {
     expect(childCount).toBeGreaterThan(5)
 
     console.log(`Tier emblem rendered with ${childCount} SVG elements`)
+  })
+
+  // ──────────────────────────────────────────────────────
+  // TEST 10: Active coupon from DB is synced to cart on loyalty page visit
+  // Covers: bug where loyalty page shows "Masz aktywny kupon" but cart is empty
+  // ──────────────────────────────────────────────────────
+  test('active coupon from DB is synced to cart on loyalty page visit', async ({ page }) => {
+    // Setup: active coupon in DB
+    await admin.from('loyalty_coupons').delete().eq('customer_id', testUserId)
+    const { data: coupon } = await admin.from('loyalty_coupons').insert({
+      customer_id: testUserId,
+      reward_id: availableRewards[0].id,
+      code: 'MESO-RESYNC',
+      coupon_type: 'free_delivery',
+      status: 'active',
+      points_spent: 100,
+      source: 'reward',
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    }).select().single()
+
+    await loginLoyaltyUser(page)
+
+    // Clear cart store to simulate lost coupon (browser refresh, cart cleared, etc.)
+    await page.goto('/')
+    await page.evaluate(() => {
+      const cartKey = 'meso-cart'
+      const stored = localStorage.getItem(cartKey)
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed.state) {
+          parsed.state.loyaltyCoupon = null
+        }
+        localStorage.setItem(cartKey, JSON.stringify(parsed))
+      }
+    })
+
+    // Visit loyalty page
+    await page.goto('/loyalty')
+    await expect(page.getByRole('button', { name: 'Nagrody' })).toBeVisible({ timeout: 15_000 })
+
+    // The active coupon banner should show (DB has active coupon)
+    await expect(page.getByText('Masz aktywny kupon')).toBeVisible({ timeout: 10_000 })
+
+    // KEY ASSERTION: The coupon should be synced back to the cart store
+    // Poll localStorage until the coupon appears (sync is async)
+    const cartCoupon = await page.evaluate(async () => {
+      for (let i = 0; i < 30; i++) {
+        await new Promise(r => setTimeout(r, 500))
+        const stored = localStorage.getItem('meso-cart')
+        if (stored) {
+          const parsed = JSON.parse(stored)
+          if (parsed.state?.loyaltyCoupon) return parsed.state.loyaltyCoupon
+        }
+      }
+      return null
+    })
+
+    expect(cartCoupon).not.toBeNull()
+    expect(cartCoupon.code).toBe('MESO-RESYNC')
+
+    console.log('Active coupon correctly synced from DB to cart on loyalty page visit')
   })
 })

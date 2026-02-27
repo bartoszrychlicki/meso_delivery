@@ -90,13 +90,26 @@ export default function LoyaltyPage() {
     if (activeTab === 'history') loadHistory(0)
   }, [activeTab, loadHistory])
 
-  // Fetch active coupon on mount
+  // Fetch active coupon on mount and sync to cart if needed
   useEffect(() => {
     if (!isPermanent) return
-    fetch('/api/loyalty/active-coupon')
-      .then(r => r.json())
-      .then(d => setActiveCoupon(d.coupon ?? null))
-      .catch(() => {})
+    async function syncActiveCoupon() {
+      try {
+        const res = await fetch('/api/loyalty/active-coupon')
+        const { coupon } = await res.json()
+        setActiveCoupon(coupon ?? null)
+
+        // Re-sync: if DB has active coupon but cart doesn't, restore it
+        if (coupon) {
+          const { useCartStore } = await import('@/stores/cartStore')
+          const storeCoupon = useCartStore.getState().loyaltyCoupon
+          if (!storeCoupon) {
+            useCartStore.getState().setLoyaltyCoupon(coupon)
+          }
+        }
+      } catch { /* silent */ }
+    }
+    syncActiveCoupon()
   }, [isPermanent])
 
   const handleActivateCoupon = async (reward: LoyaltyRewardRow) => {

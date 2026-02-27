@@ -274,6 +274,7 @@ export const useCartStore = create<CartState>()(
         items: state.items,
         locationId: state.locationId,
         deliveryType: state.deliveryType,
+        loyaltyCoupon: state.loyaltyCoupon,
       }),
       merge: (persisted, current) => {
         const p = persisted as Partial<CartState>

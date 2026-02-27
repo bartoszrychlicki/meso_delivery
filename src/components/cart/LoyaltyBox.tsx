@@ -1,17 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { Crown, Gift, ChevronRight } from 'lucide-react'
+import { Crown, ChevronRight } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useCustomerLoyalty } from '@/hooks/useCustomerLoyalty'
 import { useLoyaltyRewards } from '@/hooks/useLoyaltyRewards'
-import { useCartStore } from '@/stores/cartStore'
 
 export function LoyaltyBox() {
   const { isPermanent } = useAuth()
   const { points, isLoading: loyaltyLoading } = useCustomerLoyalty()
   const { rewards, isLoading: rewardsLoading } = useLoyaltyRewards()
-  const loyaltyCoupon = useCartStore((s) => s.loyaltyCoupon)
 
   if (!isPermanent) {
     return (
@@ -48,16 +46,11 @@ export function LoyaltyBox() {
 
   return (
     <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Crown className="h-5 w-5 text-accent" />
-          <span className="font-display text-xs font-bold tracking-wider text-accent">
-            MESO CLUB
-          </span>
-        </div>
-        <Link href="/loyalty" className="text-xs text-primary hover:underline">
-          Zobacz więcej
-        </Link>
+      <div className="flex items-center gap-2 mb-3">
+        <Crown className="h-5 w-5 text-accent" />
+        <span className="font-display text-xs font-bold tracking-wider text-accent">
+          MESO CLUB
+        </span>
       </div>
 
       {isLoading ? (
@@ -97,43 +90,9 @@ export function LoyaltyBox() {
             />
           </div>
 
-          {nextReward ? (
-            <div className="flex items-center gap-2 rounded-lg bg-secondary/50 p-2.5">
-              <Gift className="h-4 w-4 text-primary shrink-0" />
-              <div className="min-w-0">
-                <p className="text-xs font-medium text-foreground truncate">
-                  {nextReward.icon} {nextReward.name}
-                </p>
-                <p className="text-[10px] text-muted-foreground">
-                  {nextReward.points_cost - points === 0
-                    ? 'Możesz odebrać tę nagrodę!'
-                    : `Następna nagroda za ${nextReward.points_cost - points} pkt`}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <Link
-              href="/loyalty"
-              className="flex items-center gap-2 rounded-lg bg-primary/10 border border-primary/30 p-2.5"
-            >
-              <Gift className="h-4 w-4 text-primary shrink-0" />
-              <p className="text-xs font-medium text-primary">
-                Masz nagrodę do odebrania! Sprawdź dostępne nagrody →
-              </p>
-            </Link>
-          )}
-
-          {!loyaltyCoupon && points > 0 && (
-            <Link
-              href="/loyalty"
-              className="flex items-center gap-2 rounded-xl bg-meso-gold-400/10 border border-meso-gold-400/20 px-4 py-3 mt-3"
-            >
-              <Gift className="h-4 w-4 text-meso-gold-400" />
-              <p className="text-xs text-meso-gold-400">
-                Masz {points} pkt — aktywuj kupon!
-              </p>
-            </Link>
-          )}
+          <Link href="/loyalty" className="text-xs text-primary hover:underline">
+            Zobacz nagrody
+          </Link>
         </>
       )}
     </div>
