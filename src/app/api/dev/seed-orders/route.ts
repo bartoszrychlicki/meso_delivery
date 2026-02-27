@@ -116,7 +116,7 @@ export async function GET() {
       .eq('id', spicyMiso.id)
       .single()
 
-    const largeVariant = productWithVariants?.variants?.find((v: any) => v.name?.toLowerCase().includes('duży')) || null
+    const largeVariant = productWithVariants?.variants?.find((v: { name?: string; price_modifier?: number; id?: string }) => v.name?.toLowerCase().includes('duży')) || null
 
     // 5. Delete existing seed orders for this customer (idempotent)
     await supabase.from('orders_orders').delete().eq('customer_id', customerId)

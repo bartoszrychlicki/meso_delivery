@@ -6,14 +6,14 @@ import { RotateCcw, Plus } from 'lucide-react'
 import { useCartStore } from '@/stores/cartStore'
 import { useAuth } from '@/hooks/useAuth'
 import { formatPrice } from '@/lib/formatters'
-import { getProductImageUrl, PRODUCT_BLUR_PLACEHOLDER } from '@/lib/product-image'
+import { getProductImageUrl, PRODUCT_BLUR_PLACEHOLDER, ProductImage } from '@/lib/product-image'
 
 interface UpsellProduct {
   id: string
   name: string
   price: number
   image_url?: string
-  images?: any[]
+  images?: ProductImage[]
   category_id: string
   slug?: string
 }
