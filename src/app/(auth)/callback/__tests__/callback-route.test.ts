@@ -107,8 +107,8 @@ describe('GET /callback', () => {
     expect(mockExchangeCodeForSession).toHaveBeenCalledWith('recovery-code')
   })
 
-  // ---- Signup type → redirect to /?welcome=true and call convert RPC ----
-  it('redirects to /?welcome=true for signup type and calls convert_anonymous_to_permanent', async () => {
+  // ---- Signup type → redirect to /?welcome=true (no anonymous conversion needed) ----
+  it('redirects to /?welcome=true for signup type', async () => {
     const testUser = { id: 'user-2', email: 'newuser@test.com', is_anonymous: false }
 
     mockExchangeCodeForSession.mockImplementation(async () => {
@@ -121,7 +121,6 @@ describe('GET /callback', () => {
         error: null,
       }
     })
-    mockRpc.mockResolvedValue({ data: null, error: null })
 
     const res = await GET(makeCallbackRequest({ code: 'signup-code', type: 'signup' }))
 
@@ -131,11 +130,8 @@ describe('GET /callback', () => {
     expect(location.pathname).toBe('/')
     expect(location.searchParams.get('welcome')).toBe('true')
 
-    // Verify convert RPC was called
-    expect(mockRpc).toHaveBeenCalledWith('convert_anonymous_to_permanent', {
-      p_user_id: testUser.id,
-      p_email: testUser.email,
-    })
+    // No convert RPC should be called (anonymous flow removed)
+    expect(mockRpc).not.toHaveBeenCalled()
 
     // Verify cookies are set on the response
     const setCookieHeaders = res.headers.getSetCookie()
@@ -235,8 +231,8 @@ describe('GET /callback', () => {
     expect(accessCookie!.toLowerCase()).toContain('path=/')
   })
 
-  // ---- Signup with anonymous user should NOT call convert RPC ----
-  it('does not call convert_anonymous_to_permanent for anonymous users', async () => {
+  // ---- Signup always redirects to /?welcome=true (no anonymous distinction) ----
+  it('redirects to /?welcome=true even for anonymous-flagged users (anonymous flow removed)', async () => {
     mockExchangeCodeForSession.mockImplementation(async () => {
       simulateSessionCookies()
       return {
@@ -250,12 +246,12 @@ describe('GET /callback', () => {
 
     const res = await GET(makeCallbackRequest({ code: 'signup-code', type: 'signup' }))
 
-    // Should NOT redirect to /?welcome=true for anonymous users
+    // All signups redirect to /?welcome=true (anonymous flow removed)
     const location = new URL(res.headers.get('location')!)
     expect(location.pathname).toBe('/')
-    expect(location.searchParams.has('welcome')).toBe(false)
+    expect(location.searchParams.get('welcome')).toBe('true')
 
-    // Convert RPC should NOT be called
+    // No RPC calls
     expect(mockRpc).not.toHaveBeenCalled()
   })
 

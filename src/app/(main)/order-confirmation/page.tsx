@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { CheckCircle2, ChefHat, Package, MapPin, Navigation, Loader2, XCircle, CreditCard, AlertTriangle, Banknote, Star } from 'lucide-react'
 import { useOrderConfirmationStore } from '@/stores/orderConfirmationStore'
 import { formatPriceExact } from '@/lib/formatters'
+import { getProductImageUrl } from '@/lib/product-image'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import type { OrderConfirmation } from '@/stores/orderConfirmationStore'
@@ -36,7 +37,7 @@ function buildConfirmation(order: Record<string, any>, waitMinutes = 20): OrderC
             name: item.product?.name || item.custom_name || 'Produkt',
             price: item.unit_price,
             variantPrice: 0,
-            image: item.product?.image_url,
+            image: getProductImageUrl(item.product),
             quantity: item.quantity,
             spiceLevel: item.spice_level,
             variantId: item.variant_id,

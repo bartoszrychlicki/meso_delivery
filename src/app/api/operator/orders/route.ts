@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
         *,
         items:orders_order_items(
           *,
-          product:menu_products(id, name, image_url)
+          product:menu_products(id, name, image_url, images)
         ),
         customer:crm_customers(first_name, last_name, phone, email)
       `)
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
       *,
       items:orders_order_items(
         *,
-        product:menu_products(id, name, image_url)
+        product:menu_products(id, name, image_url, images)
       ),
       customer:crm_customers(first_name, last_name, phone)
     `)

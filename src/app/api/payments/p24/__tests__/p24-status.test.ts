@@ -248,7 +248,7 @@ describe('POST /api/payments/p24/status (webhook)', () => {
     const res = await POST(makeRequest(makeP24Notification({ sessionId })))
     expect(res.status).toBe(200)
 
-    // Verify that from('orders') was called — the order ID was correctly parsed
-    expect(fromCalls[0].table).toBe('orders')
+    // Verify that from('orders_orders') was called — the order ID was correctly parsed
+    expect(fromCalls[0].table).toBe('orders_orders')
   })
 })

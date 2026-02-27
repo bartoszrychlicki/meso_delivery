@@ -9,6 +9,7 @@ import { useCartStore, CartItemAddon } from '@/stores/cartStore'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/formatters'
+import { getProductImageUrl } from '@/lib/product-image'
 import { createClient } from '@/lib/supabase/client'
 import { ALLERGENS, type AllergenKey } from '@/types/menu'
 
@@ -25,6 +26,7 @@ interface Addon {
     name: string
     price: number
     is_active: boolean
+    is_available?: boolean
 }
 
 export interface Product {
@@ -37,6 +39,7 @@ export interface Product {
     price: number
     original_price?: number
     image_url?: string
+    images?: any[]
     is_spicy?: boolean
     spice_level?: 1 | 2 | 3
     is_vegetarian?: boolean
@@ -81,13 +84,10 @@ export function ProductCustomization({
             const fetchProduct = async () => {
                 const supabase = createClient()
 
-                // Fetch product with variants
+                // Fetch product — POS stores variants and modifier_groups as JSONB
                 const { data: productData, error } = await supabase
                     .from('menu_products')
-                    .select(`
-            *,
-            variants:product_variants(id, name, price_modifier, is_default, sort_order)
-          `)
+                    .select('*')
                     .eq('slug', productSlug)
                     .single()
 
@@ -97,18 +97,12 @@ export function ProductCustomization({
                     return
                 }
 
-                // Fetch addons
-                const { data: addonsData } = await supabase
-                    .from('product_addons')
-                    .select(`
-            addon:addons(id, name, price, is_active)
-          `)
-                    .eq('product_id', productData.id)
-
+                // Extract addons from modifier_groups JSONB
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const addons = (addonsData as any[])
-                    ?.map((pa: { addon: Addon | null }) => pa.addon)
-                    .filter((a): a is Addon => a !== null && a.is_active) || []
+                const modifierGroups = (productData.modifier_groups as any[]) || []
+                const addons = modifierGroups
+                    .flatMap((group: { modifiers?: Addon[] }) => group.modifiers || [])
+                    .filter((a): a is Addon => a !== null && a.is_available !== false)
 
                 const fullProduct = { ...productData, addons } as Product
                 setProduct(fullProduct)
@@ -148,6 +142,7 @@ export function ProductCustomization({
     const handleAddToCart = () => {
         if (!product) return
 
+        const imageUrl = getProductImageUrl(product)
         const cartAddons: CartItemAddon[] = selectedAddons.map((a) => ({
             id: a.id,
             name: a.name,
@@ -159,7 +154,7 @@ export function ProductCustomization({
             name: product.name,
             price: product.price,
             quantity,
-            image: product.image_url,
+            image: imageUrl,
             spiceLevel: product.has_spice_level ? selectedSpice : undefined,
             variantId: selectedVariant?.id,
             variantName: selectedVariant?.name,
@@ -197,10 +192,10 @@ export function ProductCustomization({
                     <div className="flex-1 overflow-y-auto scrollbar-hide">
                         {/* Header Image & Info */}
                         <div className="relative h-48 w-full bg-card">
-                            {displayProduct?.image_url ? (
+                            {getProductImageUrl(displayProduct) ? (
                                 <Image
-                                    src={displayProduct.image_url}
-                                    alt={displayProduct.name || ''}
+                                    src={getProductImageUrl(displayProduct)!}
+                                    alt={displayProduct?.name || ''}
                                     fill
                                     className="object-cover"
                                 />

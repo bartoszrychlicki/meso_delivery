@@ -276,10 +276,10 @@ describe('POST /api/loyalty/activate-coupon', () => {
         return chain({ data: null, error: null })
       }
       // free_product with null discount_value triggers category + product lookup
-      if (callN === 6 && table === 'categories') {
+      if (callN === 6 && table === 'menu_categories') {
         return chain({ data: [{ id: 'cat-gyoza', slug: 'gyoza' }], error: null })
       }
-      if (callN === 7 && table === 'products') {
+      if (callN === 7 && table === 'menu_products') {
         return chain({ data: { price: 22.90 }, error: null })
       }
       if (callN === 8) {
@@ -356,7 +356,7 @@ describe('POST /api/loyalty/activate-coupon', () => {
 
     // Verify rollback call was made to customers table
     expect(updateCalls.length).toBeGreaterThanOrEqual(1)
-    expect(updateCalls[0].table).toBe('customers')
+    expect(updateCalls[0].table).toBe('crm_customers')
   })
 })
 
@@ -393,7 +393,7 @@ describe('GET /api/loyalty/active-coupon', () => {
         // Select active coupons for used-order cleanup
         return chain({ data: [{ id: 'c1', code: 'MESO-XYZ' }], error: null })
       }
-      if (callN === 3 && table === 'orders') {
+      if (callN === 3 && table === 'orders_orders') {
         // Check if coupon code was used in an order — not used
         return chain({ data: null, error: null })
       }
@@ -451,12 +451,12 @@ describe('GET /api/loyalty/active-coupon', () => {
 
     await GET()
 
-    // Call 1: expire stale coupons (loyalty_coupons)
-    expect(fromCalls[0]).toBe('loyalty_coupons')
-    // Call 2: select active coupons for used-order cleanup (loyalty_coupons)
-    expect(fromCalls[1]).toBe('loyalty_coupons')
-    // Call 3: final fetch of active coupon (loyalty_coupons)
-    expect(fromCalls[2]).toBe('loyalty_coupons')
+    // Call 1: expire stale coupons (crm_customer_coupons)
+    expect(fromCalls[0]).toBe('crm_customer_coupons')
+    // Call 2: select active coupons for used-order cleanup (crm_customer_coupons)
+    expect(fromCalls[1]).toBe('crm_customer_coupons')
+    // Call 3: final fetch of active coupon (crm_customer_coupons)
+    expect(fromCalls[2]).toBe('crm_customer_coupons')
     // No active coupons found → no orders check → 3 calls total
     expect(fromCalls.length).toBe(3)
   })
@@ -474,11 +474,11 @@ describe('GET /api/loyalty/active-coupon', () => {
         // Select active coupons — one found
         return chain({ data: [{ id: 'c1', code: 'MESO-USED1' }], error: null })
       }
-      if (callN === 3 && table === 'orders') {
+      if (callN === 3 && table === 'orders_orders') {
         // Order found that used this coupon code
         return chain({ data: { id: 999 }, error: null })
       }
-      if (callN === 4 && table === 'loyalty_coupons') {
+      if (callN === 4 && table === 'crm_customer_coupons') {
         // Update coupon to 'used'
         return chain({ data: null, error: null })
       }
@@ -496,11 +496,11 @@ describe('GET /api/loyalty/active-coupon', () => {
     expect(json.coupon).toBeNull()
     // Verify the sequence: expire, select-active, check-orders, update-used, final-fetch
     expect(fromCalls).toEqual([
-      'loyalty_coupons', // expire stale
-      'loyalty_coupons', // select active for cleanup
-      'orders',          // check if coupon code used in order
-      'loyalty_coupons', // mark as used
-      'loyalty_coupons', // final fetch
+      'crm_customer_coupons', // expire stale
+      'crm_customer_coupons', // select active for cleanup
+      'orders_orders',         // check if coupon code used in order
+      'crm_customer_coupons', // mark as used
+      'crm_customer_coupons', // final fetch
     ])
   })
 })
@@ -531,8 +531,8 @@ describe('GET /api/loyalty/history', () => {
     mockAuthFrom.mockImplementation(() => {
       return chain({
         data: [
-          { id: 'h1', label: 'Zamowienie #1001', points: 42, type: 'earned', created_at: '2026-02-20T12:00:00Z' },
-          { id: 'h2', label: 'Kupon: Gyoza', points: -150, type: 'spent', created_at: '2026-02-19T12:00:00Z' },
+          { id: 'h1', label: 'Zamowienie #1001', amount: 42, reason: 'earned', created_at: '2026-02-20T12:00:00Z' },
+          { id: 'h2', label: 'Kupon: Gyoza', amount: -150, reason: 'spent', created_at: '2026-02-19T12:00:00Z' },
         ],
         error: null,
         count: 55,
@@ -575,16 +575,16 @@ describe('GET /api/loyalty/history', () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } } })
 
     mockAuthFrom.mockImplementation((table: string) => {
-      if (table === 'loyalty_history') {
+      if (table === 'crm_loyalty_transactions') {
         return chain({
           data: [
             {
               id: 'h1',
               label: 'Zamowienie #1001',
-              points: 42,
-              type: 'earned',
+              amount: 42,
+              reason: 'earned',
               created_at: '2026-02-20T12:00:00Z',
-              order_id: 1001,
+              related_order_id: 1001,
             },
           ],
           error: null,
@@ -592,7 +592,7 @@ describe('GET /api/loyalty/history', () => {
         })
       }
 
-      if (table === 'orders') {
+      if (table === 'orders_orders') {
         return chain({
           data: [
             {
@@ -618,7 +618,7 @@ describe('GET /api/loyalty/history', () => {
     const json = await res.json()
     expect(json.history).toHaveLength(2)
     expect(json.history[0].id).toBe('pending-order-2002')
-    expect(json.history[0].points).toBe(67)
+    expect(json.history[0].amount).toBe(67)
     expect(json.history[0].is_pending_confirmation).toBe(true)
     expect(json.history[0].pending_message).toContain('Punkty w trakcie potwierdzania')
     expect(json.history[1].id).toBe('h1')
@@ -628,16 +628,16 @@ describe('GET /api/loyalty/history', () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } } })
 
     mockAuthFrom.mockImplementation((table: string) => {
-      if (table === 'loyalty_history') {
+      if (table === 'crm_loyalty_transactions') {
         return chain({
           data: [
             {
               id: 'h-delivered',
               label: 'Zamowienie #3003',
-              points: 80,
-              type: 'earned',
+              amount: 80,
+              reason: 'earned',
               created_at: '2026-02-22T12:00:00Z',
-              order_id: 3003,
+              related_order_id: 3003,
             },
           ],
           error: null,
@@ -645,7 +645,7 @@ describe('GET /api/loyalty/history', () => {
         })
       }
 
-      if (table === 'orders') {
+      if (table === 'orders_orders') {
         return chain({
           data: [
             {
@@ -863,7 +863,7 @@ describe('POST /api/loyalty/apply-referral', () => {
     expect(json.message).toContain('Gyoza')
 
     // Verify that customers table was updated and loyalty_coupons was inserted
-    expect(insertedTables).toContain('customers')
-    expect(insertedTables).toContain('loyalty_coupons')
+    expect(insertedTables).toContain('crm_customers')
+    expect(insertedTables).toContain('crm_customer_coupons')
   })
 })

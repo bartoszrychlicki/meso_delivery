@@ -25,6 +25,7 @@ export async function GET() {
       description,
       price,
       image_url,
+      images,
       is_spicy,
       spice_level,
       is_vegetarian,

@@ -6,25 +6,30 @@ import { RotateCcw, Plus } from 'lucide-react'
 import { useCartStore } from '@/stores/cartStore'
 import { useAuth } from '@/hooks/useAuth'
 import { formatPrice } from '@/lib/formatters'
+import { getProductImageUrl } from '@/lib/product-image'
 
 interface UpsellProduct {
   id: string
   name: string
   price: number
   image_url?: string
+  images?: any[]
   category_id: string
+  slug?: string
 }
 
 function MiniCard({ product }: { product: UpsellProduct }) {
+  const imageUrl = getProductImageUrl(product)
+
   return (
     <Link
-      href={`/product/${product.id}`}
+      href={`/product/${product.slug || product.id}`}
       className="group shrink-0 w-28 rounded-lg border border-border bg-card overflow-hidden transition-all hover:border-primary/30"
     >
       <div className="relative aspect-square overflow-hidden bg-secondary">
-        {product.image_url ? (
+        {imageUrl ? (
           <Image
-            src={product.image_url}
+            src={imageUrl}
             alt={product.name}
             fill
             className="object-cover transition-transform group-hover:scale-105"

@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/formatters'
+import { getProductImageUrl } from '@/lib/product-image'
 import { useCartStore } from '@/stores/cartStore'
 import { toast } from 'sonner'
 
@@ -17,6 +18,7 @@ interface Product {
   price: number
   original_price?: number
   image_url?: string
+  images?: any[]
   is_spicy?: boolean
   spice_level?: 1 | 2 | 3
   is_vegetarian?: boolean
@@ -67,6 +69,7 @@ export function ProductCard({
 }: ProductCardProps) {
   const addItem = useCartStore((s) => s.addItem)
   const badges = mapProductToBadges(product)
+  const imageUrl = getProductImageUrl(product)
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -76,7 +79,7 @@ export function ProductCard({
       name: product.name,
       price: product.price,
       quantity: 1,
-      image: product.image_url,
+      image: imageUrl,
       addons: [],
     })
     toast.success(`${product.name} dodano do koszyka`)
@@ -85,16 +88,16 @@ export function ProductCard({
   if (compact) {
     return (
       <Link
-        href={`/product/${product.id}`}
+        href={`/product/${product.slug || product.id}`}
         className={cn(
           'group flex-shrink-0 w-36 sm:w-auto block rounded-xl border border-border bg-card p-2 transition-all hover:border-primary/30 hover:neon-glow-sm',
           className
         )}
       >
         <div className="relative mb-2 aspect-square overflow-hidden rounded-lg bg-secondary">
-          {product.image_url ? (
+          {imageUrl ? (
             <Image
-              src={product.image_url}
+              src={imageUrl}
               alt={product.name}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -148,7 +151,7 @@ export function ProductCard({
 
   return (
     <Link
-      href={`/product/${product.id}`}
+      href={`/product/${product.slug || product.id}`}
       className={cn(
         'group block rounded-xl border border-border bg-card p-3 transition-all hover:border-primary/30 hover:neon-glow-sm',
         className
@@ -156,9 +159,9 @@ export function ProductCard({
     >
       {/* Image */}
       <div className="relative mb-3 aspect-[4/3] overflow-hidden rounded-lg bg-secondary">
-        {product.image_url ? (
+        {imageUrl ? (
           <Image
-            src={product.image_url}
+            src={imageUrl}
             alt={product.name}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"

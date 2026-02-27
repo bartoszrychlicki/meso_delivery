@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/formatters'
+import { getProductImageUrl } from '@/lib/product-image'
 import type { OrderItemWithProduct } from '@/types/order'
 
 interface OrderItemsListProps {
@@ -26,10 +27,10 @@ export function OrderItemsList({ items, className }: OrderItemsListProps) {
                 >
                     {/* Product image */}
                     <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-background">
-                        {item.product?.image_url ? (
+                        {getProductImageUrl(item.product) ? (
                             <Image
-                                src={item.product.image_url}
-                                alt={item.product.name}
+                                src={getProductImageUrl(item.product)!}
+                                alt={item.product?.name || 'Product'}
                                 fill
                                 className="object-cover"
                             />

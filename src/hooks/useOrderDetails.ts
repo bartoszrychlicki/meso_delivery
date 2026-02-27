@@ -35,7 +35,7 @@ export function useOrderDetails(orderId: number | string): UseOrderDetailsReturn
           *,
           items:orders_order_items(
             *,
-            product:menu_products(id, name, image_url)
+            product:menu_products(id, name, image_url, images)
           ),
           location:users_locations(name, address, phone)
         `)

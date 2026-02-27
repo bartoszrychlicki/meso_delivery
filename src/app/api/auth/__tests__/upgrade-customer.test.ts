@@ -223,9 +223,9 @@ describe('POST /api/auth/upgrade-customer', () => {
     expect(json.points).toBe(50)
 
     // Verify the correct tables were called
-    expect(fromCalls[0]).toBe('customers')
-    expect(fromCalls[1]).toBe('customers')
-    expect(fromCalls[2]).toBe('loyalty_history')
+    expect(fromCalls[0]).toBe('crm_customers')
+    expect(fromCalls[1]).toBe('crm_customers')
+    expect(fromCalls[2]).toBe('crm_loyalty_transactions')
 
     // Verify RPC was called with correct arguments
     expect(mockRpc).toHaveBeenCalledWith('get_auth_user_id_by_email', { lookup_email: 'test@example.com' })

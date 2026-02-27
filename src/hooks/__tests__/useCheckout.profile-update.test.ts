@@ -13,7 +13,8 @@ describe('buildCheckoutProfileUpdate', () => {
     )
 
     expect(result).toEqual({
-      name: 'Jan Kowalski',
+      first_name: 'Jan',
+      last_name: 'Kowalski',
     })
   })
 
@@ -28,7 +29,8 @@ describe('buildCheckoutProfileUpdate', () => {
     )
 
     expect(result).toEqual({
-      name: 'Jan Kowalski',
+      first_name: 'Jan',
+      last_name: 'Kowalski',
       phone: '500600700',
     })
   })
@@ -43,6 +45,7 @@ describe('buildCheckoutProfileUpdate', () => {
       false
     )
 
-    expect(result.name).toBe('Jan Kowalski')
+    expect(result.first_name).toBe('Jan')
+    expect(result.last_name).toBe('Kowalski')
   })
 })

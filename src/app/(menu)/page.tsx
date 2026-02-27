@@ -23,6 +23,7 @@ async function getMenuData() {
         description,
         price,
         image_url,
+        images,
         is_spicy,
         spice_level,
         is_vegetarian,

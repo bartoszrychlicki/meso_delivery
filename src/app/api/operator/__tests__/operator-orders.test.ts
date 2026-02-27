@@ -182,8 +182,8 @@ describe('PATCH /api/operator/orders', () => {
     const json = await res.json()
     expect(json.success).toBe(true)
 
-    // Verify from('orders') was called
-    expect(mockAdminFrom).toHaveBeenCalledWith('orders')
+    // Verify from('orders_orders') was called
+    expect(mockAdminFrom).toHaveBeenCalledWith('orders_orders')
   })
 
   // ---- 500: DB update failure ----

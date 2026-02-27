@@ -9,13 +9,12 @@ interface PageProps {
 async function getProduct(slug: string) {
   const supabase = await createClient()
 
-  // Get product with variants and addons
+  // POS stores variants and modifier_groups (addons) as JSONB on the product
   const { data: product, error: productError } = await supabase
     .from('menu_products')
     .select(`
       *,
-      category:menu_categories(id, name, name_jp, slug),
-      variants:product_variants(id, name, price_modifier, is_default, sort_order)
+      category:menu_categories(id, name, name_jp, slug)
     `)
     .eq('slug', slug)
     .eq('is_active', true)
@@ -25,26 +24,27 @@ async function getProduct(slug: string) {
     return null
   }
 
-  // Get addons for this product
-  const { data: productAddons } = await supabase
-    .from('product_addons')
-    .select(`
-      addon:addons(id, name, price, is_active)
-    `)
-    .eq('product_id', product.id)
-
-  interface AddonRow {
-    addon: {
+  // Extract addons from modifier_groups JSONB
+  // modifier_groups is an array of groups, each with a `modifiers` array
+  const modifierGroups = (product.modifier_groups as Array<{
+    id: string
+    name: string
+    type: string
+    required: boolean
+    min_selections: number
+    max_selections: number
+    modifiers: Array<{
       id: string
       name: string
       price: number
-      is_active: boolean
-    } | null
-  }
+      is_available: boolean
+      sort_order: number
+    }>
+  }>) || []
 
-  const addons = (productAddons as AddonRow[] | null)
-    ?.map((pa) => pa.addon)
-    .filter((addon): addon is NonNullable<typeof addon> => addon !== null && addon.is_active) || []
+  const addons = modifierGroups
+    .flatMap(group => group.modifiers || [])
+    .filter(mod => mod.is_available)
 
   return {
     ...product,
