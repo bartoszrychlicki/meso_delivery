@@ -77,7 +77,7 @@ async function ensureLoyaltyTestUser(admin: SupabaseClient): Promise<string> {
   }
 
   // Set up customer with loyalty points
-  await admin.from('customers').upsert({
+  await admin.from('crm_customers').upsert({
     id: userId,
     email: TEST_EMAIL,
     name: 'E2E Loyalty',
@@ -88,7 +88,7 @@ async function ensureLoyaltyTestUser(admin: SupabaseClient): Promise<string> {
   }, { onConflict: 'id' })
 
   // Clean up any existing coupons
-  await admin.from('loyalty_coupons').delete().eq('customer_id', userId)
+  await admin.from('crm_customer_coupons').delete().eq('customer_id', userId)
 
   return userId
 }
@@ -99,7 +99,7 @@ async function ensureLoyaltyTestUser(admin: SupabaseClient): Promise<string> {
  */
 async function ensureActiveReward(admin: SupabaseClient) {
   const { data: rewards } = await admin
-    .from('loyalty_rewards')
+    .from('crm_loyalty_rewards')
     .select('id, name, points_cost, reward_type, min_tier')
     .eq('is_active', true)
     .order('points_cost', { ascending: true })
@@ -111,7 +111,7 @@ async function ensureActiveReward(admin: SupabaseClient) {
 
   // Create a test reward if none exist
   const { data: created, error } = await admin
-    .from('loyalty_rewards')
+    .from('crm_loyalty_rewards')
     .insert({
       name: 'Darmowa dostawa (test)',
       description: 'Kupon na darmową dostawę',
@@ -155,11 +155,11 @@ test.describe('Loyalty Program', () => {
 
   test.afterAll(async () => {
     // Cleanup test data
-    await admin.from('loyalty_coupons').delete().eq('customer_id', testUserId)
-    await admin.from('loyalty_history').delete().eq('customer_id', testUserId)
+    await admin.from('crm_customer_coupons').delete().eq('customer_id', testUserId)
+    await admin.from('crm_loyalty_transactions').delete().eq('customer_id', testUserId)
 
     // Restore points to original state for re-runs
-    await admin.from('customers').update({
+    await admin.from('crm_customers').update({
       loyalty_points: 500,
       loyalty_tier: 'silver',
       lifetime_points: 500,
@@ -171,8 +171,8 @@ test.describe('Loyalty Program', () => {
   // ──────────────────────────────────────────────────────
   test('MESO Club page shows rewards and allows coupon activation', async ({ page }) => {
     // Ensure clean state: 500 points, no active coupons
-    await admin.from('loyalty_coupons').delete().eq('customer_id', testUserId)
-    await admin.from('customers').update({
+    await admin.from('crm_customer_coupons').delete().eq('customer_id', testUserId)
+    await admin.from('crm_customers').update({
       loyalty_points: 500,
       loyalty_tier: 'silver',
     }).eq('id', testUserId)
@@ -210,7 +210,7 @@ test.describe('Loyalty Program', () => {
 
     // Verify points decreased in DB
     const { data: customer } = await admin
-      .from('customers')
+      .from('crm_customers')
       .select('loyalty_points')
       .eq('id', testUserId)
       .single()
@@ -224,8 +224,8 @@ test.describe('Loyalty Program', () => {
   // ──────────────────────────────────────────────────────
   test('active coupon blocks further activation', async ({ page }) => {
     // Ensure user has an active coupon via admin client
-    await admin.from('loyalty_coupons').delete().eq('customer_id', testUserId)
-    await admin.from('loyalty_coupons').insert({
+    await admin.from('crm_customer_coupons').delete().eq('customer_id', testUserId)
+    await admin.from('crm_customer_coupons').insert({
       customer_id: testUserId,
       reward_id: availableRewards[0].id,
       code: 'MESO-TEST1',
@@ -259,8 +259,8 @@ test.describe('Loyalty Program', () => {
   // ──────────────────────────────────────────────────────
   test('loyalty coupon appears in cart', async ({ page }) => {
     // Create active coupon for user via admin client
-    await admin.from('loyalty_coupons').delete().eq('customer_id', testUserId)
-    const { data: coupon } = await admin.from('loyalty_coupons').insert({
+    await admin.from('crm_customer_coupons').delete().eq('customer_id', testUserId)
+    const { data: coupon } = await admin.from('crm_customer_coupons').insert({
       customer_id: testUserId,
       reward_id: availableRewards[0].id,
       code: 'MESO-CART1',
@@ -326,28 +326,28 @@ test.describe('Loyalty Program', () => {
   // TEST 4: Loyalty history page shows entries
   // ──────────────────────────────────────────────────────
   test('loyalty history page shows entries', async ({ page }) => {
-    // Insert some loyalty_history entries for user via admin client
-    await admin.from('loyalty_history').delete().eq('customer_id', testUserId)
-    await admin.from('loyalty_history').insert([
+    // Insert some crm_loyalty_transactions entries for user via admin client
+    await admin.from('crm_loyalty_transactions').delete().eq('customer_id', testUserId)
+    await admin.from('crm_loyalty_transactions').insert([
       {
         customer_id: testUserId,
         label: 'Bonus rejestracyjny',
-        points: 50,
-        type: 'bonus',
+        amount: 50,
+        reason: 'bonus',
         created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
       },
       {
         customer_id: testUserId,
         label: 'Zamowienie #1234',
-        points: 45,
-        type: 'earned',
+        amount: 45,
+        reason: 'earned',
         created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
       },
       {
         customer_id: testUserId,
         label: 'Kupon: Darmowa dostawa',
-        points: -100,
-        type: 'spent',
+        amount: -100,
+        reason: 'spent',
         created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
       },
     ])
@@ -418,8 +418,8 @@ test.describe('Loyalty Program', () => {
   // ──────────────────────────────────────────────────────
   test('coupon syncs from DB on cart page load', async ({ page }) => {
     // Create active coupon via admin client
-    await admin.from('loyalty_coupons').delete().eq('customer_id', testUserId)
-    const { data: coupon } = await admin.from('loyalty_coupons').insert({
+    await admin.from('crm_customer_coupons').delete().eq('customer_id', testUserId)
+    const { data: coupon } = await admin.from('crm_customer_coupons').insert({
       customer_id: testUserId,
       reward_id: availableRewards[0].id,
       code: 'MESO-SYNC1',
@@ -476,14 +476,14 @@ test.describe('Loyalty Program', () => {
 
     // 1. Set up: user has an "active" coupon, but a paid order already used its code
     //    This simulates the RLS bug where checkout couldn't update coupon status
-    await admin.from('loyalty_coupons').delete().eq('customer_id', testUserId)
-    await admin.from('customers').update({
+    await admin.from('crm_customer_coupons').delete().eq('customer_id', testUserId)
+    await admin.from('crm_customers').update({
       loyalty_points: 500,
       loyalty_tier: 'silver',
     }).eq('id', testUserId)
 
     // Create coupon with status still 'active' (mimicking the RLS failure)
-    await admin.from('loyalty_coupons').insert({
+    await admin.from('crm_customer_coupons').insert({
       customer_id: testUserId,
       reward_id: availableRewards[0].id,
       code: couponCode,
@@ -504,7 +504,7 @@ test.describe('Loyalty Program', () => {
       .single()
 
     // Create an order that used this coupon code (paid, delivered)
-    await admin.from('orders').insert({
+    await admin.from('orders_orders').insert({
       customer_id: testUserId,
       location_id: location!.id,
       status: 'delivered',
@@ -541,7 +541,7 @@ test.describe('Loyalty Program', () => {
 
     // 5. Verify the coupon in DB was updated to 'used'
     const { data: updatedCoupon } = await admin
-      .from('loyalty_coupons')
+      .from('crm_customer_coupons')
       .select('status')
       .eq('customer_id', testUserId)
       .eq('code', couponCode)
@@ -549,7 +549,7 @@ test.describe('Loyalty Program', () => {
     expect(updatedCoupon!.status).toBe('used')
 
     // Cleanup: delete the test order
-    await admin.from('orders').delete().eq('customer_id', testUserId).eq('promo_code', couponCode)
+    await admin.from('orders_orders').delete().eq('customer_id', testUserId).eq('promo_code', couponCode)
 
     console.log('Used coupon correctly cleared, activation unblocked')
   })
@@ -560,8 +560,8 @@ test.describe('Loyalty Program', () => {
   // ──────────────────────────────────────────────────────
   test('reward cards always show points cost', async ({ page }) => {
     // Set up: enough points to afford at least some rewards, no active coupon
-    await admin.from('loyalty_coupons').delete().eq('customer_id', testUserId)
-    await admin.from('customers').update({
+    await admin.from('crm_customer_coupons').delete().eq('customer_id', testUserId)
+    await admin.from('crm_customers').update({
       loyalty_points: 500,
       loyalty_tier: 'silver',
     }).eq('id', testUserId)
@@ -606,8 +606,8 @@ test.describe('Loyalty Program', () => {
   // Covers: cyberpunk SVG emblem is visible on the loyalty card
   // ──────────────────────────────────────────────────────
   test('tier emblem is visible on loyalty card', async ({ page }) => {
-    await admin.from('loyalty_coupons').delete().eq('customer_id', testUserId)
-    await admin.from('customers').update({
+    await admin.from('crm_customer_coupons').delete().eq('customer_id', testUserId)
+    await admin.from('crm_customers').update({
       loyalty_points: 500,
       loyalty_tier: 'silver',
       lifetime_points: 500,
@@ -641,8 +641,8 @@ test.describe('Loyalty Program', () => {
   // ──────────────────────────────────────────────────────
   test('active coupon from DB is synced to cart on loyalty page visit', async ({ page }) => {
     // Setup: active coupon in DB
-    await admin.from('loyalty_coupons').delete().eq('customer_id', testUserId)
-    const { data: coupon } = await admin.from('loyalty_coupons').insert({
+    await admin.from('crm_customer_coupons').delete().eq('customer_id', testUserId)
+    const { data: coupon } = await admin.from('crm_customer_coupons').insert({
       customer_id: testUserId,
       reward_id: availableRewards[0].id,
       code: 'MESO-RESYNC',

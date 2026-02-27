@@ -56,8 +56,8 @@ test.describe.serial('Registration Flow', () => {
     const { data: { users } } = await admin.auth.admin.listUsers()
     const staleUsers = users?.filter(u => u.email?.includes('e2e-register-')) || []
     for (const u of staleUsers) {
-      await admin.from('loyalty_history').delete().eq('customer_id', u.id)
-      await admin.from('customers').delete().eq('id', u.id)
+      await admin.from('crm_loyalty_transactions').delete().eq('customer_id', u.id)
+      await admin.from('crm_customers').delete().eq('id', u.id)
       await admin.auth.admin.deleteUser(u.id)
     }
   })
@@ -67,8 +67,8 @@ test.describe.serial('Registration Flow', () => {
     const { data: { users } } = await admin.auth.admin.listUsers()
     const testUsers = users?.filter(u => u.email?.includes('e2e-register-')) || []
     for (const u of testUsers) {
-      await admin.from('loyalty_history').delete().eq('customer_id', u.id)
-      await admin.from('customers').delete().eq('id', u.id)
+      await admin.from('crm_loyalty_transactions').delete().eq('customer_id', u.id)
+      await admin.from('crm_customers').delete().eq('id', u.id)
       await admin.auth.admin.deleteUser(u.id)
     }
   })
@@ -100,7 +100,7 @@ test.describe.serial('Registration Flow', () => {
 
     // Verify the customer record was created with 50 bonus points
     const { data: customer, error: custError } = await admin
-      .from('customers')
+      .from('crm_customers')
       .select('id, email, is_anonymous, loyalty_points, lifetime_points')
       .eq('email', TEST_EMAIL)
       .single()
@@ -114,10 +114,10 @@ test.describe.serial('Registration Flow', () => {
 
     // Verify loyalty_history has the registration bonus entry
     const { data: history, error: histError } = await admin
-      .from('loyalty_history')
-      .select('label, points, type')
+      .from('crm_loyalty_transactions')
+      .select('label, amount, reason')
       .eq('customer_id', customer!.id)
-      .eq('type', 'bonus')
+      .eq('reason', 'bonus')
 
     expect(histError).toBeNull()
     expect(history).not.toBeNull()
@@ -125,8 +125,8 @@ test.describe.serial('Registration Flow', () => {
 
     const bonusEntry = history!.find(h => h.label === 'Bonus rejestracyjny')
     expect(bonusEntry).toBeTruthy()
-    expect(bonusEntry!.points).toBe(50)
-    expect(bonusEntry!.type).toBe('bonus')
+    expect(bonusEntry!.amount).toBe(50)
+    expect(bonusEntry!.reason).toBe('bonus')
 
     console.log(`Registration successful: ${TEST_EMAIL}, points: ${customer!.loyalty_points}`)
   })
@@ -200,7 +200,7 @@ test.describe.serial('Registration Flow', () => {
     // (not 100 from a double registration bonus)
     const admin = getAdminClient()
     const { data: customer } = await admin
-      .from('customers')
+      .from('crm_customers')
       .select('loyalty_points')
       .eq('email', TEST_EMAIL)
       .single()

@@ -56,7 +56,7 @@ export async function loginTestUser(page: Page) {
       }
     } else {
       // Ensure customers record for newly created user
-      await admin.from('customers').upsert({
+      await admin.from('crm_customers').upsert({
         id: data.user.id,
         email: TEST_EMAIL,
         name: 'E2E Test',

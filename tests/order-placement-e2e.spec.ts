@@ -66,7 +66,7 @@ test.describe.serial('Order Placement Flow', () => {
 
     // Find the test user by email in the customers table (avoids listUsers pagination issues)
     const { data: customer } = await admin
-      .from('customers')
+      .from('crm_customers')
       .select('id')
       .eq('email', TEST_EMAIL)
       .maybeSingle()
@@ -79,14 +79,14 @@ test.describe.serial('Order Placement Flow', () => {
     if (testUserId) {
       // Delete order_items first (foreign key constraint)
       const { data: existingOrders } = await admin
-        .from('orders')
+        .from('orders_orders')
         .select('id')
         .eq('customer_id', testUserId)
 
       if (existingOrders && existingOrders.length > 0) {
         const orderIds = existingOrders.map(o => o.id)
         await admin.from('order_items').delete().in('order_id', orderIds)
-        await admin.from('orders').delete().in('id', orderIds)
+        await admin.from('orders_orders').delete().in('id', orderIds)
       }
     }
   })
@@ -95,20 +95,20 @@ test.describe.serial('Order Placement Flow', () => {
     // Clean up test orders created during this run
     if (createdOrderIds.length > 0) {
       await admin.from('order_items').delete().in('order_id', createdOrderIds)
-      await admin.from('orders').delete().in('id', createdOrderIds)
+      await admin.from('orders_orders').delete().in('id', createdOrderIds)
     }
 
     // Also clean up any remaining orders for the test user
     if (testUserId) {
       const { data: remainingOrders } = await admin
-        .from('orders')
+        .from('orders_orders')
         .select('id')
         .eq('customer_id', testUserId)
 
       if (remainingOrders && remainingOrders.length > 0) {
         const orderIds = remainingOrders.map(o => o.id)
         await admin.from('order_items').delete().in('order_id', orderIds)
-        await admin.from('orders').delete().in('id', orderIds)
+        await admin.from('orders_orders').delete().in('id', orderIds)
       }
     }
   })
@@ -123,7 +123,7 @@ test.describe.serial('Order Placement Flow', () => {
     // Store the test user ID if we didn't have it yet
     if (!testUserId) {
       const { data: customer } = await admin
-        .from('customers')
+        .from('crm_customers')
         .select('id')
         .eq('email', TEST_EMAIL)
         .maybeSingle()
@@ -134,7 +134,7 @@ test.describe.serial('Order Placement Flow', () => {
     //    This bypasses the product detail page which may auto-select expensive variants,
     //    pushing the subtotal above the pay_on_pickup limit.
     const { data: cheapProduct, error: productError } = await admin
-      .from('products')
+      .from('menu_products')
       .select('id, name, price')
       .eq('is_active', true)
       .gte('price', 35)
@@ -209,7 +209,7 @@ test.describe.serial('Order Placement Flow', () => {
 
     // 12. Verify in DB: order exists with correct status
     const { data: order, error: orderError } = await admin
-      .from('orders')
+      .from('orders_orders')
       .select('*')
       .eq('id', orderIdNum)
       .single()
@@ -315,7 +315,7 @@ test.describe.serial('Order Placement Flow', () => {
 
     // 13. Verify in DB: order with pending_payment status
     const { data: order, error: orderError } = await admin
-      .from('orders')
+      .from('orders_orders')
       .select('*')
       .eq('id', orderIdNum)
       .single()
@@ -355,7 +355,7 @@ test.describe.serial('Order Placement Flow', () => {
     // 1. Simulate what the P24 webhook does: update status to confirmed, payment to paid
     const now = new Date().toISOString()
     const { error: updateError } = await admin
-      .from('orders')
+      .from('orders_orders')
       .update({
         status: 'confirmed',
         payment_status: 'paid',
@@ -368,7 +368,7 @@ test.describe.serial('Order Placement Flow', () => {
 
     // 2. Verify DB state after update
     const { data: updatedOrder } = await admin
-      .from('orders')
+      .from('orders_orders')
       .select('status, payment_status, paid_at, confirmed_at')
       .eq('id', onlinePaymentOrderId)
       .single()
@@ -428,7 +428,7 @@ test.describe.serial('Order Placement Flow', () => {
 
     // Verify in DB
     const { data: preparingOrder } = await admin
-      .from('orders')
+      .from('orders_orders')
       .select('status, preparing_at')
       .eq('id', onlinePaymentOrderId)
       .single()
@@ -457,7 +457,7 @@ test.describe.serial('Order Placement Flow', () => {
 
     // Verify in DB
     const { data: readyOrder } = await admin
-      .from('orders')
+      .from('orders_orders')
       .select('status, ready_at')
       .eq('id', onlinePaymentOrderId)
       .single()
@@ -486,7 +486,7 @@ test.describe.serial('Order Placement Flow', () => {
 
     // Verify in DB
     const { data: deliveredOrder } = await admin
-      .from('orders')
+      .from('orders_orders')
       .select('status, delivered_at')
       .eq('id', onlinePaymentOrderId)
       .single()

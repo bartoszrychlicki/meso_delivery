@@ -79,7 +79,7 @@ test.describe.serial('Password Reset Flow', () => {
     const { data: { users } } = await admin.auth.admin.listUsers()
     const staleUsers = users?.filter(u => u.email?.includes('e2e-pwreset-')) || []
     for (const u of staleUsers) {
-      await admin.from('customers').delete().eq('id', u.id)
+      await admin.from('crm_customers').delete().eq('id', u.id)
       await admin.auth.admin.deleteUser(u.id)
     }
 
@@ -102,7 +102,7 @@ test.describe.serial('Password Reset Flow', () => {
     const { data: { users } } = await admin.auth.admin.listUsers()
     const testUsers = users?.filter(u => u.email?.includes('e2e-pwreset-')) || []
     for (const u of testUsers) {
-      await admin.from('customers').delete().eq('id', u.id)
+      await admin.from('crm_customers').delete().eq('id', u.id)
       await admin.auth.admin.deleteUser(u.id)
     }
     console.log(`Cleaned up ${testUsers.length} test user(s)`)

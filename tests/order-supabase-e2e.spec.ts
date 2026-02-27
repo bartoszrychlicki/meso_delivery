@@ -56,7 +56,7 @@ async function ensureTestUser(admin: SupabaseClient): Promise<string> {
   }
 
   // Ensure customers record exists (trigger might not have fired in all cases)
-  await admin.from('customers').upsert({
+  await admin.from('crm_customers').upsert({
     id: userId,
     email: TEST_EMAIL,
     name: 'E2E Test',
@@ -106,15 +106,15 @@ test.describe('Order → Supabase', () => {
     admin = getAdminClient()
     testUserId = await ensureTestUser(admin)
     // Clean up previous test orders
-    await admin.from('orders').delete().eq('customer_id', testUserId)
+    await admin.from('orders_orders').delete().eq('customer_id', testUserId)
   })
 
   test.afterAll(async () => {
     // Cleanup
     if (createdOrderIds.length) {
-      await admin.from('orders').delete().in('id', createdOrderIds)
+      await admin.from('orders_orders').delete().in('id', createdOrderIds)
     }
-    await admin.from('orders').delete().eq('customer_id', testUserId)
+    await admin.from('orders_orders').delete().eq('customer_id', testUserId)
   })
 
   // ──────────────────────────────────────────────────────
@@ -188,9 +188,9 @@ test.describe('Order → Supabase', () => {
     const orderIdNum = parseInt(orderId!, 10)
     createdOrderIds.push(orderIdNum)
 
-    // 10. ✅ Weryfikacja w Supabase — tabela `orders`
+    // 10. ✅ Weryfikacja w Supabase — tabela `orders_orders`
     const { data: order, error: orderError } = await admin
-      .from('orders')
+      .from('orders_orders')
       .select('*')
       .eq('id', orderIdNum)
       .single()
@@ -252,7 +252,7 @@ test.describe('Order → Supabase', () => {
 
     // Pobierz aktywny produkt
     const { data: product } = await admin
-      .from('products')
+      .from('menu_products')
       .select('id, price')
       .eq('is_active', true)
       .limit(1)
@@ -261,7 +261,7 @@ test.describe('Order → Supabase', () => {
 
     // Utwórz testowe zamówienie w DB
     const { data: newOrder, error: insertError } = await admin
-      .from('orders')
+      .from('orders_orders')
       .insert({
         customer_id: testUserId,
         location_id: location!.id,
@@ -285,7 +285,7 @@ test.describe('Order → Supabase', () => {
 
     // Symulacja tego co robi webhook P24 (service role update)
     const { error: updateError } = await admin
-      .from('orders')
+      .from('orders_orders')
       .update({
         status: 'confirmed',
         payment_status: 'paid',
@@ -298,7 +298,7 @@ test.describe('Order → Supabase', () => {
 
     // Weryfikacja
     const { data: updated } = await admin
-      .from('orders')
+      .from('orders_orders')
       .select('status, payment_status, paid_at, confirmed_at')
       .eq('id', orderId)
       .single()
@@ -324,7 +324,7 @@ test.describe('Order → Supabase', () => {
       .single()
 
     const { data: order } = await admin
-      .from('orders')
+      .from('orders_orders')
       .insert({
         customer_id: testUserId,
         location_id: location!.id,
@@ -355,7 +355,7 @@ test.describe('Order → Supabase', () => {
     )
 
     const { data: anonData, error: anonError } = await anonClient
-      .from('orders')
+      .from('orders_orders')
       .select('id')
       .eq('id', orderId)
       .single()
