@@ -58,11 +58,16 @@ async function ensureTestUser(admin: SupabaseClient): Promise<string> {
   // Ensure customers record exists (trigger might not have fired in all cases)
   await admin.from('crm_customers').upsert({
     id: userId,
+    auth_id: userId,
     email: TEST_EMAIL,
-    name: 'E2E Test',
+    first_name: 'E2E',
+    last_name: 'Test',
     phone: '+48500100200',
+    registration_date: new Date().toISOString(),
+    source: 'web',
     loyalty_points: 50,
     loyalty_tier: 'bronze',
+    is_active: true,
   }, { onConflict: 'id' })
 
   return userId
@@ -211,7 +216,7 @@ test.describe('Order → Supabase', () => {
 
     // 11. ✅ Weryfikacja w Supabase — tabela `order_items`
     const { data: items, error: itemsError } = await admin
-      .from('order_items')
+      .from('orders_order_items')
       .select('*')
       .eq('order_id', orderIdNum)
 
@@ -243,7 +248,7 @@ test.describe('Order → Supabase', () => {
   test('webhook P24 poprawnie aktualizuje status zamówienia w bazie', async () => {
     // Pobierz aktywną lokalizację
     const { data: location } = await admin
-      .from('locations')
+      .from('users_locations')
       .select('id')
       .eq('is_active', true)
       .limit(1)
@@ -317,7 +322,7 @@ test.describe('Order → Supabase', () => {
   test('RLS: user nie może odczytać zamówień innego użytkownika', async () => {
     // Utwórz zamówienie jako testowy user
     const { data: location } = await admin
-      .from('locations')
+      .from('users_locations')
       .select('id')
       .eq('is_active', true)
       .limit(1)

@@ -79,12 +79,17 @@ async function ensureLoyaltyTestUser(admin: SupabaseClient): Promise<string> {
   // Set up customer with loyalty points
   await admin.from('crm_customers').upsert({
     id: userId,
+    auth_id: userId,
     email: TEST_EMAIL,
-    name: 'E2E Loyalty',
+    first_name: 'E2E',
+    last_name: 'Loyalty',
     phone: '+48500200300',
+    registration_date: new Date().toISOString(),
+    source: 'web',
     loyalty_points: 500,
     loyalty_tier: 'silver',
     lifetime_points: 500,
+    is_active: true,
   }, { onConflict: 'id' })
 
   // Clean up any existing coupons
@@ -331,21 +336,21 @@ test.describe('Loyalty Program', () => {
     await admin.from('crm_loyalty_transactions').insert([
       {
         customer_id: testUserId,
-        label: 'Bonus rejestracyjny',
+        description: 'Bonus rejestracyjny',
         amount: 50,
         reason: 'bonus',
         created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
       },
       {
         customer_id: testUserId,
-        label: 'Zamowienie #1234',
+        description: 'Zamowienie #1234',
         amount: 45,
         reason: 'earned',
         created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
       },
       {
         customer_id: testUserId,
-        label: 'Kupon: Darmowa dostawa',
+        description: 'Kupon: Darmowa dostawa',
         amount: -100,
         reason: 'spent',
         created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),

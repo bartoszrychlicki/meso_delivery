@@ -41,6 +41,8 @@ export async function loginTestUser(page: Page) {
   const { data: { users } } = await admin.auth.admin.listUsers()
   const existing = users?.find(u => u.email === TEST_EMAIL)
 
+  let userId: string
+
   if (!existing) {
     const { data, error } = await admin.auth.admin.createUser({
       email: TEST_EMAIL,
@@ -55,16 +57,27 @@ export async function loginTestUser(page: Page) {
         throw new Error(`Failed to create test user: ${error.message}`)
       }
     } else {
-      // Ensure customers record for newly created user
-      await admin.from('crm_customers').upsert({
-        id: data.user.id,
-        email: TEST_EMAIL,
-        name: 'E2E Test',
-        phone: '+48500100200',
-        loyalty_points: 0,
-        loyalty_tier: 'bronze',
-      }, { onConflict: 'id' })
+      userId = data.user.id
     }
+  } else {
+    userId = existing.id
+  }
+
+  // Always ensure crm_customers record exists (trigger may not have fired for admin-created users)
+  if (userId!) {
+    await admin.from('crm_customers').upsert({
+      id: userId,
+      auth_id: userId,
+      email: TEST_EMAIL,
+      first_name: 'E2E',
+      last_name: 'Test',
+      phone: '+48500100200',
+      registration_date: new Date().toISOString(),
+      source: 'web',
+      loyalty_points: 0,
+      loyalty_tier: 'bronze',
+      is_active: true,
+    }, { onConflict: 'id' })
   }
 
   // Bypass gate and log in via the login page

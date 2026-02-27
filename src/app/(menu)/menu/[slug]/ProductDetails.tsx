@@ -11,6 +11,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/formatters'
 import { ALLERGENS, type AllergenKey } from '@/types/menu'
+import { PRODUCT_BLUR_PLACEHOLDER } from '@/lib/product-image'
 
 interface Variant {
   id: string
@@ -151,6 +152,9 @@ export function ProductDetails({ product }: ProductDetailsProps) {
               fill
               className="object-cover"
               priority
+              sizes="(max-width: 768px) 100vw, 672px"
+              placeholder="blur"
+              blurDataURL={PRODUCT_BLUR_PLACEHOLDER}
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-card to-background">

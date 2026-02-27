@@ -94,7 +94,7 @@ async function main() {
 
   if (error && error.code !== 'PGRST116') {
     console.log('\n📋 Tables do not exist yet. Please run migrations in Supabase Dashboard:\n')
-    console.log(`1. Go to: https://supabase.com/dashboard/project/mdgvalmvpskltejtsgtl/sql/new`)
+    console.log(`1. Go to: https://supabase.com/dashboard/project/gyxcdrcdnnzjdmcrwbpr/sql/new`)
     console.log(`2. Copy and paste the content of: supabase/migrations/001_initial_schema.sql`)
     console.log(`3. Click "Run"`)
     console.log(`4. Then do the same for: supabase/migrations/002_seed_data.sql`)

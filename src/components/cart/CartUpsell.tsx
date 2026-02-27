@@ -6,7 +6,7 @@ import { RotateCcw, Plus } from 'lucide-react'
 import { useCartStore } from '@/stores/cartStore'
 import { useAuth } from '@/hooks/useAuth'
 import { formatPrice } from '@/lib/formatters'
-import { getProductImageUrl } from '@/lib/product-image'
+import { getProductImageUrl, PRODUCT_BLUR_PLACEHOLDER } from '@/lib/product-image'
 
 interface UpsellProduct {
   id: string
@@ -34,6 +34,8 @@ function MiniCard({ product }: { product: UpsellProduct }) {
             fill
             className="object-cover transition-transform group-hover:scale-105"
             sizes="112px"
+            placeholder="blur"
+            blurDataURL={PRODUCT_BLUR_PLACEHOLDER}
           />
         ) : (
           <div className="flex items-center justify-center h-full text-3xl">

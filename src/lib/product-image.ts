@@ -1,3 +1,7 @@
+/** Tiny dark-toned blur placeholder matching the app's dark theme (~80 bytes base64) */
+export const PRODUCT_BLUR_PLACEHOLDER =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAIAAAA7ljmRAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAL0lEQVR4nGNgYGBgZGT8z8DAwMDAwPD//38GBgYGJgYGBiYGBgYmBgYGFgYGBgYANiYEBx2M6sYAAAAASUVORK5CYII='
+
 export interface ProductImage {
   id: string
   url: string

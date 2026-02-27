@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/formatters'
-import { getProductImageUrl } from '@/lib/product-image'
+import { getProductImageUrl, PRODUCT_BLUR_PLACEHOLDER } from '@/lib/product-image'
 import type { OrderItemWithProduct } from '@/types/order'
 
 interface OrderItemsListProps {
@@ -33,6 +33,9 @@ export function OrderItemsList({ items, className }: OrderItemsListProps) {
                                 alt={item.product?.name || 'Product'}
                                 fill
                                 className="object-cover"
+                                sizes="64px"
+                                placeholder="blur"
+                                blurDataURL={PRODUCT_BLUR_PLACEHOLDER}
                             />
                         ) : (
                             <div className="flex h-full w-full items-center justify-center">

@@ -5,6 +5,7 @@ import { Minus, Plus, Trash2 } from 'lucide-react'
 import { CartItem as CartItemType, useCartStore } from '@/stores/cartStore'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/formatters'
+import { PRODUCT_BLUR_PLACEHOLDER } from '@/lib/product-image'
 
 interface CartItemProps {
   item: CartItemType
@@ -40,6 +41,9 @@ export function CartItem({ item }: CartItemProps) {
             alt={item.name}
             fill
             className="object-cover"
+            sizes="80px"
+            placeholder="blur"
+            blurDataURL={PRODUCT_BLUR_PLACEHOLDER}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">

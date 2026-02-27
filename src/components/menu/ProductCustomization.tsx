@@ -9,7 +9,7 @@ import { useCartStore, CartItemAddon } from '@/stores/cartStore'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/formatters'
-import { getProductImageUrl } from '@/lib/product-image'
+import { getProductImageUrl, PRODUCT_BLUR_PLACEHOLDER } from '@/lib/product-image'
 import { createClient } from '@/lib/supabase/client'
 import { ALLERGENS, type AllergenKey } from '@/types/menu'
 
@@ -198,6 +198,9 @@ export function ProductCustomization({
                                     alt={displayProduct?.name || ''}
                                     fill
                                     className="object-cover"
+                                    sizes="(max-width: 640px) 100vw, 640px"
+                                    placeholder="blur"
+                                    blurDataURL={PRODUCT_BLUR_PLACEHOLDER}
                                 />
                             ) : (
                                 <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-card to-background">

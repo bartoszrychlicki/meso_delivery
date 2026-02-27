@@ -181,7 +181,8 @@ export function MenuClient({ categories, products, location, banners }: MenuClie
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-50px' }}
                   transition={{ delay: i * 0.05 }}
                   className="flex-shrink-0 sm:flex-shrink"
                 >
@@ -209,7 +210,8 @@ export function MenuClient({ categories, products, location, banners }: MenuClie
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-50px' }}
                   transition={{ delay: i * 0.05 }}
                   className="flex-shrink-0 sm:flex-shrink"
                 >
@@ -243,7 +245,8 @@ export function MenuClient({ categories, products, location, banners }: MenuClie
                     <motion.div
                       key={product.id}
                       initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: '-50px' }}
                       transition={{ delay: i * 0.04 }}
                     >
                       <ProductCard product={product} />

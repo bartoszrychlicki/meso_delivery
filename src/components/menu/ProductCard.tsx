@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/formatters'
-import { getProductImageUrl } from '@/lib/product-image'
+import { getProductImageUrl, PRODUCT_BLUR_PLACEHOLDER } from '@/lib/product-image'
 import { useCartStore } from '@/stores/cartStore'
 import { toast } from 'sonner'
 
@@ -102,6 +102,8 @@ export function ProductCard({
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
               sizes="144px"
+              placeholder="blur"
+              blurDataURL={PRODUCT_BLUR_PLACEHOLDER}
             />
           ) : (
             <div className="flex items-center justify-center h-full text-3xl">
@@ -166,6 +168,8 @@ export function ProductCard({
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            placeholder="blur"
+            blurDataURL={PRODUCT_BLUR_PLACEHOLDER}
           />
         ) : (
           <div className="flex items-center justify-center h-full text-5xl">
