@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { addressSchema, type AddressFormData } from '@/lib/validators/checkout'
 import { Input } from '@/components/ui/input'
@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
 import { MessageSquare } from 'lucide-react'
+import { PhoneInput } from '@/components/ui/phone-input'
 
 interface AddressFormProps {
     defaultValues?: Partial<AddressFormData>
@@ -21,6 +22,7 @@ export function AddressForm({ defaultValues, savedPhone, onSubmit }: AddressForm
         register,
         handleSubmit,
         watch,
+        control,
         formState: { errors, touchedFields, isSubmitted },
     } = useForm<AddressFormData>({
         resolver: zodResolver(addressSchema),
@@ -87,7 +89,18 @@ export function AddressForm({ defaultValues, savedPhone, onSubmit }: AddressForm
                         <MessageSquare className="w-4 h-4 text-accent" />
                         Numer telefonu
                     </Label>
-                    <Input id="phone" type="tel" {...fieldProps('phone')} placeholder="123456789" maxLength={9} className="bg-card border-white/10" />
+                    <Controller
+                        name="phone"
+                        control={control}
+                        render={({ field }) => (
+                            <PhoneInput
+                                id="phone"
+                                value={field.value ?? ''}
+                                onChange={field.onChange}
+                                error={showError('phone') ? errors.phone?.message : undefined}
+                            />
+                        )}
+                    />
                     {showError('phone') && <p className="text-red-400 text-sm">{errors.phone?.message}</p>}
                 </div>
             </div>

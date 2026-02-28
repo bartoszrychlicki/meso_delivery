@@ -5,7 +5,7 @@ export const contactSchema = z.object({
     firstName: z.string().min(1, 'Imię jest wymagane').min(2, 'Imię jest zbyt krótkie'),
     lastName: z.string().min(1, 'Nazwisko jest wymagane').min(2, 'Nazwisko jest zbyt krótkie'),
     email: z.string().email('Nieprawidłowy adres email'),
-    phone: z.string().regex(/^\d{9}$/, 'Numer telefonu musi mieć 9 cyfr'),
+    phone: z.string().regex(/^\+\d{10,15}$/, 'Nieprawidłowy numer telefonu'),
 })
 
 export type ContactFormData = z.infer<typeof contactSchema>

@@ -2,11 +2,12 @@
 /* eslint-disable react-hooks/incompatible-library */
 
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { contactSchema, type ContactFormData } from '@/lib/validators/checkout'
 import { Checkbox } from '@/components/ui/checkbox'
 import { MessageSquare } from 'lucide-react'
+import { PhoneInput } from '@/components/ui/phone-input'
 
 interface ContactFormProps {
     defaultValues?: Partial<ContactFormData>
@@ -19,6 +20,7 @@ export function ContactForm({ defaultValues, savedPhone, onSubmit }: ContactForm
         register,
         handleSubmit,
         watch,
+        control,
         formState: { errors, touchedFields, isSubmitted },
     } = useForm<ContactFormData>({
         resolver: zodResolver(contactSchema),
@@ -102,15 +104,17 @@ export function ContactForm({ defaultValues, savedPhone, onSubmit }: ContactForm
                     <MessageSquare className="w-3.5 h-3.5 text-accent" />
                     Numer telefonu
                 </label>
-                <input
-                    id="phone"
-                    type="tel"
-                    autoComplete="tel"
-                    {...register('phone')}
-                    placeholder="123456789"
-                    maxLength={9}
-                    aria-invalid={showError('phone') ? true : undefined}
-                    className={inputClassName}
+                <Controller
+                    name="phone"
+                    control={control}
+                    render={({ field }) => (
+                        <PhoneInput
+                            id="phone"
+                            value={field.value ?? ''}
+                            onChange={field.onChange}
+                            error={showError('phone') ? errors.phone?.message : undefined}
+                        />
+                    )}
                 />
                 <p className="text-muted-foreground text-xs">Na ten numer wyślemy SMS o statusie Twojego zamówienia</p>
                 {showError('phone') && <p className="text-red-400 text-xs">{errors.phone?.message}</p>}

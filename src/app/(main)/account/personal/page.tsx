@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { LoginPrompt } from '@/components/auth'
 import { toast } from 'sonner'
 
@@ -166,13 +167,9 @@ export default function PersonalPage() {
         {/* Phone */}
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-muted-foreground">Telefon</label>
-          <input
-            type="tel"
-            autoComplete="tel"
+          <PhoneInput
             value={form.phone}
-            onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            placeholder="+48 500 000 000"
-            className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+            onChange={(phone) => setForm({ ...form, phone })}
           />
         </div>
 

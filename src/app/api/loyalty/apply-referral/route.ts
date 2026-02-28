@@ -34,18 +34,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Już masz polecającego' }, { status: 409 })
     }
 
-    // Clean phone number (remove spaces, dashes, +48 prefix)
-    const cleanPhone = referral_phone.replace(/[\s\-+]/g, '').replace(/^48/, '')
+    // Normalize phone: strip all non-digits to get the local number
+    const digits = referral_phone.replace(/\D/g, '')
+    // Remove leading country code 48 if present (handles +48xxx, 48xxx, and plain 9-digit)
+    const cleanPhone = digits.replace(/^48/, '')
 
     // Prevent self-referral
     if (currentCustomer.phone) {
-      const ownClean = currentCustomer.phone.replace(/[\s\-+]/g, '').replace(/^48/, '')
+      const ownDigits = currentCustomer.phone.replace(/\D/g, '')
+      const ownClean = ownDigits.replace(/^48/, '')
       if (cleanPhone === ownClean) {
         return NextResponse.json({ error: 'Nie możesz polecić samego siebie' }, { status: 400 })
       }
     }
 
-    // Find referrer by phone
+    // Find referrer by phone (match E.164, with-prefix, and bare local number)
     const { data: referrer } = await admin
       .from('crm_customers')
       .select('id, phone')
