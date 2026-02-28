@@ -1,6 +1,7 @@
 'use client'
 
 import { ProductCard } from './ProductCard'
+import { CategoryIcon } from '@/components/menu/CategoryIcon'
 
 interface Product {
   id: string
@@ -69,7 +70,7 @@ export function ProductGrid({ products, categories, activeCategory }: ProductGri
       {productsByCategory.map(({ category, products: categoryProducts }) => (
         <section key={category.id} id={`category-${category.slug}`}>
           <div className="flex items-center gap-2 mb-4">
-            {category.icon && <span className="text-2xl">{category.icon}</span>}
+            {category.icon && <CategoryIcon name={category.icon} className="h-6 w-6" />}
             <div>
               <h2 className="text-xl font-bold text-white">
                 {category.name}

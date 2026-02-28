@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
+import { CategoryIcon } from '@/components/menu/CategoryIcon'
 
 interface Category {
   id: string
@@ -62,7 +63,7 @@ export function CategoryTabs({
                 : 'bg-secondary/60 text-muted-foreground hover:text-foreground'
             )}
           >
-            {category.icon} {category.name}
+            <CategoryIcon name={category.icon} className="h-3.5 w-3.5" /> {category.name}
           </button>
         ))}
       </div>
@@ -81,7 +82,7 @@ export function CategoryTabs({
             )}
           >
             {category.icon && (
-              <span className="text-xl">{category.icon}</span>
+              <CategoryIcon name={category.icon} className="h-5 w-5" />
             )}
             <div>
               <p className="font-medium">{category.name}</p>

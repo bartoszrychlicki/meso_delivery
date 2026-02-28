@@ -18,6 +18,7 @@ async function getProduct(slug: string) {
     `)
     .eq('slug', slug)
     .eq('is_active', true)
+    .eq('is_available', true)
     .single()
 
   if (productError || !product) {

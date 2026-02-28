@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Search, Sparkles, RotateCcw } from 'lucide-react'
 import { ProductCard, PromoCarousel } from '@/components/menu'
+import { CategoryIcon } from '@/components/menu/CategoryIcon'
 import { CartSidebar } from '@/components/cart/CartSidebar'
 import { MobileStickyHeader } from '@/components/layout/MobileStickyHeader'
 import { useAuth } from '@/hooks/useAuth'
@@ -237,8 +238,9 @@ export function MenuClient({ categories, products, location, banners }: MenuClie
                 ref={(el) => setCategoryRef(cat.id, el)}
                 className="mb-8"
               >
-                <h2 className="mb-4 font-display text-sm font-bold tracking-wider uppercase text-foreground">
-                  {cat.icon} {cat.name}
+                <h2 className="mb-4 flex items-center gap-2 font-display text-sm font-bold tracking-wider uppercase text-foreground">
+                  <CategoryIcon name={cat.icon} className="h-4 w-4" />
+                  {cat.name}
                 </h2>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   {catProducts.map((product, i) => (

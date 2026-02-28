@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Search } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { CategoryIcon } from '@/components/menu/CategoryIcon'
 
 interface Category {
   id: string
@@ -125,7 +126,7 @@ export function MobileStickyHeader({
                               : 'bg-secondary/60 text-muted-foreground hover:text-foreground'
                           )}
                         >
-                          {cat.icon} {cat.name}
+                          <CategoryIcon name={cat.icon} className="h-3 w-3" /> {cat.name}
                         </button>
                       )
                     })}

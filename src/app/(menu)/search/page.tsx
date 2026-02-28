@@ -66,6 +66,7 @@ export default function SearchPage() {
       .from('menu_products')
       .select(`${PRODUCT_FIELDS}, categories!inner(name)`)
       .eq('is_active', true)
+      .eq('is_available', true)
       .or(`name.ilike.%${q}%,name_jp.ilike.%${q}%,description.ilike.%${q}%,categories.name.ilike.%${q}%`)
       .limit(20)
 
@@ -76,6 +77,7 @@ export default function SearchPage() {
         .from('menu_products')
         .select(PRODUCT_FIELDS)
         .eq('is_active', true)
+        .eq('is_available', true)
         .or(`name.ilike.%${q}%,name_jp.ilike.%${q}%,description.ilike.%${q}%`)
         .limit(20)
       setResults(fallback ?? [])

@@ -39,6 +39,7 @@ async function getMenuData() {
         tags
       `)
       .eq('is_active', true)
+      .eq('is_available', true)
       .order('sort_order'),
     supabase
       .from('users_locations')

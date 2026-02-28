@@ -42,6 +42,7 @@ export async function GET() {
       modifier_groups
     `)
     .eq('is_active', true)
+    .eq('is_available', true)
     .order('sort_order')
 
   if (prodError) {

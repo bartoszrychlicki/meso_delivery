@@ -20,6 +20,7 @@ export default async function ProductPage({ params }: PageProps) {
       category:menu_categories(id, name, slug, icon)
     `)
     .eq(isUUID ? 'id' : 'slug', id)
+    .eq('is_available', true)
     .single()
 
   if (!product) {
