@@ -11,7 +11,7 @@ vi.mock('resend', () => ({
 }))
 
 const sampleData: OrderEmailData = {
-  orderId: 123456,
+  orderId: '66dda102-abcd-1234-5678-abcdef012345',
   customerFirstName: 'Jan',
   customerLastName: 'Kowalski',
   customerEmail: 'jan@example.com',
