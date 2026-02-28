@@ -12,7 +12,6 @@ import { useCustomerLoyalty } from '@/hooks/useCustomerLoyalty'
 import { useLoyaltyRewards, type LoyaltyRewardRow } from '@/hooks/useLoyaltyRewards'
 import { useAppConfig } from '@/hooks/useAppConfig'
 import { toast } from 'sonner'
-import { TierEmblem } from '@/components/loyalty/TierEmblem'
 import type { LoyaltyTier } from '@/types/customer'
 
 interface LoyaltyHistoryEntry {
@@ -21,7 +20,7 @@ interface LoyaltyHistoryEntry {
   points: number
   type: string
   created_at: string
-  order_id?: number
+  order_id?: string | null
   is_pending_confirmation?: boolean
   pending_message?: string
 }
@@ -45,6 +44,12 @@ const TIER_LABELS: Record<LoyaltyTier, string> = {
 }
 
 const TIER_ORDER: LoyaltyTier[] = ['bronze', 'silver', 'gold']
+
+const TIER_GRADIENTS: Record<LoyaltyTier, string> = {
+  bronze: 'from-amber-800/80 via-amber-700/60 to-orange-900/50',
+  silver: 'from-slate-400/80 via-slate-500/60 to-zinc-600/50',
+  gold: 'from-yellow-500/80 via-amber-400/60 to-yellow-600/50',
+}
 
 function getTierFromLifetimePoints(
   lifetimePoints: number,
@@ -199,7 +204,7 @@ export default function LoyaltyPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/80 via-primary/60 to-accent/40 p-6 neon-glow"
+        className={cn('relative overflow-hidden rounded-2xl bg-gradient-to-br p-6 neon-glow', TIER_GRADIENTS[currentTier])}
       >
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-4">
@@ -252,16 +257,6 @@ export default function LoyaltyPage() {
             </p>
           </div>
         </div>
-        {/* Tier emblem — positioned in the top-right corner */}
-        <motion.div
-          key={currentTier}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, ease: 'easeOut', delay: 0.3 }}
-          className="absolute -right-2 -top-2 h-32 w-32 pointer-events-none"
-        >
-          <TierEmblem tier={currentTier} className="h-full w-full" />
-        </motion.div>
       </motion.div>
 
       {/* Active Coupon Banner */}
