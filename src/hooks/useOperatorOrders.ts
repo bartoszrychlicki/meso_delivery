@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { Order, OrderItem, OrderStatus } from '@/types'
+import { formatOrderDisplayId } from '@/lib/format-order-display-id'
 import { toast } from 'sonner'
 import { useOperatorAuthStore } from '@/stores/operatorAuthStore'
 
@@ -79,7 +80,7 @@ export function useOperatorOrders(options: UseOperatorOrdersOptions = {}) {
     }, [fetchOrders])
 
     // Detect new orders for notification sound
-    const prevOrderIdsRef = useRef<Set<number>>(new Set())
+    const prevOrderIdsRef = useRef<Set<string>>(new Set())
     useEffect(() => {
         const currentIds = new Set(orders.map(o => o.id))
         const newConfirmed = orders.filter(
@@ -88,7 +89,7 @@ export function useOperatorOrders(options: UseOperatorOrdersOptions = {}) {
         if (newConfirmed.length > 0 && prevOrderIdsRef.current.size > 0) {
             playNotificationSound()
             toast.success('Nowe zamówienie!', {
-                description: `Zamówienie #${newConfirmed[0].id}`,
+                description: `Zamówienie #${formatOrderDisplayId(newConfirmed[0].id, newConfirmed[0].order_number)}`,
             })
         }
         prevOrderIdsRef.current = currentIds
@@ -96,7 +97,7 @@ export function useOperatorOrders(options: UseOperatorOrdersOptions = {}) {
 
     // Update order status via API
     const updateOrderStatus = useCallback(async (
-        orderId: number,
+        orderId: string,
         newStatus: OrderStatus,
         timestampField?: string
     ) => {
@@ -130,23 +131,23 @@ export function useOperatorOrders(options: UseOperatorOrdersOptions = {}) {
         }
     }, [fetchOrders, pin])
 
-    const startPreparing = useCallback(async (orderId: number) => {
+    const startPreparing = useCallback(async (orderId: string) => {
         return updateOrderStatus(orderId, 'preparing', 'preparing_at')
     }, [updateOrderStatus])
 
-    const markAsReady = useCallback(async (orderId: number) => {
+    const markAsReady = useCallback(async (orderId: string) => {
         return updateOrderStatus(orderId, 'ready', 'ready_at')
     }, [updateOrderStatus])
 
-    const awaitingCourier = useCallback(async (orderId: number) => {
+    const awaitingCourier = useCallback(async (orderId: string) => {
         return updateOrderStatus(orderId, 'awaiting_courier')
     }, [updateOrderStatus])
 
-    const markAsInDelivery = useCallback(async (orderId: number) => {
+    const markAsInDelivery = useCallback(async (orderId: string) => {
         return updateOrderStatus(orderId, 'in_delivery', 'picked_up_at')
     }, [updateOrderStatus])
 
-    const markAsDelivered = useCallback(async (orderId: number) => {
+    const markAsDelivered = useCallback(async (orderId: string) => {
         return updateOrderStatus(orderId, 'delivered', 'delivered_at')
     }, [updateOrderStatus])
 

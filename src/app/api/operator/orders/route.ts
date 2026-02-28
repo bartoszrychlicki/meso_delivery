@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { transformCustomer } from './transform-customer'
 
 // Validate operator PIN from request header
 function validateOperatorPin(request: NextRequest): boolean {
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
         product: item.product,
         variant_name: item.variant_name || null,
       })) || [],
-      customer: data.customer,
+      customer: transformCustomer(data.customer),
     } : null
 
     return NextResponse.json({ order })
@@ -89,7 +90,7 @@ export async function GET(request: NextRequest) {
       product: item.product,
       variant_name: item.variant_name || null,
     })) || [],
-    customer: order.customer,
+    customer: transformCustomer(order.customer),
   }))
 
   return NextResponse.json({ orders })

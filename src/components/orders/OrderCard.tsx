@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/formatters'
+import { formatOrderDisplayId } from '@/lib/format-order-display-id'
 import { formatOrderDateShort, type OrderWithItems } from '@/types/order'
 import { OrderStatusBadge } from './OrderStatusBadge'
 
@@ -32,7 +33,7 @@ export function OrderCard({ order, className }: OrderCardProps) {
                     {/* Order number and date */}
                     <div className="flex items-center gap-2 mb-2">
                         <span className="text-sm font-bold text-white">
-                            #{order.id}
+                            #{formatOrderDisplayId(order.id, order.order_number)}
                         </span>
                         <span className="text-xs text-zinc-500">
                             {formatOrderDateShort(order.created_at)}

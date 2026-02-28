@@ -7,7 +7,7 @@ export interface LoyaltyHistoryEntry {
   label: string
   amount: number
   reason: 'earned' | 'spent' | 'bonus' | 'expired'
-  related_order_id: number | null
+  related_order_id: string | null
   created_at: string
 }
 

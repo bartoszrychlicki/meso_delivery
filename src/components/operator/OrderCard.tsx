@@ -8,16 +8,17 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { OperatorOrder, getOrderAge } from '@/hooks/useOperatorOrders'
+import { formatOrderDisplayId } from '@/lib/format-order-display-id'
 import { cn } from '@/lib/utils'
 
 interface OrderCardProps {
     order: OperatorOrder
     variant: 'new' | 'preparing' | 'ready' | 'in_delivery' | 'delivered'
     compact?: boolean
-    onStartPreparing?: (id: number) => Promise<boolean>
-    onMarkAsReady?: (id: number) => Promise<boolean>
-    onMarkAsInDelivery?: (id: number) => Promise<boolean>
-    onMarkAsDelivered?: (id: number) => Promise<boolean>
+    onStartPreparing?: (id: string) => Promise<boolean>
+    onMarkAsReady?: (id: string) => Promise<boolean>
+    onMarkAsInDelivery?: (id: string) => Promise<boolean>
+    onMarkAsDelivered?: (id: string) => Promise<boolean>
 }
 
 export function OrderCard({
@@ -70,7 +71,7 @@ export function OrderCard({
                 {/* Header row */}
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold text-white">#{order.id}</span>
+                        <span className="text-lg font-bold text-white">#{formatOrderDisplayId(order.id, order.order_number)}</span>
                         <span className={cn(
                             'text-xs px-1.5 py-0.5 rounded',
                             order.delivery_type === 'delivery'
@@ -124,7 +125,7 @@ export function OrderCard({
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                    <span className="text-xl font-bold text-white">#{order.id}</span>
+                    <span className="text-xl font-bold text-white">#{formatOrderDisplayId(order.id, order.order_number)}</span>
                     <span className={cn(
                         'text-xs px-2 py-0.5 rounded',
                         order.delivery_type === 'delivery'

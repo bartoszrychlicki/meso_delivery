@@ -9,6 +9,7 @@ import { ORDER_STATUS_MESSAGES, formatOrderDate } from '@/types/order'
 import { formatPrice } from '@/lib/formatters'
 import { Button } from '@/components/ui/button'
 import { isOrderActive } from '@/lib/order-confirmation-utils'
+import { formatOrderDisplayId } from '@/lib/format-order-display-id'
 
 export default function OrderDetailsPage() {
     const params = useParams()
@@ -66,7 +67,7 @@ export default function OrderDetailsPage() {
             {/* Title */}
             <div>
                 <h1 className="font-display text-xl font-bold tracking-wider">
-                    ZAMÓWIENIE #{order.id}
+                    ZAMÓWIENIE #{formatOrderDisplayId(order.id, order.order_number)}
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">{formatOrderDate(order.created_at)}</p>
             </div>

@@ -24,7 +24,8 @@ export interface DeliveryAddress {
 }
 
 export interface Order {
-  id: number
+  id: string
+  order_number?: string
   customer_id: string
   location_id: string
   status: OrderStatus
@@ -58,7 +59,7 @@ export interface Order {
 
 export interface OrderItem {
   id: string
-  order_id: number
+  order_id: string
   product_id: string
   quantity: number
   unit_price: number

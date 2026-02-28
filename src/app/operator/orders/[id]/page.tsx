@@ -12,6 +12,7 @@ import { OperatorOrder, getOrderAge, useOperatorOrders } from '@/hooks/useOperat
 import { useOperatorAuthStore } from '@/stores/operatorAuthStore'
 import { ORDER_STATUS_MESSAGES, formatOrderDate } from '@/types/order'
 import { formatPriceExact } from '@/lib/formatters'
+import { formatOrderDisplayId } from '@/lib/format-order-display-id'
 import { cn } from '@/lib/utils'
 
 interface PageProps {
@@ -102,7 +103,7 @@ export default function OrderDetailPage({ params }: PageProps) {
                     <ArrowLeft className="w-6 h-6" />
                 </Link>
                 <div className="flex-1">
-                    <h1 className="text-2xl font-bold text-white">Zamówienie #{order.id}</h1>
+                    <h1 className="text-2xl font-bold text-white">Zamówienie #{formatOrderDisplayId(order.id, order.order_number)}</h1>
                     <p className="text-white/50">{formatOrderDate(order.created_at)}</p>
                 </div>
                 <div className={cn(

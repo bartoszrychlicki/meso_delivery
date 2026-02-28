@@ -12,7 +12,7 @@ export interface OrderEmailItem {
 }
 
 export interface OrderEmailData {
-  orderId: number
+  orderId: string
   customerFirstName: string
   customerLastName: string
   customerEmail: string
@@ -44,7 +44,7 @@ export async function sendOrderConfirmationEmail(
     }
 
     const resend = new Resend(process.env.RESEND_API_KEY)
-    const orderNumber = data.orderId.toString(16).toUpperCase()
+    const orderNumber = data.orderId.slice(-8).toUpperCase()
     const html = buildOrderConfirmationHtml(data, orderNumber)
 
     const { data: result, error } = await resend.emails.send({
