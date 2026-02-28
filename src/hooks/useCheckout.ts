@@ -35,6 +35,18 @@ export function buildCheckoutProfileUpdate(
     return profileUpdate
 }
 
+export function buildOrderCustomerFields(
+    addressData: Pick<AddressFormData, 'firstName' | 'lastName' | 'phone'>
+): { customer_name: string | null; customer_phone: string | null } {
+    const name = [addressData.firstName?.trim(), addressData.lastName?.trim()]
+        .filter(Boolean)
+        .join(' ') || null
+    return {
+        customer_name: name,
+        customer_phone: addressData.phone || null,
+    }
+}
+
 export function useCheckout() {
     const router = useRouter()
     const supabase = createClient()
@@ -98,12 +110,31 @@ export function useCheckout() {
 
             const now = new Date().toISOString()
 
+            // Build items JSONB for orders_orders.items column
+            // (POS constraint requires non-empty items array)
+            const itemsJsonb = items.map(item => {
+                const basePrice = item.price + (item.variantPrice || 0)
+                const addonsPrice = item.addons.reduce((sum, addon) => sum + addon.price, 0)
+                const unitPrice = basePrice + addonsPrice
+                return {
+                    product_id: item.productId,
+                    name: item.name,
+                    quantity: item.quantity,
+                    unit_price: unitPrice,
+                    total_price: unitPrice * item.quantity,
+                    spice_level: item.spiceLevel || null,
+                    variant_name: item.variantName || null,
+                    addons: item.addons,
+                }
+            })
+
             const { data: order, error: orderError } = await supabase
                 .from('orders_orders')
                 .insert({
                     order_number: orderNumber,
                     channel: 'web',
                     customer_id: user.id,
+                    ...buildOrderCustomerFields(addressData),
                     location_id: locations.id,
                     status: isPayOnPickup ? 'confirmed' : 'pending_payment',
                     delivery_type: deliveryData.type,
@@ -119,6 +150,7 @@ export function useCheckout() {
                     promo_discount: getDiscount(),
                     total,
                     loyalty_points_earned: Math.floor(Math.max(0, subtotal - getDiscount())), // 1 pkt = 1 PLN (food value only, excludes delivery fee & tip)
+                    items: itemsJsonb,
                     notes: addressData.notes
                 })
                 .select()
