@@ -38,7 +38,12 @@ export function CategoryIcon({ name, ...props }: CategoryIconProps) {
   const Icon = iconMap[name]
 
   // If no matching Lucide icon, treat as emoji/text
-  if (!Icon) return <span {...(props as React.HTMLAttributes<HTMLSpanElement>)}>{name}</span>
+  if (!Icon) {
+    if (process.env.NODE_ENV === 'development' && name.match(/^[A-Z]/)) {
+      console.warn(`[CategoryIcon] Unknown Lucide icon: "${name}". Add it to iconMap.`)
+    }
+    return <span {...(props as React.HTMLAttributes<HTMLSpanElement>)}>{name}</span>
+  }
 
   return <Icon {...props} />
 }

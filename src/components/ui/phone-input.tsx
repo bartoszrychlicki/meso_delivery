@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 
 interface Country {
   code: string
@@ -56,6 +56,13 @@ export function PhoneInput({ value, onChange, error, className, id }: PhoneInput
   const parsed = useMemo(() => parsePhone(value), [value])
   const [countryCode, setCountryCode] = useState(parsed.countryCode)
   const [localNumber, setLocalNumber] = useState(parsed.localNumber)
+
+  // Sync internal state when value changes externally (e.g. async data load)
+  useEffect(() => {
+    const p = parsePhone(value)
+    setCountryCode(p.countryCode)
+    setLocalNumber(p.localNumber)
+  }, [value])
 
   const selectedCountry = useMemo(
     () => countries.find((c) => c.code === countryCode) ?? countries[0],
