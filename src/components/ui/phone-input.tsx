@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 
 interface Country {
   code: string
@@ -27,7 +27,7 @@ const countries: Country[] = [
   { code: '45', flag: '\u{1F1E9}\u{1F1F0}', name: 'Dania', maxDigits: 8 },
 ]
 
-function parsePhone(value: string): { countryCode: string; localNumber: string } {
+export function parsePhone(value: string): { countryCode: string; localNumber: string } {
   if (!value) return { countryCode: '48', localNumber: '' }
 
   const digits = value.replace(/\D/g, '')
@@ -42,6 +42,13 @@ function parsePhone(value: string): { countryCode: string; localNumber: string }
 
   // No prefix match — assume Polish number
   return { countryCode: '48', localNumber: digits }
+}
+
+/** Build canonical E.164 string from any phone input (strips formatting, adds +). */
+export function normalizePhone(value: string): string {
+  if (!value) return ''
+  const { countryCode, localNumber } = parsePhone(value)
+  return localNumber ? `+${countryCode}${localNumber}` : ''
 }
 
 interface PhoneInputProps {
@@ -65,6 +72,18 @@ export function PhoneInput({ value, onChange, error, className, id }: PhoneInput
     setCountryCode(p.countryCode)
     setLocalNumber(p.localNumber)
   }
+
+  // Normalize the form value to E.164 when it doesn't match canonical format.
+  // This fixes the case where a phone loaded from DB (e.g., "48512129709" without "+")
+  // displays correctly but fails Zod regex validation.
+  useEffect(() => {
+    if (!value) return
+    const normalized = normalizePhone(value)
+    if (normalized && normalized !== value) {
+      onChange(normalized)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value])
 
   const selectedCountry = useMemo(
     () => countries.find((c) => c.code === countryCode) ?? countries[0],
