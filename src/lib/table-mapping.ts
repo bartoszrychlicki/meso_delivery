@@ -17,7 +17,7 @@ export const Tables = {
 
   // CRM / Customers
   customers: 'crm_customers',
-  customerAddresses: 'crm_customer_addresses',
+  customerAddresses: 'customer_addresses',
   loyaltyTransactions: 'crm_loyalty_transactions',
   loyaltyRewards: 'crm_loyalty_rewards',
   promotions: 'crm_promotions',

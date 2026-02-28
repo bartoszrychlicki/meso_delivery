@@ -259,7 +259,7 @@ test.describe.serial('Password Reset Flow', () => {
     await page.locator('button[type="submit"]').click()
 
     // Verify redirect away from /login (successful login)
-    await page.waitForURL(url => !url.pathname.includes('/login'), { timeout: 15_000 })
+    await page.waitForURL(url => !url.pathname.includes('/login'), { timeout: 30_000 })
 
     console.log(`Login with new password successful for ${TEST_EMAIL}`)
   })

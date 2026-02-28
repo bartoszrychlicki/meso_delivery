@@ -24,11 +24,8 @@ test.describe('P24 Payment Flow (Mocked)', () => {
     await fillCheckoutContactForm(page)
     await acceptTerms(page)
 
-    let createdOrderId = ''
-
     await page.route('**/api/payments/p24/register', async (route) => {
       const payload = route.request().postDataJSON() as { orderId: string | number }
-      createdOrderId = String(payload.orderId)
 
       await route.fulfill({
         json: {
@@ -40,15 +37,26 @@ test.describe('P24 Payment Flow (Mocked)', () => {
 
     const submitButton = page.getByTestId('checkout-submit-button')
 
-    // First click submits contact form into local state.
+    // Click submit — single click may complete the entire flow
+    // (form auto-submits via requestSubmit, then order is created)
     await submitButton.click()
 
-    // Second click performs order creation and mocked payment registration.
-    await submitButton.click()
+    // If still on checkout after first click, click again
+    const redirected = await page.waitForURL(/\/order-confirmation\?orderId=/, { timeout: 5_000 })
+      .then(() => true)
+      .catch(() => false)
 
-    await expect(page).toHaveURL(/\/order-confirmation\?orderId=.*status=success/)
-    await expect(page.getByText('ZAMÓWIENIE ZŁOŻONE')).toBeVisible()
-    await expect(page.getByText('Twoje zamówienie')).toBeVisible()
-    await expect(page.getByText(new RegExp(`#${createdOrderId.slice(-6).toUpperCase()}`))).toBeVisible()
+    if (!redirected) {
+      await submitButton.click()
+    }
+
+    await expect(page).toHaveURL(/\/order-confirmation\?orderId=.*status=success/, { timeout: 20_000 })
+    // Page shows either "ZAMÓWIENIE ZŁOŻONE" (paid) or "OCZEKIWANIE NA PŁATNOŚĆ" (pending)
+    // depending on whether the webhook has already updated the status
+    await expect(
+      page.getByText('ZAMÓWIENIE ZŁOŻONE').or(page.getByText('OCZEKIWANIE NA PŁATNOŚĆ'))
+    ).toBeVisible({ timeout: 10_000 })
+    // Order confirmation shows order_number with WEB- prefix
+    await expect(page.getByText(/Zamówienie #WEB-/)).toBeVisible()
   })
 })

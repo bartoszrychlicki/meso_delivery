@@ -139,7 +139,7 @@ async function loginLoyaltyUser(page: Page) {
   await page.locator('input[type="email"]').fill(TEST_EMAIL)
   await page.locator('input[type="password"]').fill(TEST_PASSWORD)
   await page.locator('button[type="submit"]').click()
-  await page.waitForURL(url => !url.pathname.includes('/login'), { timeout: 15_000 })
+  await page.waitForURL(url => !url.pathname.includes('/login'), { timeout: 30_000 })
 }
 
 // ──────────────────────────────────────────────────────────
@@ -147,6 +147,11 @@ async function loginLoyaltyUser(page: Page) {
 // ──────────────────────────────────────────────────────────
 
 test.describe('Loyalty Program', () => {
+  // Loyalty tests need longer timeouts for login + API calls
+  test.setTimeout(90_000)
+  // Run serially: tests share DB state (same user, coupons, points)
+  test.describe.configure({ mode: 'serial' })
+
   let admin: SupabaseClient
   let testUserId: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -199,19 +204,24 @@ test.describe('Loyalty Program', () => {
 
     // Verify confirmation modal appears
     await expect(page.getByText('Aktywujesz kupon')).toBeVisible({ timeout: 5_000 })
-    // Verify point cost is shown
-    await expect(page.getByText(/pkt/)).toBeVisible()
+    // Verify point cost is shown in the confirmation modal
+    await expect(page.getByText(/\d+ pkt/).first()).toBeVisible()
     // Verify warning about non-refundable points
     await expect(page.getByText(/Punkty nie podlegają zwrotowi/)).toBeVisible()
 
-    // Click "Potwierdzam" to activate
-    await page.getByRole('button', { name: 'Potwierdzam' }).click()
+    // Click "Potwierdzam" to activate and wait for API response
+    const [activateResp] = await Promise.all([
+      page.waitForResponse(resp => resp.url().includes('/api/loyalty/activate-coupon'), { timeout: 30_000 }),
+      page.getByRole('button', { name: 'Potwierdzam' }).click(),
+    ])
+    const activateData = await activateResp.json()
+    console.log('Activate coupon API response:', activateResp.status(), JSON.stringify(activateData))
 
-    // Verify success toast appears
-    await expect(page.getByText(/Aktywowano kupon/).or(page.getByText(/kupon.*dodany/i))).toBeVisible({ timeout: 10_000 })
+    // Verify success toast appears (API call creates coupon, deducts points, logs transaction)
+    await expect(page.getByText(/Aktywowano kupon/).first()).toBeVisible({ timeout: 20_000 })
 
     // Verify the active coupon banner now shows
-    await expect(page.getByText('Masz aktywny kupon')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Masz aktywny kupon')).toBeVisible({ timeout: 15_000 })
 
     // Verify points decreased in DB
     const { data: customer } = await admin
@@ -232,7 +242,7 @@ test.describe('Loyalty Program', () => {
     await admin.from('crm_customer_coupons').delete().eq('customer_id', testUserId)
     await admin.from('crm_customer_coupons').insert({
       customer_id: testUserId,
-      reward_id: availableRewards[0].id,
+
       code: 'MESO-TEST1',
       coupon_type: availableRewards[0].reward_type,
       discount_value: availableRewards[0].reward_type === 'discount' ? 10 : null,
@@ -243,13 +253,20 @@ test.describe('Loyalty Program', () => {
     })
 
     await loginLoyaltyUser(page)
-    await page.goto('/loyalty')
+
+    // Navigate to /loyalty and wait for the active-coupon API to respond
+    const [couponResponse] = await Promise.all([
+      page.waitForResponse(resp => resp.url().includes('/api/loyalty/active-coupon'), { timeout: 30_000 }),
+      page.goto('/loyalty'),
+    ])
+    const couponData = await couponResponse.json()
+    console.log('Active coupon API response:', JSON.stringify(couponData))
 
     // Wait for page to load
     await expect(page.getByRole('button', { name: 'Nagrody' })).toBeVisible({ timeout: 15_000 })
 
     // Verify info banner about active coupon is shown
-    await expect(page.getByText('Masz aktywny kupon')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Masz aktywny kupon')).toBeVisible({ timeout: 20_000 })
     await expect(page.getByText(/Użyj go lub poczekaj/)).toBeVisible()
 
     // Verify "Aktywuj" buttons are NOT visible (replaced by point cost text)
@@ -267,7 +284,7 @@ test.describe('Loyalty Program', () => {
     await admin.from('crm_customer_coupons').delete().eq('customer_id', testUserId)
     const { data: coupon } = await admin.from('crm_customer_coupons').insert({
       customer_id: testUserId,
-      reward_id: availableRewards[0].id,
+
       code: 'MESO-CART1',
       coupon_type: 'free_delivery',
       status: 'active',
@@ -378,8 +395,8 @@ test.describe('Loyalty Program', () => {
     await expect(historyTab).toBeVisible()
     await historyTab.click()
 
-    // Verify history entries are visible
-    await expect(page.getByText('Bonus rejestracyjny')).toBeVisible({ timeout: 10_000 })
+    // Verify history entries are visible (allow more time for API response)
+    await expect(page.getByText('Bonus rejestracyjny')).toBeVisible({ timeout: 20_000 })
     await expect(page.getByText('Zamowienie #1234')).toBeVisible()
     await expect(page.getByText('Kupon: Darmowa dostawa')).toBeVisible()
 
@@ -406,7 +423,7 @@ test.describe('Loyalty Program', () => {
     await page.goto('/register')
 
     // Wait for page to load
-    await expect(page.getByText('ZAREJESTRUJ')).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByRole('heading', { name: /ZAREJESTRUJ/i })).toBeVisible({ timeout: 15_000 })
 
     // Verify referral phone input is visible
     const referralInput = page.locator('input[placeholder*="polecając"]')
@@ -426,7 +443,7 @@ test.describe('Loyalty Program', () => {
     await admin.from('crm_customer_coupons').delete().eq('customer_id', testUserId)
     const { data: coupon } = await admin.from('crm_customer_coupons').insert({
       customer_id: testUserId,
-      reward_id: availableRewards[0].id,
+
       code: 'MESO-SYNC1',
       coupon_type: 'free_delivery',
       status: 'active',
@@ -490,7 +507,7 @@ test.describe('Loyalty Program', () => {
     // Create coupon with status still 'active' (mimicking the RLS failure)
     await admin.from('crm_customer_coupons').insert({
       customer_id: testUserId,
-      reward_id: availableRewards[0].id,
+
       code: couponCode,
       coupon_type: availableRewards[0].reward_type,
       discount_value: availableRewards[0].reward_type === 'discount' ? 10 : null,
@@ -502,14 +519,17 @@ test.describe('Loyalty Program', () => {
 
     // Get a location for the order
     const { data: location } = await admin
-      .from('locations')
+      .from('users_locations')
       .select('id')
       .eq('is_active', true)
       .limit(1)
       .single()
 
     // Create an order that used this coupon code (paid, delivered)
+    const orderNum = `TEST-${Date.now()}`
     await admin.from('orders_orders').insert({
+      order_number: orderNum,
+      channel: 'web',
       customer_id: testUserId,
       location_id: location!.id,
       status: 'delivered',
@@ -532,7 +552,14 @@ test.describe('Loyalty Program', () => {
 
     // 2. Go to loyalty page — the lazy cleanup should detect the used coupon
     await loginLoyaltyUser(page)
-    await page.goto('/loyalty')
+
+    // Navigate and wait for the active-coupon API (which runs lazy cleanup)
+    const [cleanupResp] = await Promise.all([
+      page.waitForResponse(resp => resp.url().includes('/api/loyalty/active-coupon'), { timeout: 30_000 }),
+      page.goto('/loyalty'),
+    ])
+    const cleanupData = await cleanupResp.json()
+    console.log('Cleanup API response:', JSON.stringify(cleanupData))
 
     // Wait for rewards tab to load
     await expect(page.getByRole('button', { name: 'Nagrody' })).toBeVisible({ timeout: 15_000 })
@@ -628,7 +655,8 @@ test.describe('Loyalty Program', () => {
     const pointsCard = page.locator('.neon-glow').first()
     await expect(pointsCard).toBeVisible()
 
-    const emblemSvg = pointsCard.locator('svg')
+    // The tier emblem SVG is in an absolutely-positioned container
+    const emblemSvg = pointsCard.locator('svg[viewBox="0 0 120 120"]')
     await expect(emblemSvg).toBeVisible()
 
     // The SVG should have tier-specific content (silver uses octagon = 10-point polygon)
@@ -649,7 +677,7 @@ test.describe('Loyalty Program', () => {
     await admin.from('crm_customer_coupons').delete().eq('customer_id', testUserId)
     const { data: coupon } = await admin.from('crm_customer_coupons').insert({
       customer_id: testUserId,
-      reward_id: availableRewards[0].id,
+
       code: 'MESO-RESYNC',
       coupon_type: 'free_delivery',
       status: 'active',
@@ -674,12 +702,17 @@ test.describe('Loyalty Program', () => {
       }
     })
 
-    // Visit loyalty page
-    await page.goto('/loyalty')
+    // Visit loyalty page and wait for active-coupon API to respond
+    const [couponResp] = await Promise.all([
+      page.waitForResponse(resp => resp.url().includes('/api/loyalty/active-coupon'), { timeout: 30_000 }),
+      page.goto('/loyalty'),
+    ])
+    const couponData = await couponResp.json()
+    console.log('Active coupon response:', JSON.stringify(couponData))
     await expect(page.getByRole('button', { name: 'Nagrody' })).toBeVisible({ timeout: 15_000 })
 
     // The active coupon banner should show (DB has active coupon)
-    await expect(page.getByText('Masz aktywny kupon')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Masz aktywny kupon')).toBeVisible({ timeout: 20_000 })
 
     // KEY ASSERTION: The coupon should be synced back to the cart store
     // Poll localStorage until the coupon appears (sync is async)

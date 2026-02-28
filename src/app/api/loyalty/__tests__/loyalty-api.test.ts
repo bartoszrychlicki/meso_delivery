@@ -618,7 +618,7 @@ describe('GET /api/loyalty/history', () => {
     const json = await res.json()
     expect(json.history).toHaveLength(2)
     expect(json.history[0].id).toBe('pending-order-2002')
-    expect(json.history[0].amount).toBe(67)
+    expect(json.history[0].points).toBe(67)
     expect(json.history[0].is_pending_confirmation).toBe(true)
     expect(json.history[0].pending_message).toContain('Punkty w trakcie potwierdzania')
     expect(json.history[1].id).toBe('h1')

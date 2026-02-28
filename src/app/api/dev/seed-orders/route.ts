@@ -164,11 +164,16 @@ export async function GET() {
 
     const seedOrderNumber = (idx: number) => `SEED-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(idx).padStart(3,'0')}`
 
+    const customerName = 'Test Operator'
+    const customerPhone = '+48 500 000 000'
+
     const ordersToInsert = [
       {
         order_number: seedOrderNumber(1),
         channel: 'web',
         customer_id: customerId,
+        customer_name: customerName,
+        customer_phone: customerPhone,
         location_id: location.id,
         status: 'confirmed',
         delivery_type: 'delivery',
@@ -191,6 +196,8 @@ export async function GET() {
         order_number: seedOrderNumber(2),
         channel: 'web',
         customer_id: customerId,
+        customer_name: customerName,
+        customer_phone: customerPhone,
         location_id: location.id,
         status: 'preparing',
         delivery_type: 'delivery',
@@ -213,6 +220,8 @@ export async function GET() {
         order_number: seedOrderNumber(3),
         channel: 'web',
         customer_id: customerId,
+        customer_name: customerName,
+        customer_phone: customerPhone,
         location_id: location.id,
         status: 'ready',
         delivery_type: 'pickup',
@@ -235,6 +244,8 @@ export async function GET() {
         order_number: seedOrderNumber(4),
         channel: 'web',
         customer_id: customerId,
+        customer_name: customerName,
+        customer_phone: customerPhone,
         location_id: location.id,
         status: 'in_delivery',
         delivery_type: 'delivery',
@@ -259,6 +270,8 @@ export async function GET() {
         order_number: seedOrderNumber(5),
         channel: 'web',
         customer_id: customerId,
+        customer_name: customerName,
+        customer_phone: customerPhone,
         location_id: location.id,
         status: 'delivered',
         delivery_type: 'delivery',

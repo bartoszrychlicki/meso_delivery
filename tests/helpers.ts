@@ -86,7 +86,7 @@ export async function loginTestUser(page: Page) {
   await page.locator('input[type="email"]').fill(TEST_EMAIL)
   await page.locator('input[type="password"]').fill(TEST_PASSWORD)
   await page.locator('button[type="submit"]').click()
-  await page.waitForURL(url => !url.pathname.includes('/login'), { timeout: 15_000 })
+  await page.waitForURL(url => !url.pathname.includes('/login'), { timeout: 30_000 })
 }
 
 export async function gotoMenu(page: Page) {

@@ -144,12 +144,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Błąd przy odejmowaniu punktów' }, { status: 500 })
     }
 
-    // Create coupon
+    // Create coupon (promotion_id FK references crm_promotions, not rewards — leave null for reward-based coupons)
     const { data: coupon, error: couponError } = await admin
       .from('crm_customer_coupons')
       .insert({
         customer_id: user.id,
-        reward_id: reward.id,
         code,
         coupon_type: reward.reward_type,
         discount_value: computedDiscountValue,
@@ -176,7 +175,7 @@ export async function POST(request: NextRequest) {
       .from('crm_loyalty_transactions')
       .insert({
         customer_id: user.id,
-        label: `Kupon: ${reward.name}`,
+        description: `Kupon: ${reward.name}`,
         amount: -reward.points_cost,
         reason: 'spent',
       })

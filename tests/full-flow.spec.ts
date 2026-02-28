@@ -27,10 +27,12 @@ test.describe('Full User Journey', () => {
     const submitButton = page.getByTestId('checkout-submit-button')
     await expect(submitButton).toBeVisible()
 
-    // Submit button should be disabled until terms are accepted
-    await expect(submitButton).toBeDisabled()
+    // Submit button is always enabled (terms check happens in click handler)
+    // Clicking without terms accepted should show error toast
+    await submitButton.click()
+    await expect(page.getByText(/Musisz zaakceptować Regulamin/).first()).toBeVisible({ timeout: 5_000 })
 
-    // Accept terms and verify button becomes enabled
+    // Accept terms and verify the button still works (styled differently)
     const termsCheckbox = page.getByTestId('terms-acceptance')
     await termsCheckbox.click()
     await expect(submitButton).toBeEnabled()
